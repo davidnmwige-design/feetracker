@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 
+export const revalidate = 0
 export default async function Dashboard() {
   const students = await prisma.student.findMany({
     include: { payments: true }
