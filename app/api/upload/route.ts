@@ -36,16 +36,22 @@ export async function POST(req: Request) {
       s.parentPhone.replace(/\s/g, '').replace(/^254/, '0') === cleanPhone
     )
 
-    const payment = await prisma.payment.create({
-      data: {
-        mpesaRef,
-        amount,
-        senderName,
-        senderPhone,
-        matched: !!matched,
-        studentId: matched ? matched.id : null
-      }
-    })
+    const existing = await prisma.payment.findFirst({
+  where: { mpesaRef }
+})
+
+if (existing) continue
+
+const payment = await prisma.payment.create({
+  data: {
+    mpesaRef,
+    amount,
+    senderName,
+    senderPhone,
+    matched: !!matched,
+    studentId: matched ? matched.id : null
+  }
+})
 
     if (matched) {
       results.matched++
