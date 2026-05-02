@@ -8,122 +8,140 @@ export default function Students() {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [search, setSearch] = useState('')
-async function downloadCertificate(studentId: number, studentName: string) {
-  const res = await fetch('/api/certificate?studentId=' + studentId)
-  const data = await res.json()
 
-  const { jsPDF } = await import('jspdf')
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  const w = 210
-  const h = 297
+  async function downloadCertificate(studentId: number, studentName: string) {
+    const res = await fetch('/api/certificate?studentId=' + studentId)
+    const data = await res.json()
 
-  // Border
-  doc.setDrawColor(10, 31, 78)
-  doc.setLineWidth(3)
-  doc.rect(10, 10, w - 20, h - 20)
-  doc.setLineWidth(0.5)
-  doc.rect(13, 13, w - 26, h - 26)
+    const { jsPDF } = await import('jspdf')
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const w = 210
+    const h = 297
 
-  // Header background
-  doc.setFillColor(10, 31, 78)
-  doc.rect(13, 13, w - 26, 40, 'F')
+    doc.setDrawColor(10, 31, 78)
+    doc.setLineWidth(3)
+    doc.rect(10, 10, w - 20, h - 20)
+    doc.setLineWidth(0.5)
+    doc.rect(13, 13, w - 26, h - 26)
 
-  // School name
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(20)
-  doc.setTextColor(200, 168, 75)
-  doc.text(data.school.name.toUpperCase(), w / 2, 30, { align: 'center' })
+    doc.setFillColor(10, 31, 78)
+    doc.rect(13, 13, w - 26, 40, 'F')
 
-  // Subtitle
-  doc.setFontSize(10)
-  doc.setTextColor(255, 255, 255)
-  doc.setFont('helvetica', 'normal')
-  doc.text(data.school.term, w / 2, 40, { align: 'center' })
-  doc.text('Official Fee Clearance Certificate', w / 2, 47, { align: 'center' })
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(20)
+    doc.setTextColor(200, 168, 75)
+    doc.text(data.school.name.toUpperCase(), w / 2, 30, { align: 'center' })
 
-  // Certificate title
-  doc.setFontSize(22)
-  doc.setFont('times', 'bold')
-  doc.setTextColor(10, 31, 78)
-  doc.text('CERTIFICATE OF FEE CLEARANCE', w / 2, 75, { align: 'center' })
-
-  // Divider
-  doc.setDrawColor(200, 168, 75)
-  doc.setLineWidth(1)
-  doc.line(30, 80, w - 30, 80)
-
-  // Body text
-  doc.setFontSize(12)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(50, 50, 50)
-  doc.text('This is to certify that the following student has cleared all', w / 2, 95, { align: 'center' })
-  doc.text('fee obligations for the current academic term.', w / 2, 102, { align: 'center' })
-
-  // Student details box
-  doc.setDrawColor(200, 168, 75)
-  doc.setLineWidth(0.5)
-  doc.setFillColor(248, 249, 252)
-  doc.roundedRect(30, 112, w - 60, 80, 3, 3, 'FD')
-
-  const labelX = 45
-  const valueX = 110
-  const startY = 125
-  const gap = 13
-
-  doc.setFontSize(10)
-  doc.setTextColor(100, 100, 100)
-  doc.setFont('helvetica', 'normal')
-
-  const fields = [
-    ['Student Name', data.student.name],
-    ['Admission No', data.student.admNo],
-    ['Class', data.student.class + ' ' + data.student.stream],
-    ['Fee Required', 'KES ' + data.student.feeRequired.toLocaleString()],
-    ['Total Paid', 'KES ' + data.student.totalPaid.toLocaleString()],
-    ['Outstanding Balance', 'KES 0'],
-  ]
-
-  fields.forEach(([label, value], i) => {
+    doc.setFontSize(10)
+    doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(100, 100, 100)
-    doc.text(label + ':', labelX, startY + i * gap)
+    doc.text(data.school.term, w / 2, 40, { align: 'center' })
+    doc.text('Official Fee Clearance Certificate', w / 2, 47, { align: 'center' })
+
+    doc.setFontSize(22)
+    doc.setFont('times', 'bold')
+    doc.setTextColor(10, 31, 78)
+    doc.text('CERTIFICATE OF FEE CLEARANCE', w / 2, 75, { align: 'center' })
+
+    doc.setDrawColor(200, 168, 75)
+    doc.setLineWidth(1)
+    doc.line(30, 80, w - 30, 80)
+
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(50, 50, 50)
+    doc.text('This is to certify that the following student has cleared all', w / 2, 95, { align: 'center' })
+    doc.text('fee obligations for the current academic term.', w / 2, 102, { align: 'center' })
+
+    doc.setDrawColor(200, 168, 75)
+    doc.setLineWidth(0.5)
+    doc.setFillColor(248, 249, 252)
+    doc.roundedRect(30, 112, w - 60, 80, 3, 3, 'FD')
+
+    const labelX = 45
+    const valueX = 110
+    const startY = 125
+    const gap = 13
+
+    const fields = [
+      ['Student Name', data.student.name],
+      ['Admission No', data.student.admNo],
+      ['Class', data.student.class + ' ' + data.student.stream],
+      ['Fee Required', 'KES ' + data.student.feeRequired.toLocaleString()],
+      ['Total Paid', 'KES ' + data.student.totalPaid.toLocaleString()],
+      ['Outstanding Balance', 'KES 0'],
+    ]
+
+    fields.forEach(([label, value], i) => {
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100, 100, 100)
+      doc.text(label + ':', labelX, startY + i * gap)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(10, 31, 78)
+      doc.text(value, valueX, startY + i * gap)
+    })
+
+    doc.setDrawColor(10, 31, 78)
+    doc.setLineWidth(2)
+    doc.circle(w / 2, 225, 20)
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(10, 31, 78)
-    doc.text(value, valueX, startY + i * gap)
-  })
+    doc.text('CLEARED', w / 2, 222, { align: 'center' })
+    doc.setFontSize(7)
+    doc.text('FEES PAID', w / 2, 229, { align: 'center' })
 
-  // Cleared stamp area
-  doc.setDrawColor(10, 31, 78)
-  doc.setLineWidth(2)
-  doc.circle(w / 2, 225, 20)
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(10, 31, 78)
-  doc.text('CLEARED', w / 2, 222, { align: 'center' })
-  doc.setFontSize(7)
-  doc.text('FEES PAID', w / 2, 229, { align: 'center' })
+    doc.setDrawColor(10, 31, 78)
+    doc.setLineWidth(0.5)
+    doc.line(35, 260, 85, 260)
+    doc.line(125, 260, 175, 260)
 
-  // Signature lines
-  doc.setDrawColor(10, 31, 78)
-  doc.setLineWidth(0.5)
-  doc.line(35, 260, 85, 260)
-  doc.line(125, 260, 175, 260)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(100, 100, 100)
+    doc.text('Bursar', 60, 266, { align: 'center' })
+    doc.text('Principal', 150, 266, { align: 'center' })
+    doc.text(data.school.name, 60, 272, { align: 'center' })
+    doc.text(data.school.name, 150, 272, { align: 'center' })
 
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(100, 100, 100)
-  doc.text('Bursar', 60, 266, { align: 'center' })
-  doc.text('Principal', 150, 266, { align: 'center' })
-  doc.text(data.school.name, 60, 272, { align: 'center' })
-  doc.text(data.school.name, 150, 272, { align: 'center' })
+    doc.setFontSize(8)
+    doc.setTextColor(150, 150, 150)
+    doc.text('Generated by FeeTracker · ' + new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }), w / 2, 282, { align: 'center' })
 
-  // Footer
-  doc.setFontSize(8)
-  doc.setTextColor(150, 150, 150)
-  doc.text('Generated by FeeTracker · ' + new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }), w / 2, 282, { align: 'center' })
+    doc.save(studentName.replace(/ /g, '_') + '_clearance.pdf')
+  }
 
-  doc.save(studentName.replace(/ /g, '_') + '_clearance_' + data.school.term.replace(/ /g, '_') + '.pdf')
-}
+  useEffect(() => {
+    fetchStudents()
+  }, [])
+
+  async function fetchStudents() {
+    setLoading(true)
+    const res = await fetch('/api/students')
+    const data = await res.json()
+    setStudents(data)
+    setLoading(false)
+  }
+
+  async function handleUpload() {
+    if (!file) return
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('schoolId', '1')
+    await fetch('/api/students', { method: 'POST', body: formData })
+    await fetchStudents()
+    setFile(null)
+    setUploading(false)
+  }
+
+  const filtered = students.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.class.toLowerCase().includes(search.toLowerCase()) ||
+    s.admNo.toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex items-center gap-4 mb-6">
@@ -146,7 +164,8 @@ async function downloadCertificate(studentId: number, studentName: string) {
             <button
               onClick={handleUpload}
               disabled={!file || uploading}
-              className="bg-green-700 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-green-800 disabled:opacity-50"
+              className="text-white px-4 py-1.5 rounded-lg text-sm disabled:opacity-50"
+              style={{backgroundColor: '#0a1f4e'}}
             >
               {uploading ? 'Uploading...' : 'Upload'}
             </button>
@@ -157,7 +176,7 @@ async function downloadCertificate(studentId: number, studentName: string) {
           <div className="p-4 border-b border-gray-100 flex justify-between items-center">
             <h2 className="font-medium text-gray-900">{students.length} students</h2>
             <input
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 w-48"
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 w-48"
               placeholder="Search name or class..."
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -174,15 +193,15 @@ async function downloadCertificate(studentId: number, studentName: string) {
                 <th className="p-3">Paid</th>
                 <th className="p-3">Balance</th>
                 <th className="p-3">Status</th>
-<th className="p-3">Certificate</th>
+                <th className="p-3">Certificate</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={8} className="p-4 text-center text-gray-400">Loading...</td></tr>
+                <tr><td colSpan={9} className="p-4 text-center text-gray-400">Loading...</td></tr>
               )}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={8} className="p-4 text-center text-gray-400">No students yet. Upload a student list to get started.</td></tr>
+                <tr><td colSpan={9} className="p-4 text-center text-gray-400">No students yet. Upload a student list to get started.</td></tr>
               )}
               {filtered.map(student => {
                 const paid = student.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
@@ -198,21 +217,21 @@ async function downloadCertificate(studentId: number, studentName: string) {
                     <td className="p-3">KES {student.feeRequired.toLocaleString()}</td>
                     <td className="p-3 text-green-700">KES {paid.toLocaleString()}</td>
                     <td className="p-3 text-amber-600">KES {balance.toLocaleString()}</td>
-                   <td className="p-3">
-  <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor}`}>
-    {status}
-  </span>
-</td>
-<td className="p-3">
-  {status === 'Paid' && (
-    <button
-      onClick={() => downloadCertificate(student.id, student.name)}
-      className="text-xs border border-green-300 text-green-700 px-2 py-1 rounded-lg hover:bg-green-50"
-    >
-      Certificate
-    </button>
-  )}
-</td>
+                    <td className="p-3">
+                      <span className={'text-xs px-2 py-1 rounded-full font-medium ' + statusColor}>
+                        {status}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      {status === 'Paid' && (
+                        <button
+                          onClick={() => downloadCertificate(student.id, student.name)}
+                          className="text-xs border border-green-300 text-green-700 px-2 py-1 rounded-lg hover:bg-green-50"
+                        >
+                          Certificate
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 )
               })}
