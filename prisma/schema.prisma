@@ -7,19 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  school    School?
+}
+
 model School {
   id        Int       @id @default(autoincrement())
   name      String
   paybill   String?
   term      String    @default("Term 2 2026")
   createdAt DateTime  @default(now())
+  userId    Int       @unique
+  user      User      @relation(fields: [userId], references: [id])
   students  Student[]
 }
 
 model Student {
   id          Int       @id @default(autoincrement())
   name        String
-  admNo       String    @unique
+  admNo       String
   class       String
   stream      String?
   parentName  String?
@@ -29,6 +40,8 @@ model Student {
   schoolId    Int
   school      School    @relation(fields: [schoolId], references: [id])
   payments    Payment[]
+
+  @@unique([admNo, schoolId])
 }
 
 model Payment {
