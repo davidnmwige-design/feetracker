@@ -47,9 +47,24 @@ export default function Reminders() {
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Reminders</h1>
           <p className="text-gray-500 text-sm mt-1">
-            {withBalance.length} parents with outstanding balances · KES {totalOutstanding.toLocaleString()} total
-          </p>
-        </div>
+  {withBalance.length} parents with outstanding balances · KES {totalOutstanding.toLocaleString()} total
+</p>
+        </div>{withBalance.length > 0 && (
+  <button
+    onClick={() => {
+      withBalance.forEach((student, i) => {
+        const msg = getMessage(student)
+        const phone = '254' + student.parentPhone.replace(/^0/, '')
+        const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
+        setTimeout(() => window.open(url, '_blank'), i * 1500)
+      })
+    }}
+    className="mt-4 px-6 py-2.5 rounded-lg text-sm font-medium text-white"
+    style={{backgroundColor: '#0a1f4e'}}
+  >
+    Send WhatsApp to all {withBalance.length} parents
+  </button>
+)}
 
         {loading && (
           <div className="text-center text-gray-400 py-12">Loading...</div>
