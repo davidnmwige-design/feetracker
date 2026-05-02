@@ -156,9 +156,9 @@ export default function Home() {
       <div className="py-20 text-center">
         <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to save your bursar 80 hours this term?</h2>
         <p className="text-gray-500 mb-8">Set up your school in under 5 minutes. No technical knowledge needed.</p>
-        <Link href="/setup" className="bg-green-700 text-white px-8 py-3 rounded-lg hover:bg-green-800 font-medium text-lg">
-          Set up your school free
-        </Link>
+        <Link href="/setup" className="bg-navy-900 text-white px-8 py-3 rounded-lg font-medium text-lg inline-block" style={{backgroundColor: '#0a1f4e'}}>
+  Set up your school free
+</Link>
       </div>
 
       {/* Footer */}
