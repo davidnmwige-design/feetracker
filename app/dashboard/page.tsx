@@ -1,19 +1,34 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { auth } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
 export const revalidate = 0
+
 export default async function Dashboard() {
+  const session = await auth()
+  if (!session?.user?.email) redirect('/login')
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { school: true }
+  })
+
+  if (!user?.school) redirect('/signup')
+
   const students = await prisma.student.findMany({
+    where: { schoolId: user.school.id },
     include: { payments: true }
   })
 
   const totalExpected = students.reduce((sum, s) => sum + s.feeRequired, 0)
-  const totalCollected = students.reduce((sum, s) => 
+  const totalCollected = students.reduce((sum, s) =>
     sum + s.payments.reduce((p, pay) => p + pay.amount, 0), 0)
   const outstanding = totalExpected - totalCollected
   const zeroPayment = students.filter(s => s.payments.length === 0).length
 
   const recentPayments = await prisma.payment.findMany({
+    where: { student: { schoolId: user.school.id } },
     take: 10,
     orderBy: { paidAt: 'desc' },
     include: { student: true }
@@ -24,14 +39,14 @@ export default async function Dashboard() {
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-            <p className="text-gray-500 text-sm">Term 2 · 2026</p>
+            <h1 className="text-2xl font-semibold text-gray-900">{user.school.name}</h1>
+            <p className="text-gray-500 text-sm">{user.school.term}</p>
           </div>
           <div className="flex gap-3">
             <Link href="/students" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
               Students
             </Link>
-            <Link href="/upload" className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-800">
+            <Link href="/upload" className="text-white px-4 py-2 rounded-lg text-sm" style={{backgroundColor:'#0a1f4e'}}>
               Upload MPESA
             </Link>
           </div>
@@ -79,9 +94,9 @@ export default async function Dashboard() {
                   <td className="p-3 text-gray-500">{new Date(payment.paidAt).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</td>
                   <td className="p-3">{payment.senderName || '—'}</td>
                   <td className="p-3 font-medium">KES {payment.amount.toLocaleString()}</td>
-                  <td className="p-3">{payment.student ? `${payment.student.name} · ${payment.student.class}` : '—'}</td>
+                  <td className="p-3">{payment.student ? payment.student.name + ' · ' + payment.student.class : '—'}</td>
                   <td className="p-3">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${payment.matched ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    <span className={'text-xs px-2 py-1 rounded-full font-medium ' + (payment.matched ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')}>
                       {payment.matched ? 'Matched' : 'Review'}
                     </span>
                   </td>

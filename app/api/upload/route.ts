@@ -1,8 +1,24 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
 import * as XLSX from 'xlsx'
 
 export async function POST(req: Request) {
+  const session = await auth()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { school: true }
+  })
+
+  if (!user?.school) {
+    return NextResponse.json({ error: 'No school found' }, { status: 400 })
+  }
+
+  const schoolId = user.school.id
   const formData = await req.formData()
   const file = formData.get('file') as File
 
@@ -11,7 +27,9 @@ export async function POST(req: Request) {
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const rows = XLSX.utils.sheet_to_json(sheet) as any[]
 
-  const students = await prisma.student.findMany()
+  const students = await prisma.student.findMany({
+    where: { schoolId }
+  })
 
   const results = {
     matched: 0,
@@ -29,29 +47,25 @@ export async function POST(req: Request) {
     if (amount <= 0) continue
     results.total++
 
-    // Try to match by phone number
+    const existing = await prisma.payment.findFirst({ where: { mpesaRef } })
+    if (existing) continue
+
     const cleanPhone = senderPhone.replace(/\s/g, '').replace(/^254/, '0')
     const matched = students.find(s =>
       s.parentPhone &&
       s.parentPhone.replace(/\s/g, '').replace(/^254/, '0') === cleanPhone
     )
 
-    const existing = await prisma.payment.findFirst({
-  where: { mpesaRef }
-})
-
-if (existing) continue
-
-const payment = await prisma.payment.create({
-  data: {
-    mpesaRef,
-    amount,
-    senderName,
-    senderPhone,
-    matched: !!matched,
-    studentId: matched ? matched.id : null
-  }
-})
+    await prisma.payment.create({
+      data: {
+        mpesaRef,
+        amount,
+        senderName,
+        senderPhone,
+        matched: !!matched,
+        studentId: matched ? matched.id : null
+      }
+    })
 
     if (matched) {
       results.matched++
@@ -61,7 +75,7 @@ const payment = await prisma.payment.create({
       })
       const paid = totalPaid._sum.amount || 0
       const balance = matched.feeRequired - paid
-      const msg = `Dear ${matched.parentName || 'Parent'}, we have received KES ${amount.toLocaleString()} for ${matched.name}, ${matched.class}. Outstanding balance: KES ${balance.toLocaleString()}. Thank you. `
+      const msg = 'Dear ' + (matched.parentName || 'Parent') + ', we have received KES ' + amount.toLocaleString() + ' for ' + matched.name + ', ' + matched.class + '. Outstanding balance: KES ' + balance.toLocaleString() + '. Thank you. - ' + user.school!.name
       results.notifications.push(msg)
     } else {
       results.unmatched++
