@@ -1,19 +1,17 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
-
-export async function POST(req: Request) {
-  const body = await req.json()
-  const school = await prisma.school.create({
-    data: {
-      name: body.name,
-      paybill: body.paybill,
-      term: body.term
-    }
-  })
-  return NextResponse.json(school)
-}
+import { auth } from '@/lib/auth'
 
 export async function GET() {
-  const schools = await prisma.school.findMany()
-  return NextResponse.json(schools)
+  const session = await auth()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { school: true }
+  })
+
+  return NextResponse.json(user?.school || null)
 }
