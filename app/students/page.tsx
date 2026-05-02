@@ -152,6 +152,7 @@ async function downloadCertificate(studentId: number, studentName: string) {
                 <th className="p-3">Paid</th>
                 <th className="p-3">Balance</th>
                 <th className="p-3">Status</th>
+<th className="p-3">Certificate</th>
               </tr>
             </thead>
             <tbody>
