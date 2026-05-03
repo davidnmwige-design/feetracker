@@ -34,9 +34,6 @@ export default function RootLayout({
   </Link>
   <Link href="/reminders" className="text-sm text-gray-600 hover:text-green-700">
     Reminders
-    <Link href="/unmatched" className="text-sm text-gray-600 hover:text-green-700">
-  Unmatched
-</Link>
   </Link>
   <LogoutButton />
 </div>

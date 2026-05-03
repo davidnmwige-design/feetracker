@@ -103,9 +103,16 @@ export default function Upload() {
               </div>
             )}
 
-            <Link href="/dashboard" className="block text-center mt-4 text-green-700 text-sm hover:underline">
-              View dashboard →
-            </Link>
+           <div className="flex gap-4 justify-center mt-4">
+  <Link href="/dashboard" className="text-green-700 text-sm hover:underline">
+    View dashboard →
+  </Link>
+  {results.unmatched > 0 && (
+    <Link href="/unmatched" className="text-red-600 text-sm hover:underline">
+      Review {results.unmatched} unmatched payments →
+    </Link>
+  )}
+</div>
           </div>
         )}
       </div>
