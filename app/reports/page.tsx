@@ -18,7 +18,7 @@ export default function Reports() {
 
   async function downloadReport() {
     setDownloading(true)
-    const res = await fetch('/api/reports')
+   const res = await fetch('/api/report')
     const blob = await res.blob()
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
