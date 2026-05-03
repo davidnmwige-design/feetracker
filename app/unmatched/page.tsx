@@ -67,12 +67,19 @@ export default function Unmatched() {
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="font-medium text-gray-900">KES {payment.amount.toLocaleString()}</p>
-                  <p className="text-sm text-gray-400 mt-0.5">
-                    From: {payment.senderName || 'Unknown'} · {payment.senderPhone || 'No phone'}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    Ref: {payment.mpesaRef || '—'} · {new Date(payment.paidAt).toLocaleDateString('en-KE')}
-                  </p>
+                 <p className="text-sm text-gray-400 mt-0.5">
+  From: {payment.senderName || 'Unknown'} · {payment.senderPhone || 'No phone'}
+</p>
+<p className="text-sm text-gray-400">
+  MPESA Ref: {payment.mpesaRef || '—'} · {new Date(payment.paidAt).toLocaleDateString('en-KE')}
+</p>
+{payment.mpesaRef && (
+  <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+    <p className="text-xs text-amber-600 font-medium uppercase tracking-wide mb-0.5">Account reference typed by parent</p>
+    <p className="text-sm font-bold text-amber-900">{payment.mpesaRef}</p>
+    <p className="text-xs text-amber-600 mt-0.5">Use this to identify the student — match to admission number or name</p>
+  </div>
+)}
                 </div>
                 <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
                   Unmatched
