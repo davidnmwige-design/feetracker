@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     },
     school: {
       name: student.school.name,
-      term: student.school.term
+      term: student.school.currentTerm
     }
   })
 }
