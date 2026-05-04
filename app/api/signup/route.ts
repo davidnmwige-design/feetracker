@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         create: {
           name: schoolName,
           paybill,
-          term: term || 'Term 2 2026'
+          currentTerm: term || 'Term 1 2026'
         }
       }
     }
