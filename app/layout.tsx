@@ -34,6 +34,9 @@ export default function RootLayout({
   </Link>
   <Link href="/reminders" className="text-sm text-gray-600 hover:text-green-700">
     Reminders
+    <Link href="/settings" className="text-sm text-gray-600 hover:text-green-700">
+  Settings
+</Link>
   </Link>
   <LogoutButton />
 </div>
