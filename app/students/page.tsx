@@ -144,10 +144,15 @@ export default function Students() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">← Back</Link>
-          <h1 className="text-2xl font-semibold text-gray-900">Students</h1>
-        </div>
+        <div className="flex items-center justify-between mb-6">
+  <div className="flex items-center gap-4">
+    <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">← Back</Link>
+    <h1 className="text-2xl font-semibold text-gray-900">Students</h1>
+  </div>
+  <Link href="/reports" className="text-white px-4 py-2 rounded-lg text-sm font-medium" style={{backgroundColor: '#0a1f4e'}}>
+    Download Report
+  </Link>
+</div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
           <h2 className="font-medium text-gray-900 mb-1">Upload student list</h2>
