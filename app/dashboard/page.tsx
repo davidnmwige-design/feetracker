@@ -14,11 +14,14 @@ export default async function Dashboard() {
     include: { school: true }
   })
 
-  if (!user?.school && !user?.isAdmin) redirect('/signup')
-if (user?.isAdmin) redirect('/admin/dashboard')
+  if (!user) redirect('/login')
+  if (user.isAdmin) redirect('/admin/dashboard')
+  if (!user.school) redirect('/signup')
+
+  const school = user.school
 
   const students = await prisma.student.findMany({
-    where: { schoolId: user.school!.id },
+    where: { schoolId: school.id },
     include: { payments: true }
   })
 
@@ -29,7 +32,7 @@ if (user?.isAdmin) redirect('/admin/dashboard')
   const zeroPayment = students.filter(s => s.payments.length === 0).length
 
   const recentPayments = await prisma.payment.findMany({
-   where: { student: { schoolId: user.school!.id } },
+    where: { student: { schoolId: school.id } },
     take: 10,
     orderBy: { paidAt: 'desc' },
     include: { student: true }
@@ -40,8 +43,8 @@ if (user?.isAdmin) redirect('/admin/dashboard')
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{user.school.name}</h1>
-           <p className="text-gray-500 text-sm">{user.school.currentTerm}</p>
+            <h1 className="text-2xl font-semibold text-gray-900">{school.name}</h1>
+            <p className="text-gray-500 text-sm">{school.currentTerm}</p>
           </div>
           <div className="flex gap-3">
             <Link href="/students" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
