@@ -26,17 +26,11 @@ export default function RootLayout({
   <Link href="/dashboard" className="text-sm text-gray-600 hover:text-green-700">
     Dashboard
   </Link>
-  <Link href="/students" className="text-sm text-gray-600 hover:text-green-700">
-    Students
-  </Link>
-  <Link href="/upload" className="text-sm text-gray-600 hover:text-green-700">
-    Upload MPESA
-  </Link>
   <Link href="/reminders" className="text-sm text-gray-600 hover:text-green-700">
     Reminders
-    <Link href="/settings" className="text-sm text-gray-600 hover:text-green-700">
-  Settings
-</Link>
+  </Link>
+  <Link href="/settings" className="text-sm text-gray-600 hover:text-green-700">
+    Settings
   </Link>
   <LogoutButton />
 </div>
