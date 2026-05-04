@@ -17,14 +17,25 @@ model User {
 }
 
 model School {
+  id          Int       @id @default(autoincrement())
+  name        String
+  paybill     String?
+  currentTerm String    @default("Term 1 2026")
+  createdAt   DateTime  @default(now())
+  userId      Int       @unique
+  user        User      @relation(fields: [userId], references: [id])
+  students    Student[]
+  terms       Term[]
+}
+
+model Term {
   id        Int       @id @default(autoincrement())
   name      String
-  paybill   String?
-  term      String    @default("Term 2 2026")
   createdAt DateTime  @default(now())
-  userId    Int       @unique
-  user      User      @relation(fields: [userId], references: [id])
-  students  Student[]
+  archived  Boolean   @default(false)
+  schoolId  Int
+  school    School    @relation(fields: [schoolId], references: [id])
+  payments  Payment[]
 }
 
 model Student {
@@ -54,5 +65,7 @@ model Payment {
   matched     Boolean  @default(false)
   notified    Boolean  @default(false)
   studentId   Int?
+  termId      Int?
   student     Student? @relation(fields: [studentId], references: [id])
+  term        Term?    @relation(fields: [termId], references: [id])
 }
