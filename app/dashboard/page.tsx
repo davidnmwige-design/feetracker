@@ -40,7 +40,7 @@ export default async function Dashboard() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">{user.school.name}</h1>
-            <p className="text-gray-500 text-sm">{user.school.term}</p>
+           <p className="text-gray-500 text-sm">{user.school.currentTerm}</p>
           </div>
           <div className="flex gap-3">
             <Link href="/students" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
