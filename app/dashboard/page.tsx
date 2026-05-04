@@ -18,7 +18,7 @@ export default async function Dashboard() {
 if (user?.isAdmin) redirect('/admin/dashboard')
 
   const students = await prisma.student.findMany({
-    where: { schoolId: user.school.id },
+    where: { schoolId: user.school!.id },
     include: { payments: true }
   })
 
@@ -29,7 +29,7 @@ if (user?.isAdmin) redirect('/admin/dashboard')
   const zeroPayment = students.filter(s => s.payments.length === 0).length
 
   const recentPayments = await prisma.payment.findMany({
-    where: { student: { schoolId: user.school.id } },
+   where: { student: { schoolId: user.school!.id } },
     take: 10,
     orderBy: { paidAt: 'desc' },
     include: { student: true }
