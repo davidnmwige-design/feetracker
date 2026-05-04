@@ -14,7 +14,8 @@ export default async function Dashboard() {
     include: { school: true }
   })
 
-  if (!user?.school) redirect('/signup')
+  if (!user?.school && !user?.isAdmin) redirect('/signup')
+if (user?.isAdmin) redirect('/admin/dashboard')
 
   const students = await prisma.student.findMany({
     where: { schoolId: user.school.id },
