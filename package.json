@@ -7,6 +7,13 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint"
+    "scripts": {
+  "dev": "next dev --turbopack",
+  "build": "prisma generate && next build",
+  "start": "next start",
+  "lint": "next lint",
+  "postinstall": "prisma generate"
+},
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
