@@ -120,23 +120,23 @@ export default function SchoolDetail() {
 
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
           <h2 className="font-medium text-gray-900 mb-4">Quick actions</h2>
-          <div className="flex gap-3">
-            
-              href={'mailto:' + school.user?.email}
-              className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50"
-            >
-              Send email
-            </a>
-            
-              href={'https://wa.me/254?text=Hi ' + school.user?.name + ', this is a message from FeeTracker regarding your account.'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white px-4 py-2 rounded-lg text-sm"
-              style={{backgroundColor: '#0a1f4e'}}
-            >
-              WhatsApp admin
-            </a>
-          </div>
+         <div className="flex gap-3">
+  
+    href={mailtoLink}
+    className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50"
+  >
+    Send email
+  </a>
+  
+    href={waLink}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-white px-4 py-2 rounded-lg text-sm"
+    style={{backgroundColor: '#0a1f4e'}}
+  >
+    WhatsApp admin
+  </a>
+</div>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
