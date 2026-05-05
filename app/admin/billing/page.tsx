@@ -105,7 +105,7 @@ export default function AdminBilling() {
                 return (
                   <tr key={school.id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="p-3">
-                      <div className="font-medium">{school.name}</div>
+                     <Link href={'/admin/schools/' + school.id} className="font-medium text-blue-900 hover:underline">{school.name}</Link>
                       <div className="text-xs text-gray-400">{school.user?.email}</div>
                     </td>
                     <td className="p-3">
