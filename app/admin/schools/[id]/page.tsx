@@ -122,12 +122,14 @@ export default function SchoolDetail() {
           <h2 className="font-medium text-gray-900 mb-4">Quick actions</h2>
          <div className="flex gap-3">
   
-    href={mailtoLink}
+    
+     href={mailtoLink}
     className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50"
   >
     Send email
   </a>
   
+   <a
     href={waLink}
     target="_blank"
     rel="noopener noreferrer"
