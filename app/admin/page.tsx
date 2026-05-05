@@ -1,110 +1,175 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 
-export default function AdminSetup() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    secretKey: ''
-  })
+const PLANS = {
+  Starter: { monthly: 4500, setup: 15000 },
+  Growth: { monthly: 6500, setup: 20000 },
+  Premium: { monthly: 9000, setup: 25000 },
+}
 
-  async function handleSubmit() {
-    setLoading(true)
-    setError('')
+function getPlan(studentCount: number) {
+  if (studentCount <= 300) return 'Starter'
+  if (studentCount <= 600) return 'Growth'
+  return 'Premium'
+}
 
-    const res = await fetch('/api/admin/setup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    })
+export default function SchoolDetail() {
+  const { id } = useParams()
+  const [school, setSchool] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [note, setNote] = useState('')
+  const [notes, setNotes] = useState<string[]>([])
 
-    const data = await res.json()
+  useEffect(() => {
+    fetch('/api/admin/schools/' + id)
+      .then(r => r.json())
+      .then(data => {
+        setSchool(data)
+        setLoading(false)
+      })
+  }, [id])
 
-    if (!res.ok) {
-      setError(data.error || 'Something went wrong')
-      setLoading(false)
-      return
-    }
-
-    setSuccess(true)
-    setLoading(false)
-    setTimeout(() => router.push('/login'), 2000)
+  function addNote() {
+    if (!note.trim()) return
+    const timestamp = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
+    setNotes(prev => [...prev, timestamp + ' — ' + note])
+    setNote('')
   }
 
+  if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">Loading...</div>
+  if (!school) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">School not found</div>
+
+  const studentCount = school._count?.students || 0
+  const planName = getPlan(studentCount)
+  const plan = PLANS[planName as keyof typeof PLANS]
+  const totalExpected = school.students?.reduce((sum: number, s: any) => sum + s.feeRequired, 0) || 0
+  const totalCollected = school.students?.reduce((sum: number, s: any) =>
+    sum + s.payments.reduce((p: number, pay: any) => p + pay.amount, 0), 0) || 0
+  const mailtoLink = 'mailto:' + (school.user?.email || '')
+  const waMessage = 'Hi ' + (school.user?.name || '') + ', this is a message from FeeTracker regarding your account.'
+  const waLink = 'https://wa.me/?text=' + encodeURIComponent(waMessage)
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl border border-gray-200 p-8 w-full max-w-sm">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin setup</h1>
-          <p className="text-gray-500 text-sm">Create your FeeTracker admin account</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Link href="/admin/billing" className="text-gray-400 hover:text-gray-600 text-sm">← Back to billing</Link>
         </div>
 
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg mb-4">
-            Admin account created! Redirecting to login...
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="font-medium text-gray-900 mb-4">School details</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">School name</span>
+                <span className="text-sm font-medium">{school.name}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Admin name</span>
+                <span className="text-sm font-medium">{school.user?.name}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Email</span>
+                <span className="text-sm font-medium">{school.user?.email}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Paybill</span>
+                <span className="text-sm font-medium">{school.paybill || '—'}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Current term</span>
+                <span className="text-sm font-medium">{school.currentTerm}</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-sm text-gray-500">Joined</span>
+                <span className="text-sm font-medium">{new Date(school.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              </div>
+            </div>
           </div>
-        )}
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-4">
-            {error}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="font-medium text-gray-900 mb-4">Subscription and usage</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Plan</span>
+                <span className="text-sm font-medium">{planName}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Monthly fee</span>
+                <span className="text-sm font-medium">KES {plan.monthly.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Setup fee</span>
+                <span className="text-sm font-medium">KES {plan.setup.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Students</span>
+                <span className="text-sm font-medium">{studentCount}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Fees expected</span>
+                <span className="text-sm font-medium">KES {totalExpected.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-sm text-gray-500">Fees collected</span>
+                <span className="text-sm font-medium text-green-700">KES {totalCollected.toLocaleString()}</span>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
 
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Your name</label>
-            <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-              placeholder="Admin name"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-            />
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+          <h2 className="font-medium text-gray-900 mb-4">Quick actions</h2>
+          <div className="flex gap-3">
+            
+              href={mailtoLink}
+              className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50"
+            >
+              Send email
+            </a>
+            
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white px-4 py-2 rounded-lg text-sm"
+              style={{backgroundColor: '#0a1f4e'}}
+            >
+              WhatsApp admin
+            </a>
           </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Email</label>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="font-medium text-gray-900 mb-4">Notes</h2>
+          <div className="flex gap-2 mb-4">
             <input
-              type="email"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-              placeholder="admin@feetracker.co.ke"
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
+              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+              placeholder="Add a note about this school..."
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addNote()}
             />
+            <button
+              onClick={addNote}
+              className="text-white px-4 py-2 rounded-lg text-sm"
+              style={{backgroundColor: '#0a1f4e'}}
+            >
+              Add note
+            </button>
           </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Password</label>
-            <input
-              type="password"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-              placeholder="Strong password"
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Secret key</label>
-            <input
-              type="password"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-              placeholder="Admin secret key"
-              value={form.secretKey}
-              onChange={e => setForm({ ...form, secretKey: e.target.value })}
-            />
-          </div>
-          <button
-            onClick={handleSubmit}
-            disabled={loading || !form.name || !form.email || !form.password || !form.secretKey}
-            className="w-full py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-            style={{backgroundColor: '#0a1f4e'}}
-          >
-            {loading ? 'Creating...' : 'Create admin account'}
-          </button>
+          {notes.length === 0 ? (
+            <p className="text-sm text-gray-400">No notes yet. Add a note to keep track of conversations with this school.</p>
+          ) : (
+            <div className="space-y-2">
+              {notes.map((n, i) => (
+                <div key={i} className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 border border-gray-100">
+                  {n}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
