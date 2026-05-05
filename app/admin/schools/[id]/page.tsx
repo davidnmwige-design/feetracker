@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
 const PLANS = {
-  Starter: { monthly: 4500, setup: 15000, maxStudents: 300 },
-  Growth: { monthly: 6500, setup: 20000, maxStudents: 600 },
-  Premium: { monthly: 9000, setup: 25000, maxStudents: 1000 },
+  Starter: { monthly: 4500, setup: 15000 },
+  Growth: { monthly: 6500, setup: 20000 },
+  Premium: { monthly: 9000, setup: 25000 },
 }
 
 function getPlan(studentCount: number) {
@@ -47,7 +47,6 @@ export default function SchoolDetail() {
   const totalExpected = school.students?.reduce((sum: number, s: any) => sum + s.feeRequired, 0) || 0
   const totalCollected = school.students?.reduce((sum: number, s: any) =>
     sum + s.payments.reduce((p: number, pay: any) => p + pay.amount, 0), 0) || 0
-  const waLink = 'https://wa.me/254' + (school.user?.phone || '').replace(/^0/, '') 
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -88,7 +87,7 @@ export default function SchoolDetail() {
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-medium text-gray-900 mb-4">Subscription & usage</h2>
+            <h2 className="font-medium text-gray-900 mb-4">Subscription and usage</h2>
             <div className="space-y-3">
               <div className="flex justify-between py-1.5 border-b border-gray-50">
                 <span className="text-sm text-gray-500">Plan</span>
@@ -120,25 +119,21 @@ export default function SchoolDetail() {
 
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
           <h2 className="font-medium text-gray-900 mb-4">Quick actions</h2>
-         <div className="flex gap-3">
-  
-    
-     href={mailtoLink}
-    className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50"
-  >
-    Send email
-  </a>
-  
-   <a
-    href={waLink}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-white px-4 py-2 rounded-lg text-sm"
-    style={{backgroundColor: '#0a1f4e'}}
-  >
-    WhatsApp admin
-  </a>
-</div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => window.location.href = 'mailto:' + school.user?.email}
+              className="border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50"
+            >
+              Send email
+            </button>
+            <button
+              onClick={() => window.open('https://wa.me/?text=' + encodeURIComponent('Hi ' + school.user?.name + ', this is FeeTracker support.'), '_blank')}
+              className="text-white px-4 py-2 rounded-lg text-sm"
+              style={{backgroundColor: '#0a1f4e'}}
+            >
+              WhatsApp admin
+            </button>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
