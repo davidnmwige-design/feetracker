@@ -38,69 +38,66 @@ export default async function Dashboard() {
     include: { student: true }
   })
 
+  const collectionRate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">{school.name}</h1>
-            <p className="text-gray-500 text-sm">{school.currentTerm}</p>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/students" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
-              Students
-            </Link>
-            <Link href="/upload" className="text-white px-4 py-2 rounded-lg text-sm" style={{backgroundColor:'#0a1f4e'}}>
-              Upload MPESA
-            </Link>
-          </div>
+    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
+
+      <div style={{background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <div>
+          <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px'}}>{school.name}</h1>
+          <p style={{fontSize: '12px', color: '#94a3c8'}}>{school.currentTerm}</p>
+        </div>
+        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+          <span style={{background: '#c8a84b', color: '#0a1f4e', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700}}>{collectionRate}% collected</span>
+          <Link href="/students" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
+            Students
+          </Link>
+          <Link href="/upload" style={{background: '#c8a84b', color: '#0a1f4e', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, textDecoration: 'none'}}>
+            Upload MPESA
+          </Link>
+        </div>
+      </div>
+
+      <div style={{padding: '24px 32px'}}>
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px'}}>
+          {[
+            {label: 'Expected', value: 'KES ' + totalExpected.toLocaleString(), color: '#0f172a'},
+            {label: 'Collected', value: 'KES ' + totalCollected.toLocaleString(), color: '#0a1f4e'},
+            {label: 'Outstanding', value: 'KES ' + outstanding.toLocaleString(), color: '#c8a84b'},
+            {label: 'Zero payment', value: String(zeroPayment), color: '#e24b4a'},
+          ].map(card => (
+            <div key={card.label} style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px'}}>
+              <p style={{fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px'}}>{card.label}</p>
+              <p style={{fontSize: '22px', fontWeight: 700, color: card.color}}>{card.value}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Expected</p>
-            <p className="text-2xl font-semibold">KES {totalExpected.toLocaleString()}</p>
+        <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
+          <div style={{padding: '14px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <h2 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a'}}>Recent payments</h2>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Collected</p>
-            <p className="text-2xl font-semibold text-green-700">KES {totalCollected.toLocaleString()}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Outstanding</p>
-            <p className="text-2xl font-semibold text-amber-600">KES {outstanding.toLocaleString()}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Zero payment</p>
-            <p className="text-2xl font-semibold text-red-600">{zeroPayment}</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 mb-6">
-          <div className="p-4 border-b border-gray-100">
-            <h2 className="font-medium text-gray-900">Recent Payments</h2>
-          </div>
-          <table className="w-full text-sm">
+          <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px'}}>
             <thead>
-              <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
-                <th className="p-3">Time</th>
-                <th className="p-3">From</th>
-                <th className="p-3">Amount</th>
-                <th className="p-3">Matched to</th>
-                <th className="p-3">Status</th>
+              <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9'}}>
+                {['Time', 'From', 'Amount', 'Matched to', 'Status'].map(h => (
+                  <th key={h} style={{padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px'}}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {recentPayments.length === 0 && (
-                <tr><td colSpan={5} className="p-4 text-center text-gray-400">No payments yet. Upload an MPESA statement to get started.</td></tr>
+                <tr><td colSpan={5} style={{padding: '20px', textAlign: 'center' as const, color: '#94a3b8'}}>No payments yet. Upload an MPESA statement to get started.</td></tr>
               )}
               {recentPayments.map(payment => (
-                <tr key={payment.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="p-3 text-gray-500">{new Date(payment.paidAt).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</td>
-                  <td className="p-3">{payment.senderName || '—'}</td>
-                  <td className="p-3 font-medium">KES {payment.amount.toLocaleString()}</td>
-                  <td className="p-3">{payment.student ? payment.student.name + ' · ' + payment.student.class : '—'}</td>
-                  <td className="p-3">
-                    <span className={'text-xs px-2 py-1 rounded-full font-medium ' + (payment.matched ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')}>
+                <tr key={payment.id} style={{borderBottom: '1px solid #f8fafc'}}>
+                  <td style={{padding: '10px 14px', color: '#64748b'}}>{new Date(payment.paidAt).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</td>
+                  <td style={{padding: '10px 14px'}}>{payment.senderName || '—'}</td>
+                  <td style={{padding: '10px 14px', fontWeight: 600}}>KES {payment.amount.toLocaleString()}</td>
+                  <td style={{padding: '10px 14px', color: '#64748b'}}>{payment.student ? payment.student.name + ' · ' + payment.student.class : '—'}</td>
+                  <td style={{padding: '10px 14px'}}>
+                    <span style={{background: payment.matched ? '#e1f5ee' : '#fcebeb', color: payment.matched ? '#0a1f4e' : '#a32d2d', fontSize: '10px', padding: '3px 8px', borderRadius: '999px', fontWeight: 600}}>
                       {payment.matched ? 'Matched' : 'Review'}
                     </span>
                   </td>
