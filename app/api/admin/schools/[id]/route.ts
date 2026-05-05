@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -16,8 +16,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const school = await prisma.school.findUnique({
-    where: { id: Number(params.id) },
+  const { id } = await params
+const school = await prisma.school.findUnique({
+    where: { id: Number(id) },
     include: {
       user: true,
       students: {
