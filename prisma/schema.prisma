@@ -49,6 +49,7 @@ model Student {
   stream      String?
   parentName  String?
   parentPhone String?
+  parentEmail String?
   feeRequired Float     @default(0)
   tuitionFee  Float     @default(0)
   sportsFee   Float     @default(0)

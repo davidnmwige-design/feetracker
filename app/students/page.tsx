@@ -1,6 +1,144 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+
+function clearanceCertEmailHtml({
+  schoolName,
+  parentName,
+  studentName,
+  studentClass,
+  term,
+  feeRequired,
+  totalPaid,
+}: {
+  schoolName: string
+  parentName: string
+  studentName: string
+  studentClass: string
+  term: string
+  feeRequired: number
+  totalPaid: number
+}) {
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
+      <div style="background:#0a1f4e;padding:24px;text-align:center">
+        <h1 style="color:#c8a84b;margin:0;font-family:Georgia,serif;font-size:22px">FeeTracker</h1>
+        <p style="color:#94a3c8;margin:6px 0 0;font-size:12px">${schoolName}</p>
+      </div>
+      <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
+        <h2 style="color:#0f172a;font-size:18px;margin-bottom:4px">Fee Clearance Certificate</h2>
+        <p style="color:#c8a84b;font-size:12px;margin-bottom:20px">${term}</p>
+        <p style="color:#64748b;font-size:14px;line-height:1.6;margin-bottom:20px">
+          Dear ${parentName},<br>please find attached the fee clearance certificate for ${studentName}.
+        </p>
+        <div style="background:#f8f9fc;border-radius:8px;padding:20px;margin-bottom:20px">
+          <table style="width:100%;border-collapse:collapse">
+            <tr>
+              <td style="padding:8px 0;color:#64748b;font-size:13px">Student</td>
+              <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">${studentName}</td>
+            </tr>
+            <tr style="border-top:1px solid #e2e8f0">
+              <td style="padding:8px 0;color:#64748b;font-size:13px">Class</td>
+              <td style="text-align:right;font-size:13px">${studentClass}</td>
+            </tr>
+            <tr style="border-top:1px solid #e2e8f0">
+              <td style="padding:8px 0;color:#64748b;font-size:13px">Fee Required</td>
+              <td style="text-align:right;font-size:13px">KES ${feeRequired.toLocaleString()}</td>
+            </tr>
+            <tr style="border-top:1px solid #e2e8f0">
+              <td style="padding:8px 0;color:#64748b;font-size:13px">Total Paid</td>
+              <td style="text-align:right;font-weight:700;color:#0a1f4e;font-size:13px">KES ${totalPaid.toLocaleString()}</td>
+            </tr>
+            <tr style="border-top:1px solid #e2e8f0">
+              <td style="padding:8px 0;color:#64748b;font-size:13px">Balance</td>
+              <td style="text-align:right;font-weight:700;color:#0a7c3e;font-size:13px">KES 0 — CLEARED</td>
+            </tr>
+          </table>
+        </div>
+        <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0">
+          Please retain the attached PDF certificate for your records.
+        </p>
+      </div>
+      <div style="padding:16px;background:#f8f9fc;text-align:center">
+        <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker &middot; support@feetracker.co.ke</p>
+      </div>
+    </div>
+  `
+}
+
+async function buildCertificateDoc(data: any) {
+  const { jsPDF } = await import('jspdf')
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const w = 210
+  doc.setDrawColor(10, 31, 78)
+  doc.setLineWidth(4)
+  doc.line(20, 15, w - 20, 15)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(16)
+  doc.setTextColor(10, 31, 78)
+  doc.text(data.school.name.toUpperCase(), w / 2, 30, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(10)
+  doc.setTextColor(120, 120, 120)
+  doc.text(data.school.term, w / 2, 38, { align: 'center' })
+  doc.setDrawColor(200, 200, 200)
+  doc.setLineWidth(0.3)
+  doc.line(20, 44, w - 20, 44)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(13)
+  doc.setTextColor(10, 31, 78)
+  doc.text('FEE CLEARANCE CERTIFICATE', w / 2, 58, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(10)
+  doc.setTextColor(80, 80, 80)
+  doc.text('This certifies that the student below has settled all fee', w / 2, 70, { align: 'center' })
+  doc.text('obligations for the current academic term.', w / 2, 77, { align: 'center' })
+  const rows = [
+    ['Student Name', data.student.name],
+    ['Admission No', data.student.admNo],
+    ['Class', data.student.class + ' ' + data.student.stream],
+    ['Fee Required', 'KES ' + data.student.feeRequired.toLocaleString()],
+    ['Total Paid', 'KES ' + data.student.totalPaid.toLocaleString()],
+    ['Outstanding Balance', 'KES 0'],
+  ]
+  let y = 92
+  rows.forEach(([label, value]) => {
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(120, 120, 120)
+    doc.setFontSize(9)
+    doc.text(label, 40, y)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(20, 20, 20)
+    doc.setFontSize(10)
+    doc.text(value, 105, y)
+    doc.setDrawColor(230, 230, 230)
+    doc.setLineWidth(0.2)
+    doc.line(40, y + 3, w - 40, y + 3)
+    y += 14
+  })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(10, 31, 78)
+  doc.text('Status: CLEARED', w / 2, y + 10, { align: 'center' })
+  doc.setDrawColor(10, 31, 78)
+  doc.setLineWidth(0.4)
+  doc.line(40, 230, 90, 230)
+  doc.line(120, 230, 170, 230)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  doc.setTextColor(100, 100, 100)
+  doc.text('Bursar', 65, 236, { align: 'center' })
+  doc.text('Principal', 145, 236, { align: 'center' })
+  doc.text(data.school.name, 65, 242, { align: 'center' })
+  doc.text(data.school.name, 145, 242, { align: 'center' })
+  doc.setDrawColor(10, 31, 78)
+  doc.setLineWidth(4)
+  doc.line(20, 270, w - 20, 270)
+  doc.setFontSize(8)
+  doc.setTextColor(160, 160, 160)
+  doc.text('Generated by FeeTracker · ' + new Date().toLocaleDateString('en-KE'), w / 2, 278, { align: 'center' })
+  return doc
+}
 
 export default function Students() {
   const [students, setStudents] = useState<any[]>([])
@@ -10,98 +148,19 @@ export default function Students() {
   const [search, setSearch] = useState('')
   const [uploadError, setUploadError] = useState('')
   const [expandedFees, setExpandedFees] = useState<number | null>(null)
+  const [editingEmail, setEditingEmail] = useState<{ id: number; value: string } | null>(null)
+  const [emailModal, setEmailModal] = useState<{ student: any; certData: any } | null>(null)
+  const [emailInput, setEmailInput] = useState('')
+  const [emailSending, setEmailSending] = useState(false)
+  const [emailResult, setEmailResult] = useState<'sent' | 'error' | null>(null)
+  const [sentEmails, setSentEmails] = useState<Set<number>>(new Set())
+  const emailInputRef = useRef<HTMLInputElement>(null)
 
-  async function downloadCertificate(studentId: number, studentName: string) {
-    const res = await fetch('/api/certificate?studentId=' + studentId)
-    const data = await res.json()
-    const { jsPDF } = await import('jspdf')
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-    const w = 210
-    doc.setDrawColor(10, 31, 78)
-    doc.setLineWidth(4)
-    doc.line(20, 15, w - 20, 15)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(16)
-    doc.setTextColor(10, 31, 78)
-    doc.text(data.school.name.toUpperCase(), w / 2, 30, { align: 'center' })
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(10)
-    doc.setTextColor(120, 120, 120)
-    doc.text(data.school.term, w / 2, 38, { align: 'center' })
-    doc.setDrawColor(200, 200, 200)
-    doc.setLineWidth(0.3)
-    doc.line(20, 44, w - 20, 44)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(13)
-    doc.setTextColor(10, 31, 78)
-    doc.text('FEE CLEARANCE CERTIFICATE', w / 2, 58, { align: 'center' })
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(10)
-    doc.setTextColor(80, 80, 80)
-    doc.text('This certifies that the student below has settled all fee', w / 2, 70, { align: 'center' })
-    doc.text('obligations for the current academic term.', w / 2, 77, { align: 'center' })
-    const rows = [
-      ['Student Name', data.student.name],
-      ['Admission No', data.student.admNo],
-      ['Class', data.student.class + ' ' + data.student.stream],
-      ['Fee Required', 'KES ' + data.student.feeRequired.toLocaleString()],
-      ['Total Paid', 'KES ' + data.student.totalPaid.toLocaleString()],
-      ['Outstanding Balance', 'KES 0'],
-    ]
-    let y = 92
-    rows.forEach(([label, value]) => {
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(120, 120, 120)
-      doc.setFontSize(9)
-      doc.text(label, 40, y)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(20, 20, 20)
-      doc.setFontSize(10)
-      doc.text(value, 105, y)
-      doc.setDrawColor(230, 230, 230)
-      doc.setLineWidth(0.2)
-      doc.line(40, y + 3, w - 40, y + 3)
-      y += 14
-    })
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(11)
-    doc.setTextColor(10, 31, 78)
-    doc.text('Status: CLEARED', w / 2, y + 10, { align: 'center' })
-    doc.setDrawColor(10, 31, 78)
-    doc.setLineWidth(0.4)
-    doc.line(40, 230, 90, 230)
-    doc.line(120, 230, 170, 230)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(9)
-    doc.setTextColor(100, 100, 100)
-    doc.text('Bursar', 65, 236, { align: 'center' })
-    doc.text('Principal', 145, 236, { align: 'center' })
-    doc.text(data.school.name, 65, 242, { align: 'center' })
-    doc.text(data.school.name, 145, 242, { align: 'center' })
-    doc.setDrawColor(10, 31, 78)
-    doc.setLineWidth(4)
-    doc.line(20, 270, w - 20, 270)
-    doc.setFontSize(8)
-    doc.setTextColor(160, 160, 160)
-    const dateStr = new Date().toLocaleDateString('en-KE')
-    doc.text('Generated by FeeTracker · ' + dateStr, w / 2, 278, { align: 'center' })
-    doc.save(studentName.replace(/\s+/g, '_') + '_clearance.pdf')
-    return { data }
-  }
-
-  function shareViaWhatsApp(student: any, data: any) {
-    const msg = `Dear ${student.parentName || 'Parent'}, this is to confirm that ${student.name} (${student.class} ${student.stream || ''}) has been CLEARED of all fee obligations for the current term at ${data.school.name}. Total paid: KES ${data.student.totalPaid.toLocaleString()}. Please retain this message as your clearance confirmation. - FeeTracker`
-    const phone = student.parentPhone
-      ? '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '')
-      : ''
-    if (phone) {
-      window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank')
-    }
-  }
+  useEffect(() => { fetchStudents() }, [])
 
   useEffect(() => {
-    fetchStudents()
-  }, [])
+    if (emailModal) setTimeout(() => emailInputRef.current?.focus(), 50)
+  }, [emailModal])
 
   async function fetchStudents() {
     setLoading(true)
@@ -129,10 +188,95 @@ export default function Students() {
     setUploading(false)
   }
 
+  async function downloadCertificate(studentId: number, studentName: string) {
+    const res = await fetch('/api/certificate?studentId=' + studentId)
+    const data = await res.json()
+    const doc = await buildCertificateDoc(data)
+    doc.save(studentName.replace(/\s+/g, '_') + '_clearance.pdf')
+    return { data }
+  }
+
+  function shareViaWhatsApp(student: any, data: any) {
+    const msg = `Dear ${student.parentName || 'Parent'}, this is to confirm that ${student.name} (${student.class} ${student.stream || ''}) has been CLEARED of all fee obligations for the current term at ${data.school.name}. Total paid: KES ${data.student.totalPaid.toLocaleString()}. Please retain this message as your clearance confirmation. - FeeTracker`
+    const phone = student.parentPhone
+      ? '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '')
+      : ''
+    if (phone) window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank')
+  }
+
+  async function openEmailModal(student: any) {
+    const res = await fetch('/api/certificate?studentId=' + student.id)
+    const certData = await res.json()
+    setEmailModal({ student, certData })
+    setEmailInput(student.parentEmail || '')
+    setEmailResult(null)
+  }
+
+  async function sendCertificateEmail() {
+    if (!emailModal || !emailInput.trim()) return
+    setEmailSending(true)
+    setEmailResult(null)
+    try {
+      const doc = await buildCertificateDoc(emailModal.certData)
+      const pdfBase64 = doc.output('datauristring').split(',')[1]
+      const { certData, student } = emailModal
+      const html = clearanceCertEmailHtml({
+        schoolName: certData.school.name,
+        parentName: student.parentName || 'Parent',
+        studentName: student.name,
+        studentClass: `${student.class} ${student.stream || ''}`.trim(),
+        term: certData.school.term,
+        feeRequired: certData.student.feeRequired,
+        totalPaid: certData.student.totalPaid,
+      })
+      const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: emailInput.trim(),
+          subject: `Fee Clearance Certificate — ${student.name} — ${certData.school.term}`,
+          html,
+          pdfBase64,
+          pdfFilename: student.name.replace(/\s+/g, '_') + '_clearance.pdf',
+        }),
+      })
+      if (res.ok) {
+        setEmailResult('sent')
+        setSentEmails(prev => new Set([...prev, student.id]))
+        if (emailInput.trim() !== student.parentEmail) {
+          await fetch('/api/students', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId: student.id, parentEmail: emailInput.trim() }),
+          })
+          setStudents(prev => prev.map(s => s.id === student.id ? { ...s, parentEmail: emailInput.trim() } : s))
+        }
+        setTimeout(() => { setEmailModal(null); setEmailResult(null) }, 2000)
+      } else {
+        setEmailResult('error')
+      }
+    } catch {
+      setEmailResult('error')
+    }
+    setEmailSending(false)
+  }
+
+  async function saveEmail(studentId: number, email: string) {
+    const cleaned = email.trim().toLowerCase()
+    await fetch('/api/students', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId, parentEmail: cleaned }),
+    })
+    setStudents(prev => prev.map(s => s.id === studentId ? { ...s, parentEmail: cleaned || null } : s))
+    setEditingEmail(null)
+  }
+
   const filtered = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     (s.admNo || '').toLowerCase().includes(search.toLowerCase()) ||
-    (s.class || '').toLowerCase().includes(search.toLowerCase())
+    (s.class || '').toLowerCase().includes(search.toLowerCase()) ||
+    (s.parentEmail || '').toLowerCase().includes(search.toLowerCase())
   )
 
   function hasFeeBreakdown(s: any) {
@@ -169,7 +313,7 @@ export default function Students() {
         <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '16px'}}>
           <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Import students</h2>
           <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '4px'}}>
-            CSV columns: name, admNo, class, stream, feeRequired, parentName, parentPhone
+            CSV columns: name, admNo, class, stream, feeRequired, parentName, parentPhone, <strong>Parent Email</strong>
           </p>
           <p style={{fontSize: '11px', color: '#94a3b8', marginBottom: '16px'}}>
             Optional fee breakdown columns: <em>Tuition Fee, Sports Fee, Clubs Fee, Other Fee</em> — if provided, feeRequired is calculated as their sum.
@@ -205,10 +349,10 @@ export default function Students() {
             <h2 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap'}}>All students</h2>
             <input
               type="text"
-              placeholder="Search by name, admission no..."
+              placeholder="Search by name, admission no, email..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', width: '240px', outline: 'none'}}
+              style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', width: '260px', outline: 'none'}}
             />
           </div>
 
@@ -223,7 +367,7 @@ export default function Students() {
               <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px'}}>
                 <thead>
                   <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9'}}>
-                    {['Name', 'Adm No', 'Class', 'Fee Required', 'Paid', 'Balance', 'Status', ''].map(h => (
+                    {['Name', 'Adm No', 'Class', 'Fee Required', 'Paid', 'Balance', 'Status', 'Parent Email', ''].map(h => (
                       <th key={h} style={{padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap'}}>{h}</th>
                     ))}
                   </tr>
@@ -234,6 +378,7 @@ export default function Students() {
                     const balance = student.feeRequired - paid
                     const cleared = balance <= 0
                     const showFees = expandedFees === student.id
+                    const isEditingEmail = editingEmail?.id === student.id
                     return (
                       <>
                         <tr key={student.id} style={{borderBottom: showFees ? 'none' : '1px solid #f8fafc'}}>
@@ -264,9 +409,33 @@ export default function Students() {
                               {cleared ? 'Cleared' : paid > 0 ? 'Partial' : 'Unpaid'}
                             </span>
                           </td>
+                          <td style={{padding: '10px 14px', minWidth: '180px'}}>
+                            {isEditingEmail ? (
+                              <input
+                                type="email"
+                                value={editingEmail!.value}
+                                onChange={e => setEditingEmail({ id: student.id, value: e.target.value })}
+                                onBlur={() => saveEmail(student.id, editingEmail!.value)}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') saveEmail(student.id, editingEmail!.value)
+                                  if (e.key === 'Escape') setEditingEmail(null)
+                                }}
+                                autoFocus
+                                style={{border: '1px solid #c8a84b', borderRadius: '4px', padding: '3px 6px', fontSize: '12px', outline: 'none', width: '180px'}}
+                              />
+                            ) : (
+                              <span
+                                onClick={() => setEditingEmail({ id: student.id, value: student.parentEmail || '' })}
+                                title="Click to edit"
+                                style={{cursor: 'text', color: student.parentEmail ? '#0a1f4e' : '#94a3b8', fontSize: '12px', display: 'block'}}
+                              >
+                                {student.parentEmail || '+ add email'}
+                              </span>
+                            )}
+                          </td>
                           <td style={{padding: '10px 14px'}}>
                             {cleared && (
-                              <div style={{display: 'flex', gap: '6px'}}>
+                              <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap' as const}}>
                                 <button
                                   onClick={async () => {
                                     const result = await downloadCertificate(student.id, student.name)
@@ -276,14 +445,20 @@ export default function Students() {
                                 >
                                   Certificate
                                 </button>
+                                <button
+                                  onClick={() => openEmailModal(student)}
+                                  style={{fontSize: '11px', color: sentEmails.has(student.id) ? '#0a7c3e' : '#0a1f4e', background: 'none', border: '1px solid ' + (sentEmails.has(student.id) ? '#0a7c3e' : '#0a1f4e'), padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap'}}
+                                >
+                                  {sentEmails.has(student.id) ? '✓ Sent' : 'Send via email'}
+                                </button>
                               </div>
                             )}
                           </td>
                         </tr>
                         {showFees && hasFeeBreakdown(student) && (
                           <tr key={student.id + '-fees'} style={{borderBottom: '1px solid #f8fafc', background: '#fafbfc'}}>
-                            <td colSpan={8} style={{padding: '0 14px 12px 28px'}}>
-                              <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap'}}>
+                            <td colSpan={9} style={{padding: '0 14px 12px 28px'}}>
+                              <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap' as const}}>
                                 {student.tuitionFee > 0 && <span style={{fontSize: '11px', color: '#64748b'}}>Tuition: <strong>KES {student.tuitionFee.toLocaleString()}</strong></span>}
                                 {student.sportsFee > 0 && <span style={{fontSize: '11px', color: '#64748b'}}>Sports: <strong>KES {student.sportsFee.toLocaleString()}</strong></span>}
                                 {student.clubsFee > 0 && <span style={{fontSize: '11px', color: '#64748b'}}>Clubs: <strong>KES {student.clubsFee.toLocaleString()}</strong></span>}
@@ -301,6 +476,49 @@ export default function Students() {
           )}
         </div>
       </div>
+
+      {emailModal && (
+        <div
+          style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000}}
+          onClick={e => { if (e.target === e.currentTarget) { setEmailModal(null); setEmailResult(null) } }}
+        >
+          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', width: '400px', maxWidth: '92vw'}}>
+            <h3 style={{fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Send certificate via email</h3>
+            <p style={{fontSize: '12px', color: '#64748b', marginBottom: '20px'}}>{emailModal.student.name} · {emailModal.certData.school.term}</p>
+            <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '6px'}}>Parent email address</label>
+            <input
+              ref={emailInputRef}
+              type="email"
+              value={emailInput}
+              onChange={e => setEmailInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') sendCertificateEmail() }}
+              placeholder="parent@example.com"
+              style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '9px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
+            />
+            {emailResult === 'sent' && (
+              <p style={{fontSize: '12px', color: '#0a7c3e', marginTop: '12px', fontWeight: 600}}>Certificate sent successfully!</p>
+            )}
+            {emailResult === 'error' && (
+              <p style={{fontSize: '12px', color: '#e24b4a', marginTop: '12px'}}>Failed to send. Check your email settings in the environment variables.</p>
+            )}
+            <div style={{display: 'flex', gap: '8px', marginTop: '20px', justifyContent: 'flex-end'}}>
+              <button
+                onClick={() => { setEmailModal(null); setEmailResult(null) }}
+                style={{padding: '8px 16px', borderRadius: '6px', fontSize: '13px', background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer', color: '#64748b'}}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendCertificateEmail}
+                disabled={emailSending || !emailInput.trim()}
+                style={{padding: '8px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, background: emailSending || !emailInput.trim() ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', cursor: emailSending || !emailInput.trim() ? 'not-allowed' : 'pointer'}}
+              >
+                {emailSending ? 'Sending...' : 'Send certificate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

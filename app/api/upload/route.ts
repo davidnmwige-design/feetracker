@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { sendEmail, paymentConfirmationHtml } from '@/lib/email'
 import * as XLSX from 'xlsx'
 
 function parseRow(row: any, bankType: string): {
@@ -138,6 +139,21 @@ export async function POST(req: Request) {
         ? '254' + matched.parentPhone.replace(/\s/g, '').replace(/^0/, '')
         : ''
       results.notifications.push({ msg, phone })
+
+      if (matched.parentEmail) {
+        sendEmail({
+          to: matched.parentEmail,
+          subject: `Payment received for ${matched.name} — ${user.school!.name}`,
+          html: paymentConfirmationHtml({
+            schoolName: user.school!.name,
+            parentName: matched.parentName || 'Parent',
+            studentName: matched.name,
+            studentClass: `${matched.class} ${matched.stream || ''}`.trim(),
+            amount,
+            balance,
+          }),
+        }).catch(err => console.error('Payment email failed:', err))
+      }
     } else {
       results.unmatched++
     }
