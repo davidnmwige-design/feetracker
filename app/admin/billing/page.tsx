@@ -6,6 +6,7 @@ const PLANS = {
   Starter: { monthly: 4500, setup: 15000, maxStudents: 300 },
   Growth: { monthly: 6500, setup: 20000, maxStudents: 600 },
   Premium: { monthly: 9000, setup: 25000, maxStudents: 1000 },
+  Enterprise: { monthly: 15000, setup: 35000, maxStudents: null },
 }
 
 export default function AdminBilling() {
@@ -174,7 +175,7 @@ export default function AdminBilling() {
                 const planName = getPlanName(school)
                 const plan = PLANS[planName as keyof typeof PLANS] || PLANS.Starter
                 const isPaid = paid[school.id] || false
-                const planColor = planName === 'Starter' ? 'bg-gray-100 text-gray-700' : planName === 'Growth' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                const planColor = planName === 'Starter' ? 'bg-gray-100 text-gray-700' : planName === 'Growth' ? 'bg-blue-100 text-blue-700' : planName === 'Premium' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
 
                 return (
                   <tr key={school.id} className="border-b border-gray-50 hover:bg-gray-50">

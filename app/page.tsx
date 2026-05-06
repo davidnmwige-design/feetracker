@@ -103,7 +103,7 @@ export default function Home() {
           <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>Pricing</div>
           <h2 style={{fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '6px', fontFamily: 'Georgia, serif'}}>Simple, honest pricing</h2>
           <p style={{fontSize: '12px', color: '#94a3c8', marginBottom: '28px'}}>Less than the cost of one hour of your bursar's time per day</p>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px'}}>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px'}}>
             {[
               {name: 'Starter', sub: 'Up to 300 students', price: '4,500', setup: '15,000', featured: false},
               {name: 'Growth', sub: '300 – 600 students', price: '6,500', setup: '20,000', featured: true},
@@ -125,6 +125,25 @@ export default function Home() {
                 </Link>
               </div>
             ))}
+
+            {/* Enterprise card */}
+            <div style={{background: '#0a1f4e', border: '2px solid rgba(200,168,75,0.5)', borderRadius: '8px', padding: '22px', position: 'relative' as const}}>
+              <div style={{position: 'absolute' as const, top: '-10px', left: '50%', transform: 'translateX(-50%)', background: '#c8a84b', color: '#0a1f4e', fontSize: '10px', padding: '3px 10px', borderRadius: '999px', fontWeight: 700, whiteSpace: 'nowrap' as const}}>
+                Top tier
+              </div>
+              <div style={{fontSize: '14px', fontWeight: 700, color: '#c8a84b', marginBottom: '3px'}}>Enterprise</div>
+              <div style={{fontSize: '11px', color: 'rgba(200,168,75,0.7)', marginBottom: '16px'}}>1,000+ students</div>
+              <div style={{fontSize: '24px', fontWeight: 700, color: '#c8a84b'}}>KES 15,000</div>
+              <div style={{fontSize: '11px', color: 'rgba(200,168,75,0.7)'}}>/month</div>
+              <div style={{fontSize: '11px', color: 'rgba(200,168,75,0.5)', marginBottom: '8px'}}>+ KES 35,000 setup fee</div>
+              <div style={{fontSize: '11px', color: '#94a3c8', marginBottom: '20px'}}>Priority support + dedicated onboarding</div>
+              <Link href="/signup" style={{display: 'block', textAlign: 'center' as const, padding: '9px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: '#c8a84b', color: '#0a1f4e', textDecoration: 'none'}}>
+                Get started
+              </Link>
+              <div style={{fontSize: '10px', color: 'rgba(148,163,200,0.8)', textAlign: 'center' as const, marginTop: '8px'}}>
+                Custom pricing available · Contact us
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     const schoolId = user.school.id
     const currentCount = (user.school as any)._count.students
     const planName = (user.school as any).currentPlan || 'Starter'
-    const planCap = planName === 'Growth' ? 600 : planName === 'Premium' ? 1000 : 300
+    const planCap = planName === 'Growth' ? 600 : planName === 'Premium' ? 1000 : planName === 'Enterprise' ? Infinity : 300
 
     const formData = await req.formData()
     const file = formData.get('file') as File

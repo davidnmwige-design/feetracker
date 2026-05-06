@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const requestedPlan = sanitize(body.requestedPlan || '', 50)
     const notes = sanitize(body.notes || '', 500)
 
-    if (!['Growth', 'Premium'].includes(requestedPlan)) {
+    if (!['Growth', 'Premium', 'Enterprise'].includes(requestedPlan)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-const PLAN_MONTHLY: Record<string, number> = { Starter: 4500, Growth: 6500, Premium: 9000 }
+const PLAN_MONTHLY: Record<string, number> = { Starter: 4500, Growth: 6500, Premium: 9000, Enterprise: 15000 }
 
 export default function AdminDashboard() {
   const [schools, setSchools] = useState<any[]>([])
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
               {schools.map(school => {
                 const studentCount = school._count?.students || 0
                 const plan = school.currentPlan || 'Starter'
-                const planColor = plan === 'Starter' ? 'bg-gray-100 text-gray-700' : plan === 'Growth' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                const planColor = plan === 'Starter' ? 'bg-gray-100 text-gray-700' : plan === 'Growth' ? 'bg-blue-100 text-blue-700' : plan === 'Premium' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
                 const status = studentCount === 0 ? 'No students' : 'Active'
                 const statusColor = studentCount === 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                 return (

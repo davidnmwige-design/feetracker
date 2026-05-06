@@ -2,6 +2,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+const PLAN_COLORS: Record<string, string> = {
+  Starter: '#64748b',
+  Growth: '#3b82f6',
+  Premium: '#f59e0b',
+  Enterprise: '#c8a84b',
+}
+
 export default function AdminAnalytics() {
   const [schools, setSchools] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,23 +52,18 @@ export default function AdminAnalytics() {
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="font-medium text-gray-900 mb-4">Schools by plan</h2>
-          <div className="space-y-2">
-            {['Starter', 'Growth', 'Premium'].map(plan => {
-              const count = schools.filter(s => {
-                const n = s._count?.students || 0
-                if (plan === 'Starter') return n <= 300
-                if (plan === 'Growth') return n > 300 && n <= 600
-                return n > 600
-              }).length
+          <div className="space-y-3">
+            {['Starter', 'Growth', 'Premium', 'Enterprise'].map(plan => {
+              const count = schools.filter(s => (s.currentPlan || 'Starter') === plan).length
               const pct = totalSchools > 0 ? Math.round((count / totalSchools) * 100) : 0
               return (
                 <div key={plan}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-700">{plan}</span>
-                    <span className="text-gray-500">{count} schools ({pct}%)</span>
+                    <span className="font-medium" style={{ color: PLAN_COLORS[plan] }}>{plan}</span>
+                    <span className="text-gray-500">{count} school{count !== 1 ? 's' : ''} ({pct}%)</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="h-2 rounded-full" style={{ width: pct + '%', backgroundColor: '#0a1f4e' }} />
+                    <div className="h-2 rounded-full" style={{ width: pct + '%', backgroundColor: PLAN_COLORS[plan] }} />
                   </div>
                 </div>
               )

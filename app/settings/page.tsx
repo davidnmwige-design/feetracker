@@ -7,13 +7,14 @@ const TERMS = [
   'Term 1 2027', 'Term 2 2027', 'Term 3 2027',
 ]
 
-const PLAN_DETAILS: Record<string, { name: string; maxStudents: number; monthly: number; setup: number }> = {
+const PLAN_DETAILS: Record<string, { name: string; maxStudents: number | null; monthly: number; setup: number }> = {
   Starter: { name: 'Starter', maxStudents: 300, monthly: 4500, setup: 15000 },
   Growth: { name: 'Growth', maxStudents: 600, monthly: 6500, setup: 20000 },
   Premium: { name: 'Premium', maxStudents: 1000, monthly: 9000, setup: 25000 },
+  Enterprise: { name: 'Enterprise', maxStudents: null, monthly: 15000, setup: 35000 },
 }
 
-const PLAN_UPGRADES: Record<string, Array<{ name: string; maxStudents: number; monthly: number }>> = {
+const PLAN_UPGRADES: Record<string, Array<{ name: string; maxStudents: number | null; monthly: number }>> = {
   Starter: [
     { name: 'Growth', maxStudents: 600, monthly: 6500 },
     { name: 'Premium', maxStudents: 1000, monthly: 9000 },
@@ -21,7 +22,10 @@ const PLAN_UPGRADES: Record<string, Array<{ name: string; maxStudents: number; m
   Growth: [
     { name: 'Premium', maxStudents: 1000, monthly: 9000 },
   ],
-  Premium: [],
+  Premium: [
+    { name: 'Enterprise', maxStudents: null, monthly: 15000 },
+  ],
+  Enterprise: [],
 }
 
 export default function Settings() {
@@ -185,8 +189,9 @@ export default function Settings() {
     doc.text('DESCRIPTION', 24, tableY + 5.5)
     doc.text('AMOUNT', w - 24, tableY + 5.5, { align: 'right' })
 
+    const maxDesc = plan.maxStudents !== null ? `${plan.maxStudents} students max` : 'unlimited students'
     const items: [string, number][] = [
-      [plan.name + ' Plan — monthly subscription (' + plan.maxStudents + ' students max)', plan.monthly],
+      [plan.name + ' Plan — monthly subscription (' + maxDesc + ')', plan.monthly],
     ]
     if (isFirstInvoice) {
       items.push(['One-time platform setup fee', plan.setup])
@@ -259,16 +264,17 @@ export default function Settings() {
     const isFirstInvoice = terms.length <= 1
     const total = plan.monthly + (isFirstInvoice ? plan.setup : 0)
 
-    const msg = `*FeeTracker Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${plan.name} (up to ${plan.maxStudents} students)\n\n*Breakdown:*\n• ${plan.name} monthly subscription: KES ${plan.monthly.toLocaleString()}${isFirstInvoice ? `\n• One-time setup fee: KES ${plan.setup.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@feetracker.co.ke`
+    const planCapDesc = plan.maxStudents !== null ? `up to ${plan.maxStudents} students` : 'unlimited students'
+    const msg = `*FeeTracker Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${plan.name} (${planCapDesc})\n\n*Breakdown:*\n• ${plan.name} monthly subscription: KES ${plan.monthly.toLocaleString()}${isFirstInvoice ? `\n• One-time setup fee: KES ${plan.setup.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@feetracker.co.ke`
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank')
   }
 
   const currentPlan = school?.currentPlan || 'Starter'
   const planDetails = PLAN_DETAILS[currentPlan] || PLAN_DETAILS['Starter']
   const availableUpgrades = PLAN_UPGRADES[currentPlan] || []
-  const remaining = planDetails.maxStudents - studentCount
-  const progressPct = (studentCount / planDetails.maxStudents) * 100
-  const nearLimit = remaining <= 20
+  const remaining = planDetails.maxStudents !== null ? planDetails.maxStudents - studentCount : Infinity
+  const progressPct = planDetails.maxStudents !== null ? (studentCount / planDetails.maxStudents) * 100 : 0
+  const nearLimit = planDetails.maxStudents !== null && remaining <= 20
 
   return (
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
@@ -338,32 +344,37 @@ export default function Settings() {
                 </div>
                 <div style={{flex: 1, background: '#f8f9fc', borderRadius: '8px', padding: '14px'}}>
                   <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px'}}>Students</p>
-                  <p style={{fontSize: '17px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 2px'}}>{studentCount} / {planDetails.maxStudents}</p>
-                  <p style={{fontSize: '12px', color: '#64748b', margin: 0}}>enrolled</p>
+                  <p style={{fontSize: '17px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 2px'}}>
+                    {planDetails.maxStudents !== null ? `${studentCount} / ${planDetails.maxStudents}` : `${studentCount}`}
+                  </p>
+                  <p style={{fontSize: '12px', color: '#64748b', margin: 0}}>{planDetails.maxStudents !== null ? 'enrolled' : 'enrolled (unlimited)'}</p>
                 </div>
               </div>
 
-              <div style={{marginBottom: nearLimit ? '8px' : '0'}}>
-                <div style={{background: '#f1f5f9', borderRadius: '4px', height: '8px', overflow: 'hidden'}}>
-                  <div style={{
-                    background: remaining <= 0 ? '#ef4444' : nearLimit ? '#f59e0b' : '#0a1f4e',
-                    width: Math.min(progressPct, 100) + '%',
-                    height: '100%',
-                    borderRadius: '4px',
-                    transition: 'width 0.3s ease'
-                  }} />
-                </div>
-              </div>
-
-              {nearLimit && remaining > 0 && (
-                <p style={{fontSize: '12px', color: '#d97706', marginTop: '8px', margin: '8px 0 0'}}>
-                  ⚠ Only {remaining} student slot{remaining === 1 ? '' : 's'} remaining. Consider upgrading your plan.
-                </p>
-              )}
-              {remaining <= 0 && (
-                <p style={{fontSize: '12px', color: '#ef4444', marginTop: '8px', margin: '8px 0 0'}}>
-                  Student limit reached. Upgrade your plan to add more students.
-                </p>
+              {planDetails.maxStudents !== null && (
+                <>
+                  <div style={{marginBottom: nearLimit ? '8px' : '0'}}>
+                    <div style={{background: '#f1f5f9', borderRadius: '4px', height: '8px', overflow: 'hidden'}}>
+                      <div style={{
+                        background: remaining <= 0 ? '#ef4444' : nearLimit ? '#f59e0b' : '#0a1f4e',
+                        width: Math.min(progressPct, 100) + '%',
+                        height: '100%',
+                        borderRadius: '4px',
+                        transition: 'width 0.3s ease'
+                      }} />
+                    </div>
+                  </div>
+                  {nearLimit && remaining > 0 && (
+                    <p style={{fontSize: '12px', color: '#d97706', margin: '8px 0 0'}}>
+                      ⚠ Only {remaining} student slot{remaining === 1 ? '' : 's'} remaining. Consider upgrading your plan.
+                    </p>
+                  )}
+                  {remaining <= 0 && (
+                    <p style={{fontSize: '12px', color: '#ef4444', margin: '8px 0 0'}}>
+                      Student limit reached. Upgrade your plan to add more students.
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
@@ -448,7 +459,10 @@ export default function Settings() {
                   <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '22px'}}>✓</div>
                   <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0a7c3e', marginBottom: '8px'}}>Request Submitted!</h3>
                   <p style={{fontSize: '13px', color: '#64748b', lineHeight: 1.6}}>
-                    Your upgrade request has been submitted. We will contact you at <strong>{upgradeEmail}</strong> or via WhatsApp <strong>+254 746 353 411</strong> to complete the upgrade.
+                    {requestedPlan === 'Enterprise'
+                      ? 'Our team will contact you within 24 hours to discuss your Enterprise plan and complete the setup.'
+                      : <>Your upgrade request has been submitted. We will contact you at <strong>{upgradeEmail}</strong> or via WhatsApp <strong>+254 746 353 411</strong> to complete the upgrade.</>
+                    }
                   </p>
                 </div>
                 <button
@@ -476,7 +490,9 @@ export default function Settings() {
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                       <div>
                         <p style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0}}>{plan.name}</p>
-                        <p style={{fontSize: '12px', color: '#64748b', margin: '2px 0 0'}}>Up to {plan.maxStudents} students</p>
+                        <p style={{fontSize: '12px', color: '#64748b', margin: '2px 0 0'}}>
+                    {plan.maxStudents !== null ? `Up to ${plan.maxStudents} students` : '1,000+ students (unlimited)'}
+                  </p>
                       </div>
                       <div style={{textAlign: 'right'}}>
                         <p style={{fontSize: '14px', fontWeight: 700, color: '#0a1f4e', margin: 0}}>KES {plan.monthly.toLocaleString()}</p>
