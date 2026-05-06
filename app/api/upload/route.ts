@@ -3,9 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import * as XLSX from 'xlsx'
 
-type BankType = 'mpesa' | 'equity' | 'kcb' | 'coop' | 'ncba'
-
-function parseRow(row: any, bankType: BankType): {
+function parseRow(row: any, bankType: string): {
   amount: number
   senderPhone: string
   senderName: string
@@ -41,12 +39,19 @@ function parseRow(row: any, bankType: BankType): {
         mpesaRef: String(row['Transaction Reference'] || row['Ref No'] || row['reference'] || ''),
       }
     case 'mpesa':
-    default:
       return {
         amount: Number(row['Amount'] || row['amount'] || row['Paid In'] || row['Credit'] || 0),
         senderPhone: String(row['Phone'] || row['phone'] || row['MSISDN'] || ''),
         senderName: String(row['Name'] || row['name'] || row['Sender'] || ''),
         mpesaRef: String(row['Receipt No'] || row['mpesaRef'] || row['Transaction ID'] || row['Reference'] || ''),
+      }
+    default:
+      // Generic fallback for all other Kenyan banks
+      return {
+        amount: Number(row['Credit'] || row['CR Amount'] || row['Cr Amount'] || row['Amount'] || row['credit'] || row['amount'] || 0),
+        senderPhone: '',
+        senderName: String(row['Description'] || row['Narration'] || row['Particulars'] || row['Sender'] || row['description'] || ''),
+        mpesaRef: String(row['Reference'] || row['Ref No'] || row['Transaction ID'] || row['Transaction Reference'] || row['Cheque No'] || row['reference'] || ''),
       }
   }
 }
@@ -69,7 +74,7 @@ export async function POST(req: Request) {
   const schoolId = user.school.id
   const formData = await req.formData()
   const file = formData.get('file') as File
-  const bankType = (formData.get('bankType') as BankType) || 'mpesa'
+  const bankType = String(formData.get('bankType') || 'mpesa')
 
   const buffer = await file.arrayBuffer()
   const workbook = XLSX.read(buffer, { type: 'array' })
