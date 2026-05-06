@@ -18,15 +18,16 @@ model User {
 }
 
 model School {
-  id          Int       @id @default(autoincrement())
-  name        String
-  paybill     String?
-  currentTerm String    @default("Term 1 2026")
-  createdAt   DateTime  @default(now())
-  userId      Int       @unique
-  user        User      @relation(fields: [userId], references: [id])
-  students    Student[]
-  terms       Term[]
+  id            Int       @id @default(autoincrement())
+  name          String
+  paybill       String?
+  currentTerm   String    @default("Term 1 2026")
+  createdAt     DateTime  @default(now())
+  trialEndsAt   DateTime?
+  userId        Int       @unique
+  user          User      @relation(fields: [userId], references: [id])
+  students      Student[]
+  terms         Term[]
 }
 
 model Term {
@@ -48,6 +49,10 @@ model Student {
   parentName  String?
   parentPhone String?
   feeRequired Float     @default(0)
+  tuitionFee  Float     @default(0)
+  sportsFee   Float     @default(0)
+  clubsFee    Float     @default(0)
+  otherFee    Float     @default(0)
   createdAt   DateTime  @default(now())
   schoolId    Int
   school      School    @relation(fields: [schoolId], references: [id])
@@ -69,4 +74,13 @@ model Payment {
   termId      Int?
   student     Student? @relation(fields: [studentId], references: [id])
   term        Term?    @relation(fields: [termId], references: [id])
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

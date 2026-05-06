@@ -1,64 +1,152 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+
+const BANK_OPTIONS = [
+  { value: 'mpesa', label: 'MPESA (Safaricom)' },
+  { value: 'equity', label: 'Equity Bank' },
+  { value: 'kcb', label: 'KCB Bank' },
+  { value: 'coop', label: 'Co-op Bank' },
+  { value: 'ncba', label: 'NCBA Bank' },
+]
 
 export default function Upload() {
   const [file, setFile] = useState<File | null>(null)
+  const [bankType, setBankType] = useState('mpesa')
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<any>(null)
+  const [hovered, setHovered] = useState(false)
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const [notifIndex, setNotifIndex] = useState(0)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    if (countdown === null) return
+    if (countdown === 0) {
+      sendNextNotification()
+      return
+    }
+    countdownRef.current = setInterval(() => {
+      setCountdown(c => {
+        if (c === null || c <= 1) {
+          clearInterval(countdownRef.current!)
+          return 0
+        }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(countdownRef.current!)
+  }, [countdown])
+
+  function sendNextNotification() {
+    if (!results?.notifications) return
+    results.notifications.forEach((n: any, i: number) => {
+      if (!n.phone) return
+      setTimeout(() => {
+        window.open('https://wa.me/' + n.phone + '?text=' + encodeURIComponent(n.msg), '_blank')
+      }, i * 1500)
+    })
+    setCountdown(null)
+  }
+
+  function cancelNotifications() {
+    clearInterval(countdownRef.current!)
+    setCountdown(null)
+  }
 
   async function handleUpload() {
     if (!file) return
     setLoading(true)
+    setResults(null)
     const formData = new FormData()
     formData.append('file', file)
+    formData.append('bankType', bankType)
 
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData
-    })
+    const res = await fetch('/api/upload', { method: 'POST', body: formData })
     const data = await res.json()
     setResults(data)
     setLoading(false)
+
+    if (data.notifications?.length > 0 && data.notifications.some((n: any) => n.phone)) {
+      setNotifIndex(0)
+      setCountdown(5)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">← Back</Link>
-          <h1 className="text-2xl font-semibold text-gray-900">Upload MPESA Statement</h1>
-        </div>
+    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
+      <style>{`
+        @media (max-width: 640px) {
+          .upl-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
+          .upl-content { padding: 16px !important; max-width: 100% !important; }
+          .upl-results-grid { grid-template-columns: repeat(1, 1fr) !important; }
+        }
+      `}</style>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
-          <h2 className="font-medium text-gray-900 mb-1">How to get your MPESA statement</h2>
-          <ol className="text-sm text-gray-500 list-decimal list-inside space-y-1 mb-6">
-            <li>Log into the Safaricom Business portal</li>
-            <li>Go to Transactions and select your date range</li>
-            <li>Download as Excel or CSV</li>
-            <li>Upload that file below</li>
-          </ol>
+      <div className="upl-header" style={{background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <div>
+          <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px'}}>Upload Statement</h1>
+          <p style={{fontSize: '12px', color: '#94a3c8'}}>Match transactions to student fee records</p>
+        </div>
+        <Link href="/dashboard" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
+          ← Dashboard
+        </Link>
+      </div>
+
+      <div className="upl-content" style={{padding: '24px 32px', maxWidth: '640px'}}>
+        <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+
+          <div style={{marginBottom: '20px'}}>
+            <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '8px'}}>What type of statement are you uploading?</label>
+            <select
+              value={bankType}
+              onChange={e => setBankType(e.target.value)}
+              style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '9px 12px', fontSize: '13px', color: '#0f172a', background: '#fff', outline: 'none'}}
+            >
+              {BANK_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {bankType === 'mpesa' && (
+            <div style={{background: '#f8f9fc', borderRadius: '6px', padding: '12px 14px', marginBottom: '20px', fontSize: '12px', color: '#64748b', borderLeft: '3px solid #c8a84b'}}>
+              <strong style={{color: '#0f172a'}}>How to get your MPESA statement:</strong> Log into the Safaricom Business portal → Transactions → select date range → Download as Excel or CSV.
+            </div>
+          )}
+
+          {bankType !== 'mpesa' && (
+            <div style={{background: '#f8f9fc', borderRadius: '6px', padding: '12px 14px', marginBottom: '20px', fontSize: '12px', color: '#64748b', borderLeft: '3px solid #c8a84b'}}>
+              <strong style={{color: '#0f172a'}}>Note:</strong> For bank statements, phone-number matching is not available. Unmatched payments can be manually assigned on the Unmatched Payments page.
+            </div>
+          )}
 
           <div
-            className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-green-400 transition-colors"
+            style={{
+              border: '2px dashed ' + (file ? '#0a1f4e' : hovered ? '#c8a84b' : '#e2e8f0'),
+              borderRadius: '8px', padding: '32px', textAlign: 'center', cursor: 'pointer',
+              background: file ? '#f0f4f9' : '#fafbfc', transition: 'border-color 0.2s'
+            }}
             onClick={() => document.getElementById('fileInput')?.click()}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
           >
             <input
               id="fileInput"
               type="file"
               accept=".xlsx,.xls,.csv"
-              className="hidden"
+              style={{display: 'none'}}
               onChange={e => setFile(e.target.files?.[0] || null)}
             />
             {file ? (
               <div>
-                <p className="font-medium text-green-700">{file.name}</p>
-                <p className="text-sm text-gray-400 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+                <p style={{fontWeight: 600, color: '#0a1f4e', fontSize: '14px'}}>{file.name}</p>
+                <p style={{fontSize: '12px', color: '#94a3b8', marginTop: '4px'}}>{(file.size / 1024).toFixed(1)} KB</p>
               </div>
             ) : (
               <div>
-                <p className="text-gray-500">Click to select your MPESA statement</p>
-                <p className="text-sm text-gray-400 mt-1">Supports .xlsx, .xls, .csv</p>
+                <p style={{color: '#64748b', fontSize: '14px'}}>Click to select your statement file</p>
+                <p style={{fontSize: '12px', color: '#94a3b8', marginTop: '4px'}}>Supports .xlsx, .xls, .csv</p>
               </div>
             )}
           </div>
@@ -66,53 +154,82 @@ export default function Upload() {
           <button
             onClick={handleUpload}
             disabled={!file || loading}
-            className="w-full mt-4 bg-green-700 text-white py-2 rounded-lg text-sm hover:bg-green-800 disabled:opacity-50"
+            style={{
+              width: '100%', marginTop: '16px',
+              background: (!file || loading) ? '#94a3b8' : '#0a1f4e',
+              color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+              border: 'none', cursor: (!file || loading) ? 'not-allowed' : 'pointer'
+            }}
           >
             {loading ? 'Processing...' : 'Upload and match payments'}
           </button>
         </div>
 
         {results && (
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-medium text-gray-900 mb-4">Upload Results</h2>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <p className="text-2xl font-semibold text-gray-900">{results.total}</p>
-                <p className="text-xs text-gray-400 mt-1">Total transactions</p>
+          <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px'}}>
+            <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '16px'}}>Upload Results</h2>
+            <div className="upl-results-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px'}}>
+              <div style={{background: '#f8f9fc', borderRadius: '6px', padding: '12px', textAlign: 'center', border: '1px solid #e2e8f0'}}>
+                <p style={{fontSize: '24px', fontWeight: 700, color: '#0f172a'}}>{results.total}</p>
+                <p style={{fontSize: '10px', color: '#94a3b8', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Total</p>
               </div>
-              <div className="bg-green-50 rounded-lg p-3 text-center">
-                <p className="text-2xl font-semibold text-green-700">{results.matched}</p>
-                <p className="text-xs text-gray-400 mt-1">Matched</p>
+              <div style={{background: '#f0f4f9', borderRadius: '6px', padding: '12px', textAlign: 'center', border: '1px solid #d4ddf0'}}>
+                <p style={{fontSize: '24px', fontWeight: 700, color: '#0a1f4e'}}>{results.matched}</p>
+                <p style={{fontSize: '10px', color: '#94a3b8', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Matched</p>
               </div>
-              <div className="bg-red-50 rounded-lg p-3 text-center">
-                <p className="text-2xl font-semibold text-red-600">{results.unmatched}</p>
-                <p className="text-xs text-gray-400 mt-1">Needs review</p>
+              <div style={{background: '#fcebeb', borderRadius: '6px', padding: '12px', textAlign: 'center', border: '1px solid #f5c6c6'}}>
+                <p style={{fontSize: '24px', fontWeight: 700, color: '#e24b4a'}}>{results.unmatched}</p>
+                <p style={{fontSize: '10px', color: '#94a3b8', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Needs review</p>
               </div>
             </div>
 
-            {results.notifications.length > 0 && (
+            {results.notifications?.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-2">WhatsApp notifications preview</h3>
-                <div className="space-y-2">
-                  {results.notifications.map((msg: string, i: number) => (
-                    <div key={i} className="bg-green-50 border-l-4 border-green-600 p-3 text-sm text-gray-700 rounded">
-                      {msg}
+                {countdown !== null && countdown > 0 && (
+                  <div style={{background: '#f0f4f9', border: '1px solid #c8d8f0', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                    <div>
+                      <p style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', marginBottom: '2px'}}>
+                        Sending WhatsApp to {results.notifications.filter((n: any) => n.phone).length} parents in {countdown}s...
+                      </p>
+                      <p style={{fontSize: '11px', color: '#64748b'}}>Notifications will open automatically</p>
+                    </div>
+                    <button
+                      onClick={cancelNotifications}
+                      style={{background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '6px 12px', borderRadius: '5px', fontSize: '12px', cursor: 'pointer'}}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                <h3 style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px'}}>WhatsApp notifications</h3>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                  {results.notifications.map((n: any, i: number) => (
+                    <div key={i} style={{background: '#f8f9fc', borderLeft: '3px solid #c8a84b', padding: '10px 12px', borderRadius: '0 4px 4px 0', fontSize: '12px', color: '#64748b'}}>
+                      {n.msg}
                     </div>
                   ))}
                 </div>
+                {countdown === null && (
+                  <button
+                    onClick={() => setCountdown(3)}
+                    style={{marginTop: '12px', background: '#25D366', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', width: '100%'}}
+                  >
+                    Send WhatsApp to all {results.notifications.filter((n: any) => n.phone).length} parents
+                  </button>
+                )}
               </div>
             )}
 
-           <div className="flex gap-4 justify-center mt-4">
-  <Link href="/dashboard" className="text-green-700 text-sm hover:underline">
-    View dashboard →
-  </Link>
-  {results.unmatched > 0 && (
-    <Link href="/unmatched" className="text-red-600 text-sm hover:underline">
-      Review {results.unmatched} unmatched payments →
-    </Link>
-  )}
-</div>
+            <div style={{display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '16px'}}>
+              <Link href="/dashboard" style={{color: '#0a1f4e', fontSize: '13px', fontWeight: 600, textDecoration: 'none'}}>
+                View dashboard →
+              </Link>
+              {results.unmatched > 0 && (
+                <Link href="/unmatched" style={{color: '#e24b4a', fontSize: '13px', fontWeight: 600, textDecoration: 'none'}}>
+                  Review {results.unmatched} unmatched →
+                </Link>
+              )}
+            </div>
           </div>
         )}
       </div>

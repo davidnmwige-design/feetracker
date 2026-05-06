@@ -20,6 +20,10 @@ export default async function Dashboard() {
 
   const school = user.school
 
+  if (school.trialEndsAt && new Date() > school.trialEndsAt) {
+    redirect('/trial-expired')
+  }
+
   const students = await prisma.student.findMany({
     where: { schoolId: school.id },
     include: { payments: true }
@@ -42,13 +46,22 @@ export default async function Dashboard() {
 
   return (
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
+      <style>{`
+        @media (max-width: 640px) {
+          .dash-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
+          .dash-header-actions { flex-wrap: wrap; }
+          .dash-content { padding: 16px !important; }
+          .dash-stats { grid-template-columns: repeat(2, 1fr) !important; }
+          .dash-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        }
+      `}</style>
 
-      <div style={{background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+      <div className="dash-header" style={{background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
         <div>
           <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px'}}>{school.name}</h1>
           <p style={{fontSize: '12px', color: '#94a3c8'}}>{school.currentTerm}</p>
         </div>
-        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+        <div className="dash-header-actions" style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
           <span style={{background: '#c8a84b', color: '#0a1f4e', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700}}>{collectionRate}% collected</span>
           <Link href="/students" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
             Students
@@ -59,8 +72,8 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      <div style={{padding: '24px 32px'}}>
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px'}}>
+      <div className="dash-content" style={{padding: '24px 32px'}}>
+        <div className="dash-stats" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px'}}>
           {[
             {label: 'Expected', value: 'KES ' + totalExpected.toLocaleString(), color: '#0f172a'},
             {label: 'Collected', value: 'KES ' + totalCollected.toLocaleString(), color: '#0a1f4e'},
@@ -78,6 +91,7 @@ export default async function Dashboard() {
           <div style={{padding: '14px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
             <h2 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a'}}>Recent payments</h2>
           </div>
+          <div className="dash-table-wrap">
           <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px'}}>
             <thead>
               <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9'}}>
@@ -105,6 +119,7 @@ export default async function Dashboard() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>

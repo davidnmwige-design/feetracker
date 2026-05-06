@@ -3,10 +3,30 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+function PasswordRule({ met, label }: { met: boolean; label: string }) {
+  return (
+    <div style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: met ? '#0a7c4e' : '#94a3b8'}}>
+      <span style={{fontWeight: 700}}>{met ? '✓' : '✗'}</span>
+      <span>{label}</span>
+    </div>
+  )
+}
+
+function checkPassword(p: string) {
+  return {
+    length: p.length >= 8,
+    upper: /[A-Z]/.test(p),
+    lower: /[a-z]/.test(p),
+    number: /[0-9]/.test(p),
+  }
+}
+
 export default function Signup() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false)
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -16,7 +36,18 @@ export default function Signup() {
     term: 'Term 2 2026'
   })
 
+  const rules = checkPassword(form.password)
+  const passwordValid = rules.length && rules.upper && rules.lower && rules.number
+
   async function handleSubmit() {
+    if (!passwordValid) {
+      setError('Password does not meet the requirements')
+      return
+    }
+    if (!agreedToPolicy) {
+      setError('You must agree to the Privacy Policy to continue')
+      return
+    }
     setLoading(true)
     setError('')
 
@@ -38,101 +69,141 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
-      <div className="bg-white rounded-xl border border-gray-200 p-8 w-full max-w-md">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Set up your school</h1>
-          <p className="text-gray-500 text-sm">Create your FeeTracker account in 2 minutes</p>
+    <div style={{background: '#f8f9fc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', fontFamily: 'Arial, sans-serif'}}>
+      <div style={{background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', width: '100%', maxWidth: '440px', overflow: 'hidden'}}>
+        <div style={{background: '#0a1f4e', padding: '28px 32px', textAlign: 'center'}}>
+          <h1 style={{color: '#c8a84b', fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0}}>FeeTracker</h1>
+          <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '6px'}}>Create your account — 14 days free</p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
+        <div style={{padding: '32px'}}>
+          {error && (
+            <div style={{background: '#fcebeb', border: '1px solid #f5c6c6', color: '#a32d2d', fontSize: '13px', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
+              {error}
+            </div>
+          )}
 
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Your name</label>
-            <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-              placeholder="e.g. John Kamau"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Email address</label>
-            <input
-              type="email"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-              placeholder="e.g. john@stmarys.ac.ke"
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Password</label>
-            <input
-              type="password"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-              placeholder="At least 8 characters"
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-            />
-          </div>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
+            <div>
+              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Your name</label>
+              <input
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+                placeholder="e.g. John Kamau"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
 
-          <div className="border-t border-gray-100 pt-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-3">School details</p>
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">School name</label>
+            <div>
+              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Email address</label>
+              <input
+                type="email"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+                placeholder="e.g. john@stmarys.ac.ke"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Password</label>
+              <div style={{position: 'relative'}}>
                 <input
+                  type={showPassword ? 'text' : 'password'}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-                  placeholder="e.g. St. Mary's Academy"
-                  value={form.schoolName}
-                  onChange={e => setForm({ ...form, schoolName: e.target.value })}
+                  style={{paddingRight: '40px'}}
+                  placeholder="Create a strong password"
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">MPESA Paybill / Till number</label>
-                <input
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-                  placeholder="e.g. 123456"
-                  value={form.paybill}
-                  onChange={e => setForm({ ...form, paybill: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Current term</label>
-                <select
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-                  value={form.term}
-                  onChange={e => setForm({ ...form, term: e.target.value })}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', padding: '2px'}}
                 >
-                  <option>Term 1 2026</option>
-                  <option>Term 2 2026</option>
-                  <option>Term 3 2026</option>
-                </select>
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+              {form.password.length > 0 && (
+                <div style={{marginTop: '8px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', padding: '10px', background: '#f8f9fc', borderRadius: '6px', border: '1px solid #e2e8f0'}}>
+                  <PasswordRule met={rules.length} label="8+ characters" />
+                  <PasswordRule met={rules.upper} label="Uppercase letter" />
+                  <PasswordRule met={rules.lower} label="Lowercase letter" />
+                  <PasswordRule met={rules.number} label="Number" />
+                </div>
+              )}
+            </div>
+
+            <div style={{borderTop: '1px solid #f1f5f9', paddingTop: '16px'}}>
+              <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: '14px'}}>School details</p>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
+                <div>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>School name</label>
+                  <input
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+                    placeholder="e.g. St. Mary's Academy"
+                    value={form.schoolName}
+                    onChange={e => setForm({ ...form, schoolName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>MPESA Paybill / Till number</label>
+                  <input
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+                    placeholder="e.g. 123456"
+                    value={form.paybill}
+                    onChange={e => setForm({ ...form, paybill: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Current term</label>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+                    value={form.term}
+                    onChange={e => setForm({ ...form, term: e.target.value })}
+                  >
+                    <option>Term 1 2026</option>
+                    <option>Term 2 2026</option>
+                    <option>Term 3 2026</option>
+                  </select>
+                </div>
               </div>
             </div>
+
+            <label style={{display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', marginTop: '4px'}}>
+              <input
+                type="checkbox"
+                checked={agreedToPolicy}
+                onChange={e => setAgreedToPolicy(e.target.checked)}
+                style={{marginTop: '2px', accentColor: '#0a1f4e', flexShrink: 0}}
+              />
+              <span style={{fontSize: '12px', color: '#64748b', lineHeight: '1.5'}}>
+                I have read and agree to the{' '}
+                <Link href="/privacy" target="_blank" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+
+            <button
+              onClick={handleSubmit}
+              disabled={loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !agreedToPolicy}
+              style={{
+                background: (loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !agreedToPolicy) ? '#94a3b8' : '#0a1f4e',
+                color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                border: 'none', cursor: 'pointer', width: '100%', marginTop: '4px'
+              }}
+            >
+              {loading ? 'Creating account...' : 'Start free trial'}
+            </button>
+
+            <p style={{textAlign: 'center', fontSize: '12px', color: '#64748b'}}>
+              Already have an account?{' '}
+              <Link href="/login" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>
+                Sign in
+              </Link>
+            </p>
           </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading || !form.name || !form.email || !form.password || !form.schoolName}
-            className="w-full py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-50 mt-2"
-            style={{backgroundColor: '#0a1f4e'}}
-          >
-            {loading ? 'Creating account...' : 'Create account'}
-          </button>
-
-          <p className="text-center text-sm text-gray-500">
-            Already have an account?{' '}
-            <Link href="/login" className="text-blue-900 font-medium hover:underline">
-              Sign in
-            </Link>
-          </p>
         </div>
       </div>
     </div>

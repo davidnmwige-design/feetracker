@@ -40,55 +40,73 @@ export default function Unmatched() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">← Back</Link>
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Unmatched Payments</h1>
-            <p className="text-gray-500 text-sm mt-0.5">Manually assign payments that could not be matched automatically</p>
-          </div>
-        </div>
+    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
+      <style>{`
+        @media (max-width: 640px) {
+          .unm-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
+          .unm-content { padding: 16px !important; }
+          .unm-assign-row { flex-direction: column !important; }
+          .unm-assign-row select { width: 100% !important; }
+        }
+      `}</style>
 
+      <div className="unm-header" style={{background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <div>
+          <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px'}}>Unmatched Payments</h1>
+          <p style={{fontSize: '12px', color: '#94a3c8'}}>Manually assign payments that could not be matched automatically</p>
+        </div>
+        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+          {!loading && payments.length > 0 && (
+            <span style={{background: '#e24b4a', color: '#fff', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700}}>
+              {payments.length} pending
+            </span>
+          )}
+          <Link href="/dashboard" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
+            ← Dashboard
+          </Link>
+        </div>
+      </div>
+
+      <div className="unm-content" style={{padding: '24px 32px'}}>
         {loading && (
-          <div className="text-center text-gray-400 py-12">Loading...</div>
+          <div style={{textAlign: 'center', color: '#94a3b8', padding: '48px'}}>Loading...</div>
         )}
 
         {!loading && payments.length === 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-            <p className="text-gray-400 font-medium">No unmatched payments</p>
-            <p className="text-gray-400 text-sm mt-1">All payments have been matched to students.</p>
+          <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '48px', textAlign: 'center'}}>
+            <p style={{fontWeight: 600, color: '#0f172a', marginBottom: '4px'}}>No unmatched payments</p>
+            <p style={{fontSize: '13px', color: '#94a3b8'}}>All payments have been matched to students.</p>
           </div>
         )}
 
-        <div className="space-y-3">
+        <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
           {payments.map(payment => (
-            <div key={payment.id} className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="flex justify-between items-start mb-3">
+            <div key={payment.id} style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px'}}>
                 <div>
-                  <p className="font-medium text-gray-900">KES {payment.amount.toLocaleString()}</p>
-                 <p className="text-sm text-gray-400 mt-0.5">
-  From: {payment.senderName || 'Unknown'} · {payment.senderPhone || 'No phone'}
-</p>
-<p className="text-sm text-gray-400">
-  MPESA Ref: {payment.mpesaRef || '—'} · {new Date(payment.paidAt).toLocaleDateString('en-KE')}
-</p>
-{payment.mpesaRef && (
-  <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-    <p className="text-xs text-amber-600 font-medium uppercase tracking-wide mb-0.5">Account reference typed by parent</p>
-    <p className="text-sm font-bold text-amber-900">{payment.mpesaRef}</p>
-    <p className="text-xs text-amber-600 mt-0.5">Use this to identify the student — match to admission number or name</p>
-  </div>
-)}
+                  <p style={{fontWeight: 700, color: '#0f172a', fontSize: '16px', marginBottom: '4px'}}>KES {payment.amount.toLocaleString()}</p>
+                  <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '2px'}}>
+                    From: {payment.senderName || 'Unknown'} · {payment.senderPhone || 'No phone'}
+                  </p>
+                  <p style={{fontSize: '12px', color: '#94a3b8'}}>
+                    Ref: {payment.mpesaRef || '—'} · {new Date(payment.paidAt).toLocaleDateString('en-KE')}
+                  </p>
+                  {payment.mpesaRef && (
+                    <div style={{marginTop: '8px', background: '#fef9ec', border: '1px solid #f0d878', borderRadius: '6px', padding: '10px 12px'}}>
+                      <p style={{fontSize: '10px', color: '#92681a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px'}}>Account reference typed by parent</p>
+                      <p style={{fontSize: '14px', fontWeight: 700, color: '#0f172a'}}>{payment.mpesaRef}</p>
+                      <p style={{fontSize: '11px', color: '#92681a', marginTop: '2px'}}>Use this to identify the student — match to admission number or name</p>
+                    </div>
+                  )}
                 </div>
-                <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
+                <span style={{background: '#fcebeb', color: '#a32d2d', fontSize: '10px', padding: '3px 10px', borderRadius: '999px', fontWeight: 600, whiteSpace: 'nowrap'}}>
                   Unmatched
                 </span>
               </div>
 
-              <div className="flex gap-2">
+              <div className="unm-assign-row" style={{display: 'flex', gap: '8px'}}>
                 <select
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+                  style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', color: '#0f172a', background: '#fff', outline: 'none'}}
                   value={selected[payment.id] || ''}
                   onChange={e => setSelected({ ...selected, [payment.id]: e.target.value })}
                 >
@@ -102,8 +120,12 @@ export default function Unmatched() {
                 <button
                   onClick={() => assignPayment(payment.id)}
                   disabled={!selected[payment.id] || assigning === payment.id}
-                  className="text-white px-4 py-1.5 rounded-lg text-sm disabled:opacity-50"
-                  style={{backgroundColor: '#0a1f4e'}}
+                  style={{
+                    background: (!selected[payment.id] || assigning === payment.id) ? '#94a3b8' : '#0a1f4e',
+                    color: '#fff', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                    border: 'none', cursor: (!selected[payment.id] || assigning === payment.id) ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
                 >
                   {assigning === payment.id ? 'Saving...' : 'Assign'}
                 </button>

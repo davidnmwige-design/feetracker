@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
 export default function Reminders() {
   const [students, setStudents] = useState<any[]>([])
@@ -42,41 +43,61 @@ export default function Reminders() {
   const totalOutstanding = withBalance.reduce((sum, s) => sum + getBalance(s), 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">Reminders</h1>
-          <p className="text-gray-500 text-sm mt-1">
-  {withBalance.length} parents with outstanding balances · KES {totalOutstanding.toLocaleString()} total
-</p>
-        </div>{withBalance.length > 0 && (
-  <button
-    onClick={() => {
-      withBalance.forEach((student, i) => {
-        const msg = getMessage(student)
-        const phone = '254' + student.parentPhone.replace(/^0/, '')
-        const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
-        setTimeout(() => window.open(url, '_blank'), i * 1500)
-      })
-    }}
-    className="mt-4 px-6 py-2.5 rounded-lg text-sm font-medium text-white"
-    style={{backgroundColor: '#0a1f4e'}}
-  >
-    Send WhatsApp to all {withBalance.length} parents
-  </button>
-)}
+    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
+      <style>{`
+        @media (max-width: 640px) {
+          .rem-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
+          .rem-content { padding: 16px !important; }
+        }
+      `}</style>
+
+      <div className="rem-header" style={{background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <div>
+          <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px'}}>Reminders</h1>
+          <p style={{fontSize: '12px', color: '#94a3c8'}}>
+            {loading ? 'Loading...' : withBalance.length + ' parents with outstanding balances'}
+          </p>
+        </div>
+        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+          {!loading && withBalance.length > 0 && (
+            <span style={{background: '#c8a84b', color: '#0a1f4e', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700}}>
+              KES {totalOutstanding.toLocaleString()} outstanding
+            </span>
+          )}
+          <Link href="/dashboard" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
+            ← Dashboard
+          </Link>
+        </div>
+      </div>
+
+      <div className="rem-content" style={{padding: '24px 32px'}}>
+        {!loading && withBalance.length > 0 && (
+          <button
+            onClick={() => {
+              withBalance.forEach((student, i) => {
+                const msg = getMessage(student)
+                const phone = '254' + student.parentPhone.replace(/^0/, '')
+                const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
+                setTimeout(() => window.open(url, '_blank'), i * 1500)
+              })
+            }}
+            style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', marginBottom: '20px'}}
+          >
+            Send WhatsApp to all {withBalance.length} parents
+          </button>
+        )}
 
         {loading && (
-          <div className="text-center text-gray-400 py-12">Loading...</div>
+          <div style={{textAlign: 'center', color: '#94a3b8', padding: '48px'}}>Loading...</div>
         )}
 
         {!loading && withBalance.length === 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-            <p className="text-gray-400">No outstanding balances. All students are fully paid!</p>
+          <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '48px', textAlign: 'center'}}>
+            <p style={{color: '#94a3b8', fontSize: '14px'}}>No outstanding balances. All students are fully paid!</p>
           </div>
         )}
 
-        <div className="space-y-3">
+        <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
           {withBalance.map(student => {
             const balance = getBalance(student)
             const paid = getPaid(student)
@@ -85,35 +106,35 @@ export default function Reminders() {
             const waLink = 'https://wa.me/254' + student.parentPhone.replace(/^0/, '') + '?text=' + encodeURIComponent(msg)
 
             return (
-              <div key={student.id} className="bg-white rounded-xl border border-gray-200 p-4">
-                <div className="flex justify-between items-start mb-3">
+              <div key={student.id} style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px'}}>
                   <div>
-                    <p className="font-medium text-gray-900">{student.name}</p>
-                    <p className="text-sm text-gray-400">{student.class} {student.stream} · {student.parentName || 'Parent'} · {student.parentPhone}</p>
+                    <p style={{fontWeight: 600, color: '#0f172a', fontSize: '14px', marginBottom: '2px'}}>{student.name}</p>
+                    <p style={{fontSize: '12px', color: '#94a3b8'}}>{student.class} {student.stream} · {student.parentName || 'Parent'} · {student.parentPhone}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-red-600 font-semibold">KES {balance.toLocaleString()}</p>
-                    <p className="text-xs text-gray-400">{percent}% paid</p>
+                  <div style={{textAlign: 'right'}}>
+                    <p style={{color: '#e24b4a', fontWeight: 700, fontSize: '14px'}}>KES {balance.toLocaleString()}</p>
+                    <p style={{fontSize: '11px', color: '#94a3b8'}}>{percent}% paid</p>
                   </div>
                 </div>
 
-                <div className="bg-green-50 border-l-4 border-green-600 p-3 rounded text-sm text-gray-700 mb-3">
+                <div style={{background: '#f8f9fc', borderLeft: '3px solid #c8a84b', padding: '10px 12px', borderRadius: '0 4px 4px 0', fontSize: '12px', color: '#64748b', marginBottom: '12px'}}>
                   {msg}
                 </div>
 
-                <div className="flex gap-2">
+                <div style={{display: 'flex', gap: '8px'}}>
                   <button
                     onClick={() => copyMessage(student.id, msg)}
-                    className="text-xs border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600"
+                    style={{fontSize: '12px', border: '1px solid #e2e8f0', padding: '6px 12px', borderRadius: '5px', background: '#fff', color: '#64748b', cursor: 'pointer'}}
                   >
                     {copied === student.id ? 'Copied!' : 'Copy message'}
                   </button>
                   {student.parentPhone && (
-                   <a 
+                    <a
                       href={waLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs bg-green-700 text-white px-3 py-1.5 rounded-lg hover:bg-green-800"
+                      style={{fontSize: '12px', background: '#25D366', color: '#fff', padding: '6px 12px', borderRadius: '5px', textDecoration: 'none', fontWeight: 600}}
                     >
                       Send on WhatsApp
                     </a>
