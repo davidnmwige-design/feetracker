@@ -593,7 +593,7 @@ type Tab = 'dashboard' | 'students' | 'upload' | 'reminders' | 'certificate'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'dashboard',   label: 'Dashboard'    },
   { id: 'students',    label: 'Students'     },
-  { id: 'upload',      label: 'Upload MPESA' },
+  { id: 'upload',      label: 'Upload Statement' },
   { id: 'reminders',   label: 'Reminders'    },
   { id: 'certificate', label: 'Certificate'  },
 ]

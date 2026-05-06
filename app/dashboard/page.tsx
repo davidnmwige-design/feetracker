@@ -67,7 +67,7 @@ export default async function Dashboard() {
             Students
           </Link>
           <Link href="/upload" style={{background: '#c8a84b', color: '#0a1f4e', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, textDecoration: 'none'}}>
-            Upload MPESA
+            Upload Statement
           </Link>
         </div>
       </div>

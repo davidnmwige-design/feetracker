@@ -105,12 +105,6 @@ export default function Upload() {
             </select>
           </div>
 
-          {bankType === 'mpesa' && (
-            <div style={{background: '#f8f9fc', borderRadius: '6px', padding: '12px 14px', marginBottom: '20px', fontSize: '12px', color: '#64748b', borderLeft: '3px solid #c8a84b'}}>
-              <strong style={{color: '#0f172a'}}>How to get your MPESA statement:</strong> Log into the Safaricom Business portal → Transactions → select date range → Download as Excel or CSV.
-            </div>
-          )}
-
           {bankType !== 'mpesa' && (
             <div style={{background: '#f8f9fc', borderRadius: '6px', padding: '12px 14px', marginBottom: '20px', fontSize: '12px', color: '#64748b', borderLeft: '3px solid #c8a84b'}}>
               <strong style={{color: '#0f172a'}}>Note:</strong> For bank statements, phone-number matching is not available. Unmatched payments can be manually assigned on the Unmatched Payments page.
