@@ -8,9 +8,14 @@ export default function Home() {
         <span style={{fontSize: '18px', fontWeight: 700, color: '#0f2d6e', fontFamily: 'Georgia, serif'}}>
           Fee<span style={{color: '#c8a84b'}}>Tracker</span>
         </span>
-        <Link href="/signup" style={{background: '#0a1f4e', color: '#fff', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', textDecoration: 'none'}}>
-          Get started free
-        </Link>
+        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+          <Link href="/demo" style={{color: '#0a1f4e', fontSize: '13px', fontWeight: 600, textDecoration: 'none', padding: '8px 14px', borderRadius: '6px', border: '1px solid #e2e8f0'}}>
+            Demo
+          </Link>
+          <Link href="/signup" style={{background: '#0a1f4e', color: '#fff', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', textDecoration: 'none'}}>
+            Get started free
+          </Link>
+        </div>
       </nav>
 
       <div style={{background: '#0a1f4e', color: '#fff', padding: '56px 32px', textAlign: 'center'}}>
@@ -24,9 +29,12 @@ export default function Home() {
         <p style={{fontSize: '13px', color: '#94a3c8', maxWidth: '480px', margin: '0 auto 28px', lineHeight: 1.7}}>
           Upload your MPESA statement. Every payment is matched automatically. Parents get notified instantly. Your bursar saves 80 hours every term.
         </p>
-        <div style={{display: 'flex', gap: '10px', justifyContent: 'center'}}>
+        <div style={{display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' as const}}>
           <Link href="/signup" style={{background: '#c8a84b', color: '#0a1f4e', padding: '12px 28px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none'}}>
             Set up your school free
+          </Link>
+          <Link href="/demo" style={{background: 'rgba(200,168,75,0.15)', color: '#c8a84b', padding: '12px 28px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: '1px solid rgba(200,168,75,0.4)', textDecoration: 'none'}}>
+            View demo →
           </Link>
           <Link href="/login" style={{background: 'transparent', color: '#fff', padding: '12px 28px', borderRadius: '6px', fontSize: '13px', border: '1px solid rgba(255,255,255,0.2)', textDecoration: 'none'}}>
             Sign in
