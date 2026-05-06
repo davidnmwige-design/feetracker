@@ -108,6 +108,7 @@ export default function Privacy() {
               <div style={{marginTop: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px'}}>
                 <p style={{margin: 0, fontWeight: 600, color: '#0f172a'}}>FeeTracker Kenya</p>
                 <p style={{margin: '4px 0 0'}}>Email: <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a></p>
+                <p style={{margin: '4px 0 0'}}>WhatsApp: <a href="https://wa.me/254746353411" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}} target="_blank" rel="noopener noreferrer">+254 746 353 411</a></p>
                 <p style={{margin: '4px 0 0'}}>Location: Nairobi, Kenya</p>
               </div>
             </div>

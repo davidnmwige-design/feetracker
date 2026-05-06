@@ -133,9 +133,16 @@ export default function Home() {
         </Link>
       </div>
 
-      <div style={{background: '#0a1f4e', padding: '16px 32px', textAlign: 'center' as const}}>
-        <p style={{fontSize: '11px', color: '#475569'}}>
-          FeeTracker · Built for private schools in Nairobi, Kenya
+      <div style={{background: '#0a1f4e', padding: '20px 32px', textAlign: 'center' as const}}>
+        <p style={{fontSize: '12px', color: '#94a3c8', marginBottom: '6px'}}>
+          Questions? Email{' '}
+          <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>
+          {' '}or WhatsApp{' '}
+          <a href="https://wa.me/254746353411" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}} target="_blank" rel="noopener noreferrer">+254 746 353 411</a>
+        </p>
+        <p style={{fontSize: '11px', color: '#475569', margin: 0}}>
+          FeeTracker · Built for private schools in Nairobi, Kenya ·{' '}
+          <a href="/privacy" style={{color: '#475569', textDecoration: 'none'}}>Privacy Policy</a>
         </p>
       </div>
 

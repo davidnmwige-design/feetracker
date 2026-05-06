@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import * as XLSX from 'xlsx'
 
 function parseRow(row: any, bankType: string): {
@@ -57,11 +58,16 @@ function parseRow(row: any, bankType: string): {
 }
 
 export async function POST(req: Request) {
+  if (!checkRateLimit(getIp(req))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const session = await auth()
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  try {
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
     include: { school: true }
@@ -114,7 +120,8 @@ export async function POST(req: Request) {
         senderName,
         senderPhone,
         matched: !!matched,
-        studentId: matched ? matched.id : null
+        studentId: matched ? matched.id : null,
+        schoolId,
       }
     })
 
@@ -137,4 +144,8 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json(results)
+  } catch (err) {
+    console.error('upload error:', err)
+    return NextResponse.json({ error: 'Something went wrong processing your file.' }, { status: 500 })
+  }
 }

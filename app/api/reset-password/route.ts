@@ -1,0 +1,48 @@
+import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
+import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { sanitize } from '@/lib/sanitize'
+import bcrypt from 'bcryptjs'
+
+export async function POST(req: Request) {
+  if (!checkRateLimit(getIp(req))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
+  try {
+    const body = await req.json()
+    const token = sanitize(body.token, 200)
+    const newPassword = body.newPassword as string
+
+    if (!token || !newPassword) {
+      return NextResponse.json({ error: 'Token and password are required' }, { status: 400 })
+    }
+
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      return NextResponse.json({ error: 'Password does not meet requirements' }, { status: 400 })
+    }
+
+    const resetRecord = await prisma.passwordReset.findUnique({ where: { token } })
+
+    if (!resetRecord || resetRecord.used || new Date() > resetRecord.expiresAt) {
+      return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 })
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10)
+
+    await prisma.user.update({
+      where: { email: resetRecord.email },
+      data: { password: hashed }
+    })
+
+    await prisma.passwordReset.update({
+      where: { token },
+      data: { used: true }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    console.error('reset-password error:', err)
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
+  }
+}

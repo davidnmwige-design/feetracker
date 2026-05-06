@@ -1,28 +1,38 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { checkRateLimit, getIp } from '@/lib/ratelimit'
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!checkRateLimit(getIp(req))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const session = await auth()
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email }
-  })
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
 
-  if (!user?.isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user?.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const schools = await prisma.school.findMany({
+      include: {
+        user: true,
+        _count: { select: { students: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json(schools)
+  } catch (err) {
+    console.error('admin schools GET error:', err)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
-
-  const schools = await prisma.school.findMany({
-    include: {
-      user: true,
-      _count: { select: { students: true } }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
-
-  return NextResponse.json(schools)
 }

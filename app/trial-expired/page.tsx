@@ -46,7 +46,7 @@ export default function TrialExpired() {
 
             <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
               <a
-                href="https://wa.me/254700000000?text=Hi%2C%20I%27d%20like%20to%20subscribe%20to%20FeeTracker%20for%20my%20school."
+                href="https://wa.me/254746353411?text=Hi%2C%20I%27d%20like%20to%20subscribe%20to%20FeeTracker%20for%20my%20school."
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{display: 'block', background: '#25D366', color: '#fff', padding: '12px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none', textAlign: 'center'}}

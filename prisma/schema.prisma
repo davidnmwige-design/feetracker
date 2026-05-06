@@ -28,6 +28,7 @@ model School {
   user          User      @relation(fields: [userId], references: [id])
   students      Student[]
   terms         Term[]
+  payments      Payment[]
 }
 
 model Term {
@@ -72,8 +73,10 @@ model Payment {
   notified    Boolean  @default(false)
   studentId   Int?
   termId      Int?
+  schoolId    Int?
   student     Student? @relation(fields: [studentId], references: [id])
   term        Term?    @relation(fields: [termId], references: [id])
+  school      School?  @relation(fields: [schoolId], references: [id])
 }
 
 model PasswordReset {

@@ -1,36 +1,70 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
+import { checkRateLimit, getIp } from '@/lib/ratelimit'
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const studentId = Number(searchParams.get('studentId'))
-
-  const student = await prisma.student.findUnique({
-    where: { id: studentId },
-    include: { payments: true, school: true }
-  })
-
-  if (!student) {
-    return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+  if (!checkRateLimit(getIp(req))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 
-  const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0)
-  const balance = student.feeRequired - totalPaid
+  const session = await auth()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-  return NextResponse.json({
-    student: {
-      name: student.name,
-      admNo: student.admNo,
-      class: student.class,
-      stream: student.stream,
-      feeRequired: student.feeRequired,
-      totalPaid,
-      balance,
-      cleared: balance <= 0
-    },
-    school: {
-      name: student.school.name,
-      term: student.school.currentTerm
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { school: true }
+    })
+
+    if (!user?.school) {
+      return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
-  })
+
+    const { searchParams } = new URL(req.url)
+    const studentId = Number(searchParams.get('studentId'))
+
+    if (!studentId) {
+      return NextResponse.json({ error: 'Student ID required' }, { status: 400 })
+    }
+
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { payments: true, school: true }
+    })
+
+    if (!student) {
+      return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+    }
+
+    // Ensure student belongs to the authenticated user's school
+    if (student.schoolId !== user.school.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0)
+    const balance = student.feeRequired - totalPaid
+
+    return NextResponse.json({
+      student: {
+        name: student.name,
+        admNo: student.admNo,
+        class: student.class,
+        stream: student.stream,
+        feeRequired: student.feeRequired,
+        totalPaid,
+        balance,
+        cleared: balance <= 0
+      },
+      school: {
+        name: student.school.name,
+        term: student.school.currentTerm
+      }
+    })
+  } catch (err) {
+    console.error('certificate error:', err)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  }
 }
