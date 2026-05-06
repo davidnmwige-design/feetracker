@@ -72,19 +72,9 @@ export default function Reminders() {
 
       <div className="rem-content" style={{padding: '24px 32px'}}>
         {!loading && withBalance.length > 0 && (
-          <button
-            onClick={() => {
-              withBalance.forEach((student, i) => {
-                const msg = getMessage(student)
-                const phone = '254' + student.parentPhone.replace(/^0/, '')
-                const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
-                setTimeout(() => window.open(url, '_blank'), i * 1500)
-              })
-            }}
-            style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', marginBottom: '20px'}}
-          >
-            Send WhatsApp to all {withBalance.length} parents
-          </button>
+          <div style={{background: '#f0f4f9', border: '1px solid #c8d8f0', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '12px', color: '#0a1f4e'}}>
+            Use the individual <strong>Send on WhatsApp</strong> buttons below to send each reminder. Browsers block automatic multi-tab opening.
+          </div>
         )}
 
         {loading && (
@@ -103,7 +93,8 @@ export default function Reminders() {
             const paid = getPaid(student)
             const percent = Math.round((paid / student.feeRequired) * 100)
             const msg = getMessage(student)
-            const waLink = 'https://wa.me/254' + student.parentPhone.replace(/^0/, '') + '?text=' + encodeURIComponent(msg)
+            const waPhone = student.parentPhone ? '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '') : ''
+            const waLink = waPhone ? 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg) : ''
 
             return (
               <div key={student.id} style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px'}}>
@@ -129,7 +120,7 @@ export default function Reminders() {
                   >
                     {copied === student.id ? 'Copied!' : 'Copy message'}
                   </button>
-                  {student.parentPhone && (
+                  {waLink && (
                     <a
                       href={waLink}
                       target="_blank"

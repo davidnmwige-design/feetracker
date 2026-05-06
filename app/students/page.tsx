@@ -196,14 +196,6 @@ export default function Students() {
     return { data }
   }
 
-  function shareViaWhatsApp(student: any, data: any) {
-    const msg = `Dear ${student.parentName || 'Parent'}, this is to confirm that ${student.name} (${student.class} ${student.stream || ''}) has been CLEARED of all fee obligations for the current term at ${data.school.name}. Total paid: KES ${data.student.totalPaid.toLocaleString()}. Please retain this message as your clearance confirmation. - FeeTracker`
-    const phone = student.parentPhone
-      ? '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '')
-      : ''
-    if (phone) window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank')
-  }
-
   async function openEmailModal(student: any) {
     const res = await fetch('/api/certificate?studentId=' + student.id)
     const certData = await res.json()
@@ -437,10 +429,7 @@ export default function Students() {
                             {cleared && (
                               <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap' as const}}>
                                 <button
-                                  onClick={async () => {
-                                    const result = await downloadCertificate(student.id, student.name)
-                                    if (result) shareViaWhatsApp(student, result.data)
-                                  }}
+                                  onClick={() => downloadCertificate(student.id, student.name)}
                                   style={{fontSize: '11px', color: '#c8a84b', background: 'none', border: '1px solid #c8a84b', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap'}}
                                 >
                                   Certificate

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 
 const BANK_OPTIONS = [
@@ -54,43 +54,6 @@ export default function Upload() {
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<any>(null)
   const [hovered, setHovered] = useState(false)
-  const [countdown, setCountdown] = useState<number | null>(null)
-  const [notifIndex, setNotifIndex] = useState(0)
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    if (countdown === null) return
-    if (countdown === 0) {
-      sendNextNotification()
-      return
-    }
-    countdownRef.current = setInterval(() => {
-      setCountdown(c => {
-        if (c === null || c <= 1) {
-          clearInterval(countdownRef.current!)
-          return 0
-        }
-        return c - 1
-      })
-    }, 1000)
-    return () => clearInterval(countdownRef.current!)
-  }, [countdown])
-
-  function sendNextNotification() {
-    if (!results?.notifications) return
-    results.notifications.forEach((n: any, i: number) => {
-      if (!n.phone) return
-      setTimeout(() => {
-        window.open('https://wa.me/' + n.phone + '?text=' + encodeURIComponent(n.msg), '_blank')
-      }, i * 1500)
-    })
-    setCountdown(null)
-  }
-
-  function cancelNotifications() {
-    clearInterval(countdownRef.current!)
-    setCountdown(null)
-  }
 
   async function handleUpload() {
     if (!file) return
@@ -104,11 +67,6 @@ export default function Upload() {
     const data = await res.json()
     setResults(data)
     setLoading(false)
-
-    if (data.notifications?.length > 0 && data.notifications.some((n: any) => n.phone)) {
-      setNotifIndex(0)
-      setCountdown(5)
-    }
   }
 
   return (
@@ -223,38 +181,26 @@ export default function Upload() {
 
             {results.notifications?.length > 0 && (
               <div>
-                {countdown !== null && countdown > 0 && (
-                  <div style={{background: '#f0f4f9', border: '1px solid #c8d8f0', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                    <div>
-                      <p style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', marginBottom: '2px'}}>
-                        Sending WhatsApp to {results.notifications.filter((n: any) => n.phone).length} parents in {countdown}s...
-                      </p>
-                      <p style={{fontSize: '11px', color: '#64748b'}}>Notifications will open automatically</p>
-                    </div>
-                    <button
-                      onClick={cancelNotifications}
-                      style={{background: '#fff', border: '1px solid #e2e8f0', color: '#64748b', padding: '6px 12px', borderRadius: '5px', fontSize: '12px', cursor: 'pointer'}}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-                <h3 style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px'}}>WhatsApp notifications</h3>
+                <h3 style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px'}}>
+                  WhatsApp notifications — {results.notifications.filter((n: any) => n.phone).length} parents
+                </h3>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
                   {results.notifications.map((n: any, i: number) => (
                     <div key={i} style={{background: '#f8f9fc', borderLeft: '3px solid #c8a84b', padding: '10px 12px', borderRadius: '0 4px 4px 0', fontSize: '12px', color: '#64748b'}}>
-                      {n.msg}
+                      <p style={{margin: '0 0 8px', lineHeight: 1.6}}>{n.msg}</p>
+                      {n.phone && (
+                        <a
+                          href={`https://wa.me/${n.phone}?text=${encodeURIComponent(n.msg)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{display: 'inline-block', background: '#25D366', color: '#fff', padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, textDecoration: 'none'}}
+                        >
+                          Send on WhatsApp
+                        </a>
+                      )}
                     </div>
                   ))}
                 </div>
-                {countdown === null && (
-                  <button
-                    onClick={() => setCountdown(3)}
-                    style={{marginTop: '12px', background: '#25D366', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', width: '100%'}}
-                  >
-                    Send WhatsApp to all {results.notifications.filter((n: any) => n.phone).length} parents
-                  </button>
-                )}
               </div>
             )}
 
