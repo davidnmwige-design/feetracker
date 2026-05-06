@@ -72,9 +72,19 @@ export default function Reminders() {
 
       <div className="rem-content" style={{padding: '24px 32px'}}>
         {!loading && withBalance.length > 0 && (
-          <div style={{background: '#f0f4f9', border: '1px solid #c8d8f0', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '12px', color: '#0a1f4e'}}>
-            Use the individual <strong>Send on WhatsApp</strong> buttons below to send each reminder. Browsers block automatic multi-tab opening.
-          </div>
+          <button
+            onClick={() => {
+              withBalance.forEach((student, i) => {
+                const msg = getMessage(student)
+                const phone = '254' + student.parentPhone.replace(/^0/, '')
+                const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
+                setTimeout(() => window.open(url, '_blank'), i * 1500)
+              })
+            }}
+            style={{background: '#0a1f4e', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', marginBottom: '20px'}}
+          >
+            Send WhatsApp to all {withBalance.length} parents
+          </button>
         )}
 
         {loading && (
