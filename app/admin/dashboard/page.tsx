@@ -2,21 +2,25 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+const PLAN_MONTHLY: Record<string, number> = { Starter: 4500, Growth: 6500, Premium: 9000 }
+
 export default function AdminDashboard() {
   const [schools, setSchools] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [pendingUpgrades, setPendingUpgrades] = useState(0)
 
   useEffect(() => {
     fetch('/api/admin/schools')
       .then(r => r.json())
-      .then(data => {
-        setSchools(data)
-        setLoading(false)
-      })
+      .then(data => { setSchools(data); setLoading(false) })
+    fetch('/api/admin/upgrade')
+      .then(r => r.json())
+      .then(data => { setPendingUpgrades(Array.isArray(data) ? data.length : 0) })
   }, [])
 
   const totalSchools = schools.length
   const totalStudents = schools.reduce((sum, s) => sum + (s._count?.students || 0), 0)
+  const totalMonthly = schools.reduce((sum, s) => sum + (PLAN_MONTHLY[s.currentPlan || 'Starter'] || 4500), 0)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -27,8 +31,14 @@ export default function AdminDashboard() {
             <p className="text-gray-500 text-sm mt-0.5">FeeTracker platform overview</p>
           </div>
           <div className="flex gap-3">
-            <Link href="/admin/billing" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
+            <Link
+              href="/admin/billing"
+              className={'border px-4 py-2 rounded-lg text-sm flex items-center gap-2 ' + (pendingUpgrades > 0 ? 'border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100' : 'border-gray-300 text-gray-700 hover:bg-gray-100')}
+            >
               Billing
+              {pendingUpgrades > 0 && (
+                <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">{pendingUpgrades}</span>
+              )}
             </Link>
             <Link href="/admin/analytics" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
               Analytics
@@ -50,18 +60,14 @@ export default function AdminDashboard() {
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Monthly revenue</p>
-            <p className="text-2xl font-semibold text-green-700">
-              KES {schools.reduce((sum, s) => {
-                const plan = s._count?.students <= 300 ? 4500 : s._count?.students <= 600 ? 6500 : 9000
-                return sum + plan
-              }, 0).toLocaleString()}
-            </p>
+            <p className="text-2xl font-semibold text-green-700">KES {totalMonthly.toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Needing attention</p>
-            <p className="text-2xl font-semibold text-red-600">
-              {schools.filter(s => s._count?.students === 0).length}
-            </p>
+          <div className={'bg-white rounded-xl border p-4 ' + (pendingUpgrades > 0 ? 'border-amber-200' : 'border-gray-200')}>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Upgrade requests</p>
+            <p className={'text-2xl font-semibold ' + (pendingUpgrades > 0 ? 'text-amber-600' : 'text-gray-400')}>{pendingUpgrades}</p>
+            {pendingUpgrades > 0 && (
+              <Link href="/admin/billing" className="text-xs text-amber-600 hover:underline">Review →</Link>
+            )}
           </div>
         </div>
 
@@ -90,7 +96,7 @@ export default function AdminDashboard() {
               )}
               {schools.map(school => {
                 const studentCount = school._count?.students || 0
-                const plan = studentCount <= 300 ? 'Starter' : studentCount <= 600 ? 'Growth' : 'Premium'
+                const plan = school.currentPlan || 'Starter'
                 const planColor = plan === 'Starter' ? 'bg-gray-100 text-gray-700' : plan === 'Growth' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
                 const status = studentCount === 0 ? 'No students' : 'Active'
                 const statusColor = studentCount === 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'

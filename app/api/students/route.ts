@@ -58,9 +58,8 @@ export async function POST(req: Request) {
 
     const schoolId = user.school.id
     const currentCount = (user.school as any)._count.students
-
-    const planCap = currentCount <= 300 ? 300 : currentCount <= 600 ? 600 : 1000
-    const planName = currentCount <= 300 ? 'Starter' : currentCount <= 600 ? 'Growth' : 'Premium'
+    const planName = (user.school as any).currentPlan || 'Starter'
+    const planCap = planName === 'Growth' ? 600 : planName === 'Premium' ? 1000 : 300
 
     const formData = await req.formData()
     const file = formData.get('file') as File

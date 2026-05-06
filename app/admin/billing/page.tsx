@@ -8,39 +8,55 @@ const PLANS = {
   Premium: { monthly: 9000, setup: 25000, maxStudents: 1000 },
 }
 
-function getPlan(studentCount: number) {
-  if (studentCount <= 300) return 'Starter'
-  if (studentCount <= 600) return 'Growth'
-  return 'Premium'
-}
-
 export default function AdminBilling() {
   const [schools, setSchools] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [paid, setPaid] = useState<Record<number, boolean>>({})
+  const [upgradeRequests, setUpgradeRequests] = useState<any[]>([])
+  const [upgradeLoading, setUpgradeLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<Record<number, boolean>>({})
 
   useEffect(() => {
     fetch('/api/admin/schools')
       .then(r => r.json())
-      .then(data => {
-        setSchools(data)
-        setLoading(false)
-      })
+      .then(data => { setSchools(data); setLoading(false) })
+    fetch('/api/admin/upgrade')
+      .then(r => r.json())
+      .then(data => { setUpgradeRequests(Array.isArray(data) ? data : []); setUpgradeLoading(false) })
   }, [])
 
+  async function handleUpgradeAction(requestId: number, action: 'approve' | 'reject') {
+    setActionLoading(prev => ({ ...prev, [requestId]: true }))
+    await fetch('/api/admin/upgrade', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestId, action })
+    })
+    setUpgradeRequests(prev => prev.filter(r => r.id !== requestId))
+    if (action === 'approve') {
+      const req = upgradeRequests.find(r => r.id === requestId)
+      if (req) {
+        setSchools(prev => prev.map(s => s.id === req.schoolId ? { ...s, currentPlan: req.requestedPlan } : s))
+      }
+    }
+    setActionLoading(prev => ({ ...prev, [requestId]: false }))
+  }
+
+  const getPlanName = (school: any) => school.currentPlan || 'Starter'
+
   const totalMonthly = schools.reduce((sum, s) => {
-    const plan = getPlan(s._count?.students || 0)
-    return sum + PLANS[plan as keyof typeof PLANS].monthly
+    const plan = PLANS[getPlanName(s) as keyof typeof PLANS] || PLANS.Starter
+    return sum + plan.monthly
   }, 0)
 
   const totalSetup = schools.reduce((sum, s) => {
-    const plan = getPlan(s._count?.students || 0)
-    return sum + PLANS[plan as keyof typeof PLANS].setup
+    const plan = PLANS[getPlanName(s) as keyof typeof PLANS] || PLANS.Starter
+    return sum + plan.setup
   }, 0)
 
   const totalPaidMonthly = schools.filter(s => paid[s.id]).reduce((sum, s) => {
-    const plan = getPlan(s._count?.students || 0)
-    return sum + PLANS[plan as keyof typeof PLANS].monthly
+    const plan = PLANS[getPlanName(s) as keyof typeof PLANS] || PLANS.Starter
+    return sum + plan.monthly
   }, 0)
 
   const totalOutstanding = totalMonthly - totalPaidMonthly
@@ -55,6 +71,64 @@ export default function AdminBilling() {
             <p className="text-gray-500 text-sm mt-0.5">Track what each school owes you</p>
           </div>
         </div>
+
+        {/* Pending upgrade requests */}
+        {!upgradeLoading && upgradeRequests.length > 0 && (
+          <div className="bg-white rounded-xl border border-amber-200 mb-6">
+            <div className="p-4 border-b border-amber-100 flex items-center gap-2">
+              <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full">{upgradeRequests.length}</span>
+              <h2 className="font-medium text-gray-900">Pending Plan Upgrade Requests</h2>
+            </div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
+                  <th className="p-3">School</th>
+                  <th className="p-3">Current plan</th>
+                  <th className="p-3">Requested plan</th>
+                  <th className="p-3">Notes</th>
+                  <th className="p-3">Submitted</th>
+                  <th className="p-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {upgradeRequests.map(req => (
+                  <tr key={req.id} className="border-b border-gray-50">
+                    <td className="p-3">
+                      <div className="font-medium text-gray-900">{req.school?.name}</div>
+                      <div className="text-xs text-gray-400">{req.school?.user?.email}</div>
+                    </td>
+                    <td className="p-3">
+                      <span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-700">{req.currentPlan}</span>
+                    </td>
+                    <td className="p-3">
+                      <span className="text-xs px-2 py-1 rounded-full font-medium bg-amber-100 text-amber-700">{req.requestedPlan}</span>
+                    </td>
+                    <td className="p-3 text-gray-500 text-xs max-w-xs">{req.notes || '—'}</td>
+                    <td className="p-3 text-gray-500 text-xs">{new Date(req.createdAt).toLocaleDateString('en-KE')}</td>
+                    <td className="p-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleUpgradeAction(req.id, 'approve')}
+                          disabled={actionLoading[req.id]}
+                          className="text-xs px-3 py-1.5 rounded-lg font-medium bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 disabled:opacity-50"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleUpgradeAction(req.id, 'reject')}
+                          disabled={actionLoading[req.id]}
+                          className="text-xs px-3 py-1.5 rounded-lg font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 disabled:opacity-50"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -97,15 +171,15 @@ export default function AdminBilling() {
               )}
               {schools.map(school => {
                 const studentCount = school._count?.students || 0
-                const planName = getPlan(studentCount)
-                const plan = PLANS[planName as keyof typeof PLANS]
+                const planName = getPlanName(school)
+                const plan = PLANS[planName as keyof typeof PLANS] || PLANS.Starter
                 const isPaid = paid[school.id] || false
                 const planColor = planName === 'Starter' ? 'bg-gray-100 text-gray-700' : planName === 'Growth' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
 
                 return (
                   <tr key={school.id} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="p-3">
-                     <Link href={'/admin/schools/' + school.id} className="font-medium text-blue-900 hover:underline">{school.name}</Link>
+                      <Link href={'/admin/schools/' + school.id} className="font-medium text-blue-900 hover:underline">{school.name}</Link>
                       <div className="text-xs text-gray-400">{school.user?.email}</div>
                     </td>
                     <td className="p-3">

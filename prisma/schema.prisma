@@ -18,17 +18,30 @@ model User {
 }
 
 model School {
-  id            Int       @id @default(autoincrement())
-  name          String
-  paybill       String?
-  currentTerm   String    @default("Term 1 2026")
-  createdAt     DateTime  @default(now())
-  trialEndsAt   DateTime?
-  userId        Int       @unique
-  user          User      @relation(fields: [userId], references: [id])
-  students      Student[]
-  terms         Term[]
-  payments      Payment[]
+  id              Int                  @id @default(autoincrement())
+  name            String
+  paybill         String?
+  currentTerm     String               @default("Term 1 2026")
+  currentPlan     String               @default("Starter")
+  createdAt       DateTime             @default(now())
+  trialEndsAt     DateTime?
+  userId          Int                  @unique
+  user            User                 @relation(fields: [userId], references: [id])
+  students        Student[]
+  terms           Term[]
+  payments        Payment[]
+  upgradeRequests PlanUpgradeRequest[]
+}
+
+model PlanUpgradeRequest {
+  id            Int      @id @default(autoincrement())
+  schoolId      Int
+  currentPlan   String
+  requestedPlan String
+  status        String   @default("pending")
+  notes         String?
+  createdAt     DateTime @default(now())
+  school        School   @relation(fields: [schoolId], references: [id])
 }
 
 model Term {

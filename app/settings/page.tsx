@@ -7,10 +7,21 @@ const TERMS = [
   'Term 1 2027', 'Term 2 2027', 'Term 3 2027',
 ]
 
-function getPlanDetails(studentCount: number) {
-  if (studentCount <= 300) return { name: 'Starter', maxStudents: 300, monthly: 4500, setup: 15000 }
-  if (studentCount <= 600) return { name: 'Growth', maxStudents: 600, monthly: 6500, setup: 20000 }
-  return { name: 'Premium', maxStudents: 1000, monthly: 9000, setup: 25000 }
+const PLAN_DETAILS: Record<string, { name: string; maxStudents: number; monthly: number; setup: number }> = {
+  Starter: { name: 'Starter', maxStudents: 300, monthly: 4500, setup: 15000 },
+  Growth: { name: 'Growth', maxStudents: 600, monthly: 6500, setup: 20000 },
+  Premium: { name: 'Premium', maxStudents: 1000, monthly: 9000, setup: 25000 },
+}
+
+const PLAN_UPGRADES: Record<string, Array<{ name: string; maxStudents: number; monthly: number }>> = {
+  Starter: [
+    { name: 'Growth', maxStudents: 600, monthly: 6500 },
+    { name: 'Premium', maxStudents: 1000, monthly: 9000 },
+  ],
+  Growth: [
+    { name: 'Premium', maxStudents: 1000, monthly: 9000 },
+  ],
+  Premium: [],
 }
 
 export default function Settings() {
@@ -20,6 +31,14 @@ export default function Settings() {
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [selectedTerm, setSelectedTerm] = useState('')
+
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [requestedPlan, setRequestedPlan] = useState('')
+  const [upgradeNotes, setUpgradeNotes] = useState('')
+  const [upgradeLoading, setUpgradeLoading] = useState(false)
+  const [upgradeSuccess, setUpgradeSuccess] = useState(false)
+  const [upgradeError, setUpgradeError] = useState('')
+  const [upgradeEmail, setUpgradeEmail] = useState('')
 
   useEffect(() => {
     fetchData()
@@ -54,10 +73,44 @@ export default function Settings() {
     setStarting(false)
   }
 
+  async function submitUpgrade() {
+    if (!requestedPlan || upgradeLoading) return
+    setUpgradeLoading(true)
+    setUpgradeError('')
+    try {
+      const res = await fetch('/api/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestedPlan, notes: upgradeNotes })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setUpgradeError(data.error || 'Something went wrong')
+      } else {
+        setUpgradeEmail(data.adminEmail || '')
+        setUpgradeSuccess(true)
+      }
+    } catch {
+      setUpgradeError('Something went wrong')
+    } finally {
+      setUpgradeLoading(false)
+    }
+  }
+
+  function closeUpgradeModal() {
+    setShowUpgradeModal(false)
+    setRequestedPlan('')
+    setUpgradeNotes('')
+    setUpgradeError('')
+    setUpgradeSuccess(false)
+    setUpgradeEmail('')
+  }
+
   async function downloadInvoice() {
     if (!school) return
     const { jsPDF } = await import('jspdf')
-    const plan = getPlanDetails(studentCount)
+    const planName = school.currentPlan || 'Starter'
+    const plan = PLAN_DETAILS[planName] || PLAN_DETAILS['Starter']
     const today = new Date()
     const dueDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
     const invoiceNum = 'FT-' + school.id + '-' + today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0')
@@ -66,7 +119,6 @@ export default function Settings() {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
     const w = 210
 
-    // Header bar
     doc.setFillColor(10, 31, 78)
     doc.rect(0, 0, w, 40, 'F')
 
@@ -90,7 +142,6 @@ export default function Settings() {
     doc.setTextColor(180, 190, 210)
     doc.text(invoiceNum, w - 20, 30, { align: 'right' })
 
-    // Invoice metadata
     const metaY = 54
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9)
@@ -106,12 +157,10 @@ export default function Settings() {
     doc.text(dueDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }), 80, metaY + 6)
     doc.text(plan.name, 140, metaY + 6)
 
-    // Divider
     doc.setDrawColor(226, 232, 240)
     doc.setLineWidth(0.3)
     doc.line(20, metaY + 14, w - 20, metaY + 14)
 
-    // Bill to
     const billY = metaY + 22
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(8)
@@ -127,7 +176,6 @@ export default function Settings() {
     doc.text('Current term: ' + school.currentTerm, 20, billY + 14)
     doc.text('Students enrolled: ' + studentCount, 20, billY + 20)
 
-    // Line items table
     const tableY = billY + 34
     doc.setFillColor(248, 249, 252)
     doc.rect(20, tableY, w - 40, 8, 'F')
@@ -160,7 +208,6 @@ export default function Settings() {
       itemY += 14
     })
 
-    // Total
     const total = items.reduce((s, [, a]) => s + a, 0)
     doc.setFillColor(10, 31, 78)
     doc.rect(20, itemY, w - 40, 12, 'F')
@@ -171,7 +218,6 @@ export default function Settings() {
     doc.setTextColor(255, 255, 255)
     doc.text('KES ' + total.toLocaleString(), w - 24, itemY + 8, { align: 'right' })
 
-    // Payment instructions
     const instrY = itemY + 24
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(10)
@@ -191,7 +237,6 @@ export default function Settings() {
     doc.text('Payment due by: ' + dueDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }), 20, instrY + 24)
     doc.text('Questions? Email support@feetracker.co.ke or WhatsApp +254 700 000 000', 20, instrY + 32)
 
-    // Footer
     doc.setFillColor(10, 31, 78)
     doc.rect(0, 275, w, 22, 'F')
     doc.setFont('helvetica', 'normal')
@@ -206,7 +251,8 @@ export default function Settings() {
 
   function sendInvoiceWhatsApp() {
     if (!school) return
-    const plan = getPlanDetails(studentCount)
+    const planName = school.currentPlan || 'Starter'
+    const plan = PLAN_DETAILS[planName] || PLAN_DETAILS['Starter']
     const today = new Date()
     const dueDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
     const invoiceNum = 'FT-' + school.id + '-' + today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0')
@@ -217,6 +263,13 @@ export default function Settings() {
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank')
   }
 
+  const currentPlan = school?.currentPlan || 'Starter'
+  const planDetails = PLAN_DETAILS[currentPlan] || PLAN_DETAILS['Starter']
+  const availableUpgrades = PLAN_UPGRADES[currentPlan] || []
+  const remaining = planDetails.maxStudents - studentCount
+  const progressPct = (studentCount / planDetails.maxStudents) * 100
+  const nearLimit = remaining <= 20
+
   return (
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
       <style>{`
@@ -225,6 +278,7 @@ export default function Settings() {
           .set-content { padding: 16px !important; max-width: 100% !important; }
           .set-term-row { flex-direction: column !important; }
           .set-invoice-row { flex-direction: column !important; }
+          .set-plan-cards { flex-direction: column !important; }
         }
       `}</style>
 
@@ -250,13 +304,67 @@ export default function Settings() {
                 {label: 'School name', value: school?.name},
                 {label: 'MPESA Paybill', value: school?.paybill || '—'},
                 {label: 'Current term', value: school?.currentTerm},
-                {label: 'Plan', value: getPlanDetails(studentCount).name + ' (' + studentCount + ' / ' + getPlanDetails(studentCount).maxStudents + ' students)'},
+                {label: 'Plan', value: currentPlan + ' (' + studentCount + ' / ' + planDetails.maxStudents + ' students)'},
               ].map((row, i, arr) => (
                 <div key={row.label} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none'}}>
                   <span style={{fontSize: '13px', color: '#64748b'}}>{row.label}</span>
                   <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{row.value}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Your Plan */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px'}}>
+                <div>
+                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Your Plan</h2>
+                  <p style={{fontSize: '12px', color: '#94a3b8'}}>Current plan and student usage</p>
+                </div>
+                {availableUpgrades.length > 0 && (
+                  <button
+                    onClick={() => setShowUpgradeModal(true)}
+                    style={{background: '#c8a84b', color: '#0a1f4e', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'}}
+                  >
+                    Upgrade Plan
+                  </button>
+                )}
+              </div>
+
+              <div className="set-plan-cards" style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
+                <div style={{flex: 1, background: '#f8f9fc', borderRadius: '8px', padding: '14px'}}>
+                  <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', margin: '0 0 4px'}}>Plan</p>
+                  <p style={{fontSize: '17px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 2px'}}>{currentPlan}</p>
+                  <p style={{fontSize: '12px', color: '#64748b', margin: 0}}>KES {planDetails.monthly.toLocaleString()}/month</p>
+                </div>
+                <div style={{flex: 1, background: '#f8f9fc', borderRadius: '8px', padding: '14px'}}>
+                  <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px'}}>Students</p>
+                  <p style={{fontSize: '17px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 2px'}}>{studentCount} / {planDetails.maxStudents}</p>
+                  <p style={{fontSize: '12px', color: '#64748b', margin: 0}}>enrolled</p>
+                </div>
+              </div>
+
+              <div style={{marginBottom: nearLimit ? '8px' : '0'}}>
+                <div style={{background: '#f1f5f9', borderRadius: '4px', height: '8px', overflow: 'hidden'}}>
+                  <div style={{
+                    background: remaining <= 0 ? '#ef4444' : nearLimit ? '#f59e0b' : '#0a1f4e',
+                    width: Math.min(progressPct, 100) + '%',
+                    height: '100%',
+                    borderRadius: '4px',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+              </div>
+
+              {nearLimit && remaining > 0 && (
+                <p style={{fontSize: '12px', color: '#d97706', marginTop: '8px', margin: '8px 0 0'}}>
+                  ⚠ Only {remaining} student slot{remaining === 1 ? '' : 's'} remaining. Consider upgrading your plan.
+                </p>
+              )}
+              {remaining <= 0 && (
+                <p style={{fontSize: '12px', color: '#ef4444', marginTop: '8px', margin: '8px 0 0'}}>
+                  Student limit reached. Upgrade your plan to add more students.
+                </p>
+              )}
             </div>
 
             <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
@@ -293,7 +401,7 @@ export default function Settings() {
               <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Subscription invoice</h2>
               <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
                 Generate your FeeTracker subscription invoice for {new Date().toLocaleString('en-KE', { month: 'long', year: 'numeric' })}.
-                Plan: <strong>{getPlanDetails(studentCount).name}</strong> — KES {getPlanDetails(studentCount).monthly.toLocaleString()}/month.
+                Plan: <strong>{planDetails.name}</strong> — KES {planDetails.monthly.toLocaleString()}/month.
               </p>
               <div className="set-invoice-row" style={{display: 'flex', gap: '10px'}}>
                 <button
@@ -329,6 +437,90 @@ export default function Settings() {
           </>
         )}
       </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
+          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+            {upgradeSuccess ? (
+              <>
+                <div style={{textAlign: 'center', padding: '8px 0 16px'}}>
+                  <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '22px'}}>✓</div>
+                  <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0a7c3e', marginBottom: '8px'}}>Request Submitted!</h3>
+                  <p style={{fontSize: '13px', color: '#64748b', lineHeight: 1.6}}>
+                    Your upgrade request has been submitted. We will contact you at <strong>{upgradeEmail}</strong> or via WhatsApp <strong>+254 746 353 411</strong> to complete the upgrade.
+                  </p>
+                </div>
+                <button
+                  onClick={closeUpgradeModal}
+                  style={{width: '100%', background: '#0a1f4e', color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer'}}
+                >
+                  Done
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Upgrade Your Plan</h3>
+                <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '20px'}}>Select a plan to upgrade to</p>
+
+                {availableUpgrades.map(plan => (
+                  <div
+                    key={plan.name}
+                    onClick={() => setRequestedPlan(plan.name)}
+                    style={{
+                      border: requestedPlan === plan.name ? '2px solid #0a1f4e' : '1px solid #e2e8f0',
+                      borderRadius: '8px', padding: '14px 16px', marginBottom: '10px', cursor: 'pointer',
+                      background: requestedPlan === plan.name ? '#f0f4ff' : '#fff'
+                    }}
+                  >
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                      <div>
+                        <p style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0}}>{plan.name}</p>
+                        <p style={{fontSize: '12px', color: '#64748b', margin: '2px 0 0'}}>Up to {plan.maxStudents} students</p>
+                      </div>
+                      <div style={{textAlign: 'right'}}>
+                        <p style={{fontSize: '14px', fontWeight: 700, color: '#0a1f4e', margin: 0}}>KES {plan.monthly.toLocaleString()}</p>
+                        <p style={{fontSize: '11px', color: '#94a3b8', margin: '2px 0 0'}}>per month</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <textarea
+                  placeholder="Any notes or questions? (optional)"
+                  value={upgradeNotes}
+                  onChange={e => setUpgradeNotes(e.target.value)}
+                  style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', resize: 'vertical', minHeight: '72px', marginBottom: '16px', boxSizing: 'border-box', outline: 'none'}}
+                />
+
+                {upgradeError && (
+                  <p style={{color: '#ef4444', fontSize: '12px', marginBottom: '12px'}}>{upgradeError}</p>
+                )}
+
+                <div style={{display: 'flex', gap: '10px'}}>
+                  <button
+                    onClick={closeUpgradeModal}
+                    style={{flex: 1, background: '#f1f5f9', color: '#64748b', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer'}}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitUpgrade}
+                    disabled={!requestedPlan || upgradeLoading}
+                    style={{
+                      flex: 2, background: (!requestedPlan || upgradeLoading) ? '#94a3b8' : '#0a1f4e',
+                      color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                      border: 'none', cursor: (!requestedPlan || upgradeLoading) ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {upgradeLoading ? 'Submitting...' : 'Request Upgrade'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

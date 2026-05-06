@@ -30,7 +30,15 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json(schools)
+    const pendingRequests = await prisma.planUpgradeRequest.groupBy({
+      by: ['schoolId'],
+      where: { status: 'pending' },
+      _count: true,
+    })
+    const pendingBySchool = Object.fromEntries(pendingRequests.map(r => [r.schoolId, r._count]))
+    const schoolsWithPending = schools.map(s => ({ ...s, pendingUpgrades: pendingBySchool[s.id] || 0 }))
+
+    return NextResponse.json(schoolsWithPending)
   } catch (err) {
     console.error('admin schools GET error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
