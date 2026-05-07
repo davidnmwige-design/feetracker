@@ -8,12 +8,16 @@ function reminderEmailHtml({
   studentName,
   studentClass,
   balance,
+  paybill,
+  accountNumberFormat,
 }: {
   schoolName: string
   parentName: string
   studentName: string
   studentClass: string
   balance: number
+  paybill?: string | null
+  accountNumberFormat?: string | null
 }) {
   return `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
@@ -43,8 +47,23 @@ function reminderEmailHtml({
           </table>
         </div>
         <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0">
-          Please make payment to our MPESA paybill at your earliest convenience. Thank you.
+          Please make payment at your earliest convenience. Thank you.
         </p>
+        ${paybill ? `
+        <div style="background:#0a1f4e;border-radius:8px;padding:16px 20px;margin-top:20px">
+          <p style="color:#c8a84b;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 10px">How to Pay</p>
+          <table style="width:100%;border-collapse:collapse">
+            <tr>
+              <td style="color:#94a3c8;font-size:12px;padding:4px 0">MPESA Paybill</td>
+              <td style="text-align:right;font-weight:700;color:#c8a84b;font-size:15px">${paybill}</td>
+            </tr>
+            ${accountNumberFormat ? `<tr><td style="color:#94a3c8;font-size:12px;padding:4px 0">Account Number</td><td style="text-align:right;color:#fff;font-size:12px">${accountNumberFormat}</td></tr>` : ''}
+            <tr>
+              <td style="color:#94a3c8;font-size:12px;padding:4px 0">Amount Due</td>
+              <td style="text-align:right;font-weight:700;color:#fff;font-size:13px">KES ${balance.toLocaleString()}</td>
+            </tr>
+          </table>
+        </div>` : ''}
       </div>
       <div style="padding:16px;background:#f8f9fc;text-align:center">
         <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker &middot; support@feetracker.co.ke</p>
@@ -100,7 +119,12 @@ export default function Reminders() {
     const balance = getBalance(student)
     const name = student.parentName || 'Parent'
     const cls = student.class + ' ' + student.stream
-    return 'Dear ' + name + ', this is a reminder that ' + student.name + ' (' + cls + ') has an outstanding fee balance of KES ' + balance.toLocaleString() + ' for this term. Please make payment to our MPESA paybill at your earliest convenience. Thank you. - FeeTracker'
+    let msg = 'Dear ' + name + ', this is a reminder that ' + student.name + ' (' + cls + ') has an outstanding fee balance of KES ' + balance.toLocaleString() + ' for this term. Please make payment at your earliest convenience. Thank you. - ' + (school?.name || 'FeeTracker')
+    if (school?.paybill) {
+      const acctFmt = school.accountNumberFormat ? ' | Account No: ' + school.accountNumberFormat : ''
+      msg += '\nTo pay: MPESA Paybill ' + school.paybill + acctFmt + ' | Balance: KES ' + balance.toLocaleString()
+    }
+    return msg
   }
 
   function copyMessage(id: number, msg: string) {
@@ -127,6 +151,8 @@ export default function Reminders() {
         studentName: student.name,
         studentClass: `${student.class} ${student.stream || ''}`.trim(),
         balance: getBalance(student),
+        paybill: school?.paybill,
+        accountNumberFormat: school?.accountNumberFormat,
       })
       const res = await fetch('/api/send-email', {
         method: 'POST',
@@ -182,6 +208,8 @@ export default function Reminders() {
           studentName: student.name,
           studentClass: `${student.class} ${student.stream || ''}`.trim(),
           balance: getBalance(student),
+          paybill: school?.paybill,
+          accountNumberFormat: school?.accountNumberFormat,
         })
         const res = await fetch('/api/send-email', {
           method: 'POST',

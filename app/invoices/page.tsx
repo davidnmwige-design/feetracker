@@ -108,19 +108,33 @@ async function buildInvoicePdf(school: any, student: any, totalPaid: number) {
   doc.text(`KES ${totalDue.toLocaleString()}`, W - 25, y + 8.5, { align: 'right' })
   y += 20
 
-  // Payment instructions
-  if (school.paybill) {
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(10, 31, 78)
-    doc.text('Payment Instructions', 20, y)
-    y += 7
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(71, 85, 105)
-    doc.text(`Pay to ${school.name} via MPESA`, 20, y)
-    y += 7
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(15, 23, 42)
-    doc.text(`Paybill: ${school.paybill}`, 20, y)
-    y += 7
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(71, 85, 105)
-    doc.text(`Payment due by: ${dueDateStr}`, 20, y)
+  // HOW TO PAY box
+  {
+    const boxH = 38
+    doc.setFillColor(10, 31, 78); doc.rect(20, y, W - 40, boxH, 'F')
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(200, 168, 75)
+    doc.setCharSpace(2); doc.text('HOW TO PAY', 26, y + 9); doc.setCharSpace(0)
+
+    if (school.paybill) {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(148, 163, 200)
+      doc.text('MPESA Paybill:', 26, y + 20)
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(200, 168, 75)
+      doc.text(school.paybill, 63, y + 20)
+
+      const acctLine = school.accountNumberFormat
+        ? `Account: ${school.accountNumberFormat}`
+        : 'Account: Contact school'
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(148, 163, 200)
+      doc.text(acctLine, 26, y + 30)
+
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(255, 255, 255)
+      doc.text(`Amount: KES ${totalDue.toLocaleString()}`, W - 26, y + 30, { align: 'right' })
+    } else {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(148, 163, 200)
+      doc.text('Contact school for payment details', 26, y + 22)
+    }
+    y += boxH + 4
   }
 
   // Navy footer
@@ -330,7 +344,10 @@ export default function Invoices() {
     if (student.otherFee > 0) lines.push(`• Other: KES ${student.otherFee.toLocaleString()}`)
     lines.push(`• Amount paid: KES ${totalPaid.toLocaleString()}`)
     lines.push(`• *TOTAL DUE: KES ${totalDue.toLocaleString()}*`)
-    if (school.paybill) lines.push(`\nPlease pay to paybill ${school.paybill} by ${dueDateStr}.`)
+    if (school.paybill) {
+      const acctFmt = school.accountNumberFormat ? ` | Account: ${school.accountNumberFormat}` : ''
+      lines.push(`\n*HOW TO PAY:* MPESA Paybill ${school.paybill}${acctFmt} | Amount: KES ${totalDue.toLocaleString()} | Due: ${dueDateStr}`)
+    }
     lines.push(`— ${school.name}`)
 
     const waPhone = '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '')

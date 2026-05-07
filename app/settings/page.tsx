@@ -36,6 +36,10 @@ export default function Settings() {
   const [starting, setStarting] = useState(false)
   const [selectedTerm, setSelectedTerm] = useState('')
 
+  const [acctFmt, setAcctFmt] = useState('')
+  const [acctFmtSaving, setAcctFmtSaving] = useState(false)
+  const [acctFmtSaved, setAcctFmtSaved] = useState(false)
+
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [requestedPlan, setRequestedPlan] = useState('')
   const [upgradeNotes, setUpgradeNotes] = useState('')
@@ -59,9 +63,27 @@ export default function Settings() {
     const termsData = await termsRes.json()
     const studentsData = await studentsRes.json()
     setSchool(schoolData)
+    setAcctFmt(schoolData?.accountNumberFormat || '')
     setTerms(termsData)
     setStudentCount(Array.isArray(studentsData) ? studentsData.length : 0)
     setLoading(false)
+  }
+
+  async function saveAcctFmt() {
+    setAcctFmtSaving(true)
+    setAcctFmtSaved(false)
+    try {
+      await fetch('/api/school', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountNumberFormat: acctFmt }),
+      })
+      setSchool((prev: any) => prev ? { ...prev, accountNumberFormat: acctFmt } : prev)
+      setAcctFmtSaved(true)
+      setTimeout(() => setAcctFmtSaved(false), 3000)
+    } finally {
+      setAcctFmtSaving(false)
+    }
   }
 
   async function startNewTerm() {
@@ -317,6 +339,42 @@ export default function Settings() {
                   <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{row.value}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Payment settings */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Payment settings</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+                Tell parents how to pay when sending invoices and reminders
+              </p>
+              <label style={{fontSize: '13px', color: '#0f172a', fontWeight: 600, display: 'block', marginBottom: '4px'}}>
+                Payment Account Number Format
+              </label>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '8px'}}>
+                e.g. "ADM followed by your admission number" or "Your child's admission number e.g. ADM1234"
+              </p>
+              <div style={{display: 'flex', gap: '10px'}}>
+                <input
+                  type="text"
+                  value={acctFmt}
+                  onChange={e => setAcctFmt(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveAcctFmt() }}
+                  placeholder="Your child's admission number e.g. ADM1234"
+                  style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none'}}
+                />
+                <button
+                  onClick={saveAcctFmt}
+                  disabled={acctFmtSaving}
+                  style={{
+                    background: acctFmtSaved ? '#0a7c3e' : '#c8a84b',
+                    color: acctFmtSaved ? '#fff' : '#0a1f4e',
+                    padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                    border: 'none', cursor: acctFmtSaving ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const,
+                  }}
+                >
+                  {acctFmtSaved ? '✓ Saved' : acctFmtSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
             </div>
 
             {/* Your Plan */}

@@ -50,6 +50,8 @@ export function paymentConfirmationHtml({
   amount,
   balance,
   breakdown,
+  paybill,
+  accountNumberFormat,
 }: {
   schoolName: string
   parentName: string
@@ -64,6 +66,8 @@ export function paymentConfirmationHtml({
     otherFee: number
     totalFee: number
   }
+  paybill?: string | null
+  accountNumberFormat?: string | null
 }): string {
   const balanceColor = balance > 0 ? '#e24b4a' : '#0a7c3e'
   const balanceText = balance <= 0
@@ -111,6 +115,21 @@ export function paymentConfirmationHtml({
         <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0">
           Thank you for your payment. Please retain this message for your records.
         </p>
+        ${balance > 0 && paybill ? `
+        <div style="background:#0a1f4e;border-radius:8px;padding:16px 20px;margin-top:20px">
+          <p style="color:#c8a84b;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 10px">How to Pay Remaining Balance</p>
+          <table style="width:100%;border-collapse:collapse">
+            <tr>
+              <td style="color:#94a3c8;font-size:12px;padding:4px 0">MPESA Paybill</td>
+              <td style="text-align:right;font-weight:700;color:#c8a84b;font-size:15px">${paybill}</td>
+            </tr>
+            ${accountNumberFormat ? `<tr><td style="color:#94a3c8;font-size:12px;padding:4px 0">Account Number</td><td style="text-align:right;color:#fff;font-size:12px">${accountNumberFormat}</td></tr>` : ''}
+            <tr>
+              <td style="color:#94a3c8;font-size:12px;padding:4px 0">Amount Due</td>
+              <td style="text-align:right;font-weight:700;color:#fff;font-size:13px">KES ${balance.toLocaleString()}</td>
+            </tr>
+          </table>
+        </div>` : ''}
       </div>
       <div style="padding:16px;background:#f8f9fc;text-align:center">
         <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker &middot; support@feetracker.co.ke</p>

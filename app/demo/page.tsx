@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const SCHOOL = { name: 'Westlands Academy', term: 'Term 2 2026', paybill: '522522' }
+const SCHOOL = { name: 'Westlands Academy', term: 'Term 2 2026', paybill: '522522', accountNumberFormat: "Your child's admission number e.g. ADM0001" }
 
 const STUDENTS = [
   { name: 'Brian Kamau',   admNo: 'WA/001', cls: 'Form 2 North', parent: 'Mary Kamau',    phone: '0722111001', fee: 45000, paid: 45000 },
@@ -36,7 +36,7 @@ const REMINDERS = STUDENTS.filter(s => s.paid < s.fee).map(s => ({
   ...s,
   balance: s.fee - s.paid,
   waPhone: '254' + s.phone.slice(1),
-  msg: `Dear ${s.parent}, this is a fee reminder from ${SCHOOL.name}. ${s.name} in ${s.cls} has an outstanding balance of KES ${(s.fee - s.paid).toLocaleString()} for ${SCHOOL.term}. Kindly settle at your earliest convenience. Thank you. — ${SCHOOL.name}`,
+  msg: `Dear ${s.parent}, this is a fee reminder from ${SCHOOL.name}. ${s.name} in ${s.cls} has an outstanding balance of KES ${(s.fee - s.paid).toLocaleString()} for ${SCHOOL.term}. Kindly settle at your earliest convenience. Thank you. — ${SCHOOL.name}\nTo pay: MPESA Paybill ${SCHOOL.paybill} | Account No: ${SCHOOL.accountNumberFormat} | Balance: KES ${(s.fee - s.paid).toLocaleString()}`,
 }))
 
 const CERT_STUDENT = STUDENTS[0] // Brian Kamau — fully paid
@@ -748,7 +748,21 @@ function TabInvoices() {
             </div>
           </div>
 
-          <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>Pay via MPESA Paybill: <strong style={{ color: '#0f172a' }}>{SCHOOL.paybill}</strong></p>
+          <div style={{ background: '#0a1f4e', borderRadius: '6px', padding: '12px 14px', marginTop: '2px' }}>
+            <p style={{ color: '#c8a84b', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', margin: '0 0 8px' }}>HOW TO PAY</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+              <span style={{ fontSize: '11px', color: '#94a3c8' }}>MPESA Paybill</span>
+              <span style={{ fontSize: '15px', fontWeight: 700, color: '#c8a84b' }}>{SCHOOL.paybill}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <span style={{ fontSize: '10px', color: '#94a3c8' }}>Account</span>
+              <span style={{ fontSize: '10px', color: '#cbd5e1' }}>{SCHOOL.accountNumberFormat}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: '#94a3c8' }}>Amount</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#fff' }}>KES {previewDue.toLocaleString()}</span>
+            </div>
+          </div>
         </div>
         <div style={{ background: '#0a1f4e', padding: '8px 16px', textAlign: 'center' as const }}>
           <p style={{ fontSize: '10px', color: '#94a3c8', margin: 0 }}>For queries contact {SCHOOL.name} · Powered by FeeTracker</p>

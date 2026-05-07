@@ -134,7 +134,11 @@ export async function POST(req: Request) {
       })
       const paid = totalPaid._sum.amount || 0
       const balance = matched.feeRequired - paid
-      const msg = `Dear ${matched.parentName || 'Parent'}, we have received KES ${amount.toLocaleString()} for ${matched.name}, ${matched.class}. Outstanding balance: KES ${balance.toLocaleString()}. Thank you. - ${user.school!.name}`
+      let msg = `Dear ${matched.parentName || 'Parent'}, we have received KES ${amount.toLocaleString()} for ${matched.name}, ${matched.class}. Outstanding balance: KES ${balance.toLocaleString()}. Thank you. - ${user.school!.name}`
+      if (balance > 0 && user.school!.paybill) {
+        const acctFmt = user.school!.accountNumberFormat ? ` Account ${user.school!.accountNumberFormat}` : ''
+        msg += `\nIf you have an outstanding balance of KES ${balance.toLocaleString()}, please pay to Paybill ${user.school!.paybill}${acctFmt}`
+      }
       const phone = matched.parentPhone
         ? '254' + matched.parentPhone.replace(/\s/g, '').replace(/^0/, '')
         : ''
@@ -159,6 +163,8 @@ export async function POST(req: Request) {
               otherFee: matched.otherFee,
               totalFee: matched.feeRequired,
             } : undefined,
+            paybill: user.school!.paybill,
+            accountNumberFormat: user.school!.accountNumberFormat,
           }),
         }).catch(err => console.error('Payment email failed:', err))
       }

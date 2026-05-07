@@ -20,8 +20,9 @@ model User {
 model School {
   id              Int                  @id @default(autoincrement())
   name            String
-  paybill         String?
-  currentTerm     String               @default("Term 1 2026")
+  paybill             String?
+  accountNumberFormat String?
+  currentTerm         String               @default("Term 1 2026")
   currentPlan     String               @default("Starter")
   createdAt       DateTime             @default(now())
   trialEndsAt     DateTime?
