@@ -574,9 +574,201 @@ function TabCertificate() {
   )
 }
 
+// ── Tab 6: Invoices ───────────────────────────────────────────────────────────
+
+const DEMO_INVOICES = [
+  { name: 'Brian Kamau',   admNo: 'WA/001', cls: 'Form 2 North', parent: 'Mary Kamau',    phone: '0722111001', tuition: 35000, sports: 5000, clubs: 3000, other: 2000, paid: 45000, status: 'paid' },
+  { name: 'Aisha Mwangi',  admNo: 'WA/002', cls: 'Form 2 North', parent: 'James Mwangi',  phone: '0722111002', tuition: 35000, sports: 5000, clubs: 3000, other: 2000, paid: 25000, status: 'sent' },
+  { name: 'Daniel Otieno', admNo: 'WA/003', cls: 'Form 2 South', parent: 'Grace Otieno',  phone: '0722111003', tuition: 35000, sports: 5000, clubs: 3000, other: 2000, paid: 0,     status: 'draft' },
+  { name: 'Grace Njeri',   admNo: 'WA/004', cls: 'Form 3 North', parent: 'John Njeri',    phone: '0722111004', tuition: 42000, sports: 5000, clubs: 3000, other: 2000, paid: 52000, status: 'sent' },
+  { name: 'Kevin Ochieng', admNo: 'WA/005', cls: 'Form 3 South', parent: 'Peter Ochieng', phone: '0722111005', tuition: 42000, sports: 5000, clubs: 3000, other: 2000, paid: 10000, status: 'draft' },
+]
+
+function InvoiceStatusBadge({ status }: { status: string }) {
+  const map: Record<string, { bg: string; color: string }> = {
+    paid:  { bg: '#e1f5ee', color: '#166534' },
+    sent:  { bg: '#dbeafe', color: '#1e40af' },
+    draft: { bg: '#f1f5f9', color: '#475569' },
+  }
+  const s = map[status] || map.draft
+  return (
+    <span style={{ background: s.bg, color: s.color, fontSize: '10px', padding: '3px 9px', borderRadius: '999px', fontWeight: 700, textTransform: 'capitalize' as const }}>
+      {status}
+    </span>
+  )
+}
+
+function TabInvoices() {
+  const [search, setSearch] = useState('')
+  const [statuses, setStatuses] = useState<Record<string, string>>(
+    Object.fromEntries(DEMO_INVOICES.map(s => [s.admNo, s.status]))
+  )
+  const q = search.toLowerCase()
+  const filtered = DEMO_INVOICES.filter(s =>
+    s.name.toLowerCase().includes(q) || s.cls.toLowerCase().includes(q)
+  )
+
+  // Sample invoice preview uses the first student
+  const preview = DEMO_INVOICES[0]
+  const previewTotal = preview.tuition + preview.sports + preview.clubs + preview.other
+  const previewDue = Math.max(0, previewTotal - preview.paid)
+  const today = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
+  const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    .toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
+
+  function handleSend(admNo: string, via: 'email' | 'wa') {
+    setStatuses(p => ({ ...p, [admNo]: 'sent' }))
+  }
+
+  return (
+    <div>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', gap: '10px', flexWrap: 'wrap' as const }}>
+        <input
+          type="text" placeholder="Search students…" value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 12px', fontSize: '12px', width: '220px', outline: 'none' }}
+        />
+        <button style={{ background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '9px 18px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
+          Send invoices to all ({DEMO_INVOICES.length})
+        </button>
+      </div>
+
+      {/* Student invoice list */}
+      <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '700px' }}>
+            <thead>
+              <tr style={{ textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9' }}>
+                {['Student', 'Class', 'Fee Breakdown', 'Paid', 'Due', 'Status', 'Actions'].map(h => (
+                  <th key={h} style={{ padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(s => {
+                const total = s.tuition + s.sports + s.clubs + s.other
+                const due = Math.max(0, total - s.paid)
+                const status = statuses[s.admNo] || s.status
+                return (
+                  <tr key={s.admNo} style={{ borderBottom: '1px solid #f8fafc' }}>
+                    <td style={{ padding: '10px 14px' }}>
+                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{s.name}</div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{s.admNo}</div>
+                    </td>
+                    <td style={{ padding: '10px 14px', color: '#64748b', whiteSpace: 'nowrap' }}>{s.cls}</td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.6 }}>
+                        <div>Tuition: KES {s.tuition.toLocaleString()}</div>
+                        <div>Sports: KES {s.sports.toLocaleString()}</div>
+                        <div>Clubs: KES {s.clubs.toLocaleString()}</div>
+                        <div>Other: KES {s.other.toLocaleString()}</div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '10px 14px', color: '#166534', fontWeight: 600, whiteSpace: 'nowrap' }}>KES {s.paid.toLocaleString()}</td>
+                    <td style={{ padding: '10px 14px', color: due > 0 ? '#dc2626' : '#166534', fontWeight: 600, whiteSpace: 'nowrap' }}>KES {due.toLocaleString()}</td>
+                    <td style={{ padding: '10px 14px' }}><InvoiceStatusBadge status={status} /></td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          onClick={() => handleSend(s.admNo, 'email')}
+                          style={{ fontSize: '11px', background: '#0a1f4e', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontWeight: 600 }}
+                        >
+                          ✉ Email
+                        </button>
+                        <button
+                          onClick={() => handleSend(s.admNo, 'wa')}
+                          style={{ fontSize: '11px', background: '#25D366', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontWeight: 600 }}
+                        >
+                          WhatsApp
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Invoice preview */}
+      <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
+        Sample invoice for <strong style={{ color: '#0f172a' }}>Brian Kamau</strong>:
+      </p>
+      <div style={{ background: '#fff', borderRadius: '10px', border: '2px solid #e2e8f0', overflow: 'hidden', maxWidth: '480px', margin: '0 auto 20px', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+        <div style={{ background: '#0a1f4e', padding: '20px 28px', textAlign: 'center' as const }}>
+          <p style={{ color: '#c8a84b', fontSize: '17px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: '0 0 3px' }}>{SCHOOL.name.toUpperCase()}</p>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', letterSpacing: '2px', margin: '0 0 2px' }}>FEE INVOICE</p>
+          <p style={{ color: 'rgba(200,168,75,0.8)', fontSize: '11px', margin: 0 }}>{SCHOOL.term}</p>
+        </div>
+        <div style={{ height: '3px', background: '#c8a84b' }} />
+        <div style={{ padding: '20px 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px', fontSize: '11px', color: '#64748b' }}>
+            <div><div style={{ color: '#94a3b8', fontSize: '10px', marginBottom: '2px' }}>Invoice No</div><div style={{ color: '#0f172a', fontWeight: 600 }}>INV-2026-WA-001</div></div>
+            <div><div style={{ color: '#94a3b8', fontSize: '10px', marginBottom: '2px' }}>Issue Date</div><div style={{ color: '#0f172a', fontWeight: 600 }}>{today}</div></div>
+            <div><div style={{ color: '#94a3b8', fontSize: '10px', marginBottom: '2px' }}>Due Date</div><div style={{ color: '#0f172a', fontWeight: 600 }}>{dueDate}</div></div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+            <div style={{ background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px' }}>
+              <p style={{ fontSize: '9px', color: '#94a3b8', textTransform: 'uppercase' as const, letterSpacing: '1px', margin: '0 0 4px' }}>Student</p>
+              <p style={{ fontSize: '12px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 2px' }}>{preview.name}</p>
+              <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{preview.admNo} · {preview.cls}</p>
+            </div>
+            <div style={{ background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px' }}>
+              <p style={{ fontSize: '9px', color: '#94a3b8', textTransform: 'uppercase' as const, letterSpacing: '1px', margin: '0 0 4px' }}>Parent</p>
+              <p style={{ fontSize: '12px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 2px' }}>{preview.parent}</p>
+              <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{preview.phone}</p>
+            </div>
+          </div>
+
+          <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden', marginBottom: '10px' }}>
+            <div style={{ background: '#0a1f4e', padding: '6px 12px', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '10px', color: '#c8a84b', fontWeight: 700 }}>DESCRIPTION</span>
+              <span style={{ fontSize: '10px', color: '#c8a84b', fontWeight: 700 }}>AMOUNT</span>
+            </div>
+            {[['Tuition Fee', preview.tuition], ['Sports Fee', preview.sports], ['Clubs Fee', preview.clubs], ['Other Fee', preview.other]].map(([label, amt], i) => (
+              <div key={String(label)} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 12px', background: i % 2 === 0 ? '#fff' : '#f8f9fc', fontSize: '12px' }}>
+                <span style={{ color: '#64748b' }}>{label}</span>
+                <span style={{ color: '#0f172a' }}>KES {Number(amt).toLocaleString()}</span>
+              </div>
+            ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 12px', borderTop: '1px solid #e2e8f0', fontSize: '12px' }}>
+              <span style={{ color: '#64748b' }}>Subtotal</span>
+              <span style={{ color: '#0f172a', fontWeight: 600 }}>KES {previewTotal.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 12px', borderTop: '1px solid #e2e8f0', fontSize: '12px' }}>
+              <span style={{ color: '#64748b' }}>Amount Paid</span>
+              <span style={{ color: '#166534', fontWeight: 600 }}>KES {preview.paid.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#c8a84b', fontSize: '13px', fontWeight: 700 }}>
+              <span style={{ color: '#0a1f4e' }}>TOTAL DUE</span>
+              <span style={{ color: '#0a1f4e' }}>KES {previewDue.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 4px' }}>Pay via MPESA Paybill: <strong style={{ color: '#0f172a' }}>{SCHOOL.paybill}</strong></p>
+        </div>
+        <div style={{ background: '#0a1f4e', padding: '8px 16px', textAlign: 'center' as const }}>
+          <p style={{ fontSize: '10px', color: '#94a3c8', margin: 0 }}>For queries contact {SCHOOL.name} · Powered by FeeTracker</p>
+        </div>
+      </div>
+
+      <div style={{ background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px 16px', marginBottom: '20px' }}>
+        <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
+          <strong style={{ color: '#0f172a' }}>In your live account:</strong> invoices are generated as PDFs and sent directly to parent emails. Parents with no email receive the fee breakdown via WhatsApp instead.
+        </p>
+      </div>
+
+      <CTA />
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-type Tab = 'dashboard' | 'students' | 'upload' | 'reminders' | 'certificate'
+type Tab = 'dashboard' | 'students' | 'upload' | 'reminders' | 'certificate' | 'invoices'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'dashboard',   label: 'Dashboard'    },
@@ -584,6 +776,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'upload',      label: 'Upload Statement' },
   { id: 'reminders',   label: 'Reminders'    },
   { id: 'certificate', label: 'Certificate'  },
+  { id: 'invoices',    label: 'Invoices'     },
 ]
 
 export default function Demo() {
@@ -655,6 +848,7 @@ export default function Demo() {
         {tab === 'upload'      && <TabUpload />}
         {tab === 'reminders'   && <TabReminders />}
         {tab === 'certificate' && <TabCertificate />}
+        {tab === 'invoices'    && <TabInvoices />}
       </div>
     </div>
   )

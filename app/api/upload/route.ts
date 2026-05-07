@@ -141,6 +141,7 @@ export async function POST(req: Request) {
       results.notifications.push({ msg, phone })
 
       if (matched.parentEmail) {
+        const hasFeeBreakdown = matched.tuitionFee > 0 || matched.sportsFee > 0 || matched.clubsFee > 0 || matched.otherFee > 0
         sendEmail({
           to: matched.parentEmail,
           subject: `Payment received for ${matched.name} — ${user.school!.name}`,
@@ -151,6 +152,13 @@ export async function POST(req: Request) {
             studentClass: `${matched.class} ${matched.stream || ''}`.trim(),
             amount,
             balance,
+            breakdown: hasFeeBreakdown ? {
+              tuitionFee: matched.tuitionFee,
+              sportsFee: matched.sportsFee,
+              clubsFee: matched.clubsFee,
+              otherFee: matched.otherFee,
+              totalFee: matched.feeRequired,
+            } : undefined,
           }),
         }).catch(err => console.error('Payment email failed:', err))
       }

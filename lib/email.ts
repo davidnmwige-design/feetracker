@@ -34,7 +34,7 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
   }
   if (opts.pdfBase64) {
     mailOptions.attachments = [{
-      filename: opts.pdfFilename || 'certificate.pdf',
+      filename: opts.pdfFilename || 'document.pdf',
       content: Buffer.from(opts.pdfBase64, 'base64'),
       contentType: 'application/pdf',
     }]
@@ -49,6 +49,7 @@ export function paymentConfirmationHtml({
   studentClass,
   amount,
   balance,
+  breakdown,
 }: {
   schoolName: string
   parentName: string
@@ -56,11 +57,28 @@ export function paymentConfirmationHtml({
   studentClass: string
   amount: number
   balance: number
+  breakdown?: {
+    tuitionFee: number
+    sportsFee: number
+    clubsFee: number
+    otherFee: number
+    totalFee: number
+  }
 }): string {
   const balanceColor = balance > 0 ? '#e24b4a' : '#0a7c3e'
   const balanceText = balance <= 0
     ? 'KES 0 — Fully Cleared'
     : `KES ${balance.toLocaleString()}`
+
+  const breakdownRows = breakdown
+    ? [
+        breakdown.tuitionFee > 0 ? `<tr style="border-top:1px solid #e2e8f0"><td style="padding:8px 0;color:#64748b;font-size:13px">Tuition Fee</td><td style="text-align:right;font-size:13px">KES ${breakdown.tuitionFee.toLocaleString()}</td></tr>` : '',
+        breakdown.sportsFee > 0  ? `<tr style="border-top:1px solid #e2e8f0"><td style="padding:8px 0;color:#64748b;font-size:13px">Sports Fee</td><td style="text-align:right;font-size:13px">KES ${breakdown.sportsFee.toLocaleString()}</td></tr>` : '',
+        breakdown.clubsFee > 0   ? `<tr style="border-top:1px solid #e2e8f0"><td style="padding:8px 0;color:#64748b;font-size:13px">Clubs Fee</td><td style="text-align:right;font-size:13px">KES ${breakdown.clubsFee.toLocaleString()}</td></tr>` : '',
+        breakdown.otherFee > 0   ? `<tr style="border-top:1px solid #e2e8f0"><td style="padding:8px 0;color:#64748b;font-size:13px">Other Fee</td><td style="text-align:right;font-size:13px">KES ${breakdown.otherFee.toLocaleString()}</td></tr>` : '',
+        `<tr style="border-top:2px solid #e2e8f0"><td style="padding:8px 0;color:#64748b;font-size:13px">Total Required</td><td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">KES ${breakdown.totalFee.toLocaleString()}</td></tr>`,
+      ].filter(Boolean).join('')
+    : ''
 
   return `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
@@ -83,6 +101,7 @@ export function paymentConfirmationHtml({
               <td style="padding:8px 0;color:#64748b;font-size:13px">Amount Paid</td>
               <td style="text-align:right;font-weight:700;color:#0a1f4e;font-size:15px">KES ${amount.toLocaleString()}</td>
             </tr>
+            ${breakdownRows}
             <tr style="border-top:1px solid #e2e8f0">
               <td style="padding:8px 0;color:#64748b;font-size:13px">Outstanding Balance</td>
               <td style="text-align:right;font-weight:700;color:${balanceColor};font-size:13px">${balanceText}</td>

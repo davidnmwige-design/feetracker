@@ -16,6 +16,7 @@ export default function AppNav() {
       </Link>
       <div className="flex items-center gap-6">
         <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">Dashboard</Link>
+        <Link href="/invoices" className="text-sm text-gray-600 hover:text-gray-900">Invoices</Link>
         <Link href="/reminders" className="text-sm text-gray-600 hover:text-gray-900">Reminders</Link>
         <Link href="/settings" className="text-sm text-gray-600 hover:text-gray-900">Settings</Link>
         <LogoutButton />
