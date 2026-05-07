@@ -31,6 +31,8 @@ model School {
   terms           Term[]
   payments        Payment[]
   upgradeRequests PlanUpgradeRequest[]
+  notes           SchoolNote[]
+  billingRecords  BillingRecord[]
 }
 
 model PlanUpgradeRequest {
@@ -100,4 +102,25 @@ model PasswordReset {
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model SchoolNote {
+  id        Int      @id @default(autoincrement())
+  schoolId  Int
+  content   String
+  createdAt DateTime @default(now())
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
+model BillingRecord {
+  id       Int       @id @default(autoincrement())
+  schoolId Int
+  month    Int
+  year     Int
+  isPaid   Boolean   @default(false)
+  paidAt   DateTime?
+  amount   Float
+  school   School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, month, year])
 }

@@ -9,22 +9,62 @@ const PLANS = {
   Enterprise: { monthly: 15000, setup: 35000, maxStudents: null },
 }
 
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
 export default function AdminBilling() {
   const [schools, setSchools] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [paid, setPaid] = useState<Record<number, boolean>>({})
+  const [billingRecords, setBillingRecords] = useState<any[]>([])
+  const [markingPaid, setMarkingPaid] = useState<Record<number, boolean>>({})
   const [upgradeRequests, setUpgradeRequests] = useState<any[]>([])
   const [upgradeLoading, setUpgradeLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<Record<number, boolean>>({})
+
+  const now = new Date()
+  const currentMonth = now.getMonth() + 1
+  const currentYear = now.getFullYear()
 
   useEffect(() => {
     fetch('/api/admin/schools')
       .then(r => r.json())
       .then(data => { setSchools(data); setLoading(false) })
+    fetch('/api/admin/billing')
+      .then(r => r.json())
+      .then(data => setBillingRecords(Array.isArray(data) ? data : []))
     fetch('/api/admin/upgrade')
       .then(r => r.json())
       .then(data => { setUpgradeRequests(Array.isArray(data) ? data : []); setUpgradeLoading(false) })
   }, [])
+
+  function getBillingRecord(schoolId: number) {
+    return billingRecords.find(r => r.schoolId === schoolId && r.month === currentMonth && r.year === currentYear)
+  }
+
+  async function togglePaid(school: any) {
+    const planName = getPlanName(school)
+    const plan = PLANS[planName as keyof typeof PLANS] || PLANS.Starter
+    const existing = getBillingRecord(school.id)
+    const newIsPaid = !existing?.isPaid
+
+    setMarkingPaid(prev => ({ ...prev, [school.id]: true }))
+    const res = await fetch('/api/admin/billing', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        schoolId: school.id,
+        month: currentMonth,
+        year: currentYear,
+        amount: plan.monthly,
+        isPaid: newIsPaid,
+      }),
+    })
+    const record = await res.json()
+    setBillingRecords(prev => {
+      const filtered = prev.filter(r => !(r.schoolId === school.id && r.month === currentMonth && r.year === currentYear))
+      return [...filtered, record]
+    })
+    setMarkingPaid(prev => ({ ...prev, [school.id]: false }))
+  }
 
   async function handleUpgradeAction(requestId: number, action: 'approve' | 'reject') {
     setActionLoading(prev => ({ ...prev, [requestId]: true }))
@@ -55,11 +95,8 @@ export default function AdminBilling() {
     return sum + plan.setup
   }, 0)
 
-  const totalPaidMonthly = schools.filter(s => paid[s.id]).reduce((sum, s) => {
-    const plan = PLANS[getPlanName(s) as keyof typeof PLANS] || PLANS.Starter
-    return sum + plan.monthly
-  }, 0)
-
+  const paidThisMonth = billingRecords.filter(r => r.month === currentMonth && r.year === currentYear && r.isPaid)
+  const totalPaidMonthly = paidThisMonth.reduce((sum, r) => sum + r.amount, 0)
   const totalOutstanding = totalMonthly - totalPaidMonthly
 
   return (
@@ -154,7 +191,7 @@ export default function AdminBilling() {
 
         <div className="bg-white rounded-xl border border-gray-200">
           <div className="p-4 border-b border-gray-100">
-            <h2 className="font-medium text-gray-900">School billing — {new Date().toLocaleString('en-KE', { month: 'long', year: 'numeric' })}</h2>
+            <h2 className="font-medium text-gray-900">School billing — {MONTH_NAMES[currentMonth - 1]} {currentYear}</h2>
           </div>
           <div className="overflow-x-auto">
           <table className="w-full text-sm" style={{minWidth: '640px'}}>
@@ -177,7 +214,9 @@ export default function AdminBilling() {
                 const studentCount = school._count?.students || 0
                 const planName = getPlanName(school)
                 const plan = PLANS[planName as keyof typeof PLANS] || PLANS.Starter
-                const isPaid = paid[school.id] || false
+                const record = getBillingRecord(school.id)
+                const isPaid = record?.isPaid || false
+                const isMarking = markingPaid[school.id] || false
                 const planColor = planName === 'Starter' ? 'bg-gray-100 text-gray-700' : planName === 'Growth' ? 'bg-blue-100 text-blue-700' : planName === 'Premium' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
 
                 return (
@@ -194,12 +233,20 @@ export default function AdminBilling() {
                     <td className="p-3 text-gray-500">KES {plan.setup.toLocaleString()}</td>
                     <td className="p-3 text-gray-500">{new Date(school.createdAt).toLocaleDateString('en-KE')}</td>
                     <td className="p-3">
-                      <button
-                        onClick={() => setPaid(prev => ({ ...prev, [school.id]: !prev[school.id] }))}
-                        className={'text-xs px-3 py-1.5 rounded-lg font-medium border ' + (isPaid ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200')}
-                      >
-                        {isPaid ? 'Paid ✓' : 'Mark as paid'}
-                      </button>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => togglePaid(school)}
+                          disabled={isMarking}
+                          className={'text-xs px-3 py-1.5 rounded-lg font-medium border disabled:opacity-50 ' + (isPaid ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200')}
+                        >
+                          {isMarking ? '...' : isPaid ? 'Paid ✓' : 'Mark as paid'}
+                        </button>
+                        {isPaid && record?.paidAt && (
+                          <span className="text-xs text-gray-400">
+                            {new Date(record.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )

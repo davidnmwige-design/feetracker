@@ -310,8 +310,11 @@ function TabReminders() {
   const [allSent, setAllSent] = useState(false)
 
   function sendOne(name: string) {
-    setSent(p => ({ ...p, [name]: true }))
-    if (Object.keys(sent).length + 1 === REMINDERS.length) setAllSent(true)
+    setSent(p => {
+      const updated = { ...p, [name]: true }
+      if (Object.keys(updated).length === REMINDERS.length) setAllSent(true)
+      return updated
+    })
   }
 
   function sendAll() {

@@ -10,12 +10,17 @@ const PLANS = {
   Enterprise: { monthly: 15000, setup: 35000 },
 }
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
 export default function SchoolDetail() {
   const { id } = useParams()
   const [school, setSchool] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [note, setNote] = useState('')
-  const [notes, setNotes] = useState<string[]>([])
+  const [notes, setNotes] = useState<any[]>([])
+  const [notesLoading, setNotesLoading] = useState(true)
+  const [addingNote, setAddingNote] = useState(false)
+  const [billingHistory, setBillingHistory] = useState<any[]>([])
 
   useEffect(() => {
     fetch('/api/admin/schools/' + id)
@@ -24,13 +29,42 @@ export default function SchoolDetail() {
         setSchool(data)
         setLoading(false)
       })
+
+    fetch('/api/admin/schools/' + id + '/notes')
+      .then(r => r.json())
+      .then(data => {
+        setNotes(Array.isArray(data) ? data : [])
+        setNotesLoading(false)
+      })
+
+    fetch('/api/admin/billing?schoolId=' + id)
+      .then(r => r.json())
+      .then(data => setBillingHistory(Array.isArray(data) ? data : []))
   }, [id])
 
-  function addNote() {
-    if (!note.trim()) return
-    const timestamp = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
-    setNotes(prev => [...prev, timestamp + ' — ' + note])
-    setNote('')
+  async function addNote() {
+    if (!note.trim() || addingNote) return
+    setAddingNote(true)
+    const res = await fetch('/api/admin/schools/' + id + '/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: note.trim() }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setNotes(prev => [data, ...prev])
+      setNote('')
+    }
+    setAddingNote(false)
+  }
+
+  async function deleteNote(noteId: number) {
+    await fetch('/api/admin/schools/' + id + '/notes', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ noteId }),
+    })
+    setNotes(prev => prev.filter(n => n.id !== noteId))
   }
 
   if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">Loading...</div>
@@ -42,6 +76,8 @@ export default function SchoolDetail() {
   const totalExpected = school.students?.reduce((sum: number, s: any) => sum + s.feeRequired, 0) || 0
   const totalCollected = school.students?.reduce((sum: number, s: any) =>
     sum + s.payments.reduce((p: number, pay: any) => p + pay.amount, 0), 0) || 0
+
+  const paidBilling = billingHistory.filter(r => r.isPaid)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -131,6 +167,27 @@ export default function SchoolDetail() {
           </div>
         </div>
 
+        {/* Billing history */}
+        {paidBilling.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+            <h2 className="font-medium text-gray-900 mb-4">Payment history</h2>
+            <div className="space-y-2">
+              {paidBilling.map((r: any) => (
+                <div key={r.id} className="flex justify-between items-center py-1.5 border-b border-gray-50 last:border-0">
+                  <span className="text-sm text-gray-700 font-medium">{MONTH_NAMES[r.month - 1]} {r.year}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-500">KES {r.amount.toLocaleString()}</span>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Paid</span>
+                    {r.paidAt && (
+                      <span className="text-xs text-gray-400">{new Date(r.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="font-medium text-gray-900 mb-4">Notes</h2>
           <div className="flex gap-2 mb-4">
@@ -143,19 +200,36 @@ export default function SchoolDetail() {
             />
             <button
               onClick={addNote}
-              className="text-white px-4 py-2 rounded-lg text-sm"
+              disabled={addingNote || !note.trim()}
+              className="text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
               style={{backgroundColor: '#0a1f4e'}}
             >
-              Add note
+              {addingNote ? 'Adding...' : 'Add note'}
             </button>
           </div>
-          {notes.length === 0 ? (
+          {notesLoading ? (
+            <p className="text-sm text-gray-400">Loading notes...</p>
+          ) : notes.length === 0 ? (
             <p className="text-sm text-gray-400">No notes yet. Add a note to keep track of conversations with this school.</p>
           ) : (
             <div className="space-y-2">
-              {notes.map((n, i) => (
-                <div key={i} className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 border border-gray-100">
-                  {n}
+              {notes.map((n: any) => (
+                <div key={n.id} className="bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-700 border border-gray-100 flex justify-between items-start gap-2">
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1">
+                      {new Date(n.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      {' · '}
+                      {new Date(n.createdAt).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    <p>{n.content}</p>
+                  </div>
+                  <button
+                    onClick={() => deleteNote(n.id)}
+                    className="text-gray-300 hover:text-red-400 text-xs flex-shrink-0 mt-1"
+                    title="Delete note"
+                  >
+                    ✕
+                  </button>
                 </div>
               ))}
             </div>
