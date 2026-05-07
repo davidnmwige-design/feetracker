@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  isAdmin   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  school    School?
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  password       String
+  isAdmin        Boolean  @default(false)
+  sessionVersion Int      @default(1)
+  createdAt      DateTime @default(now())
+  school         School?
 }
 
 model School {
@@ -142,4 +143,14 @@ model Invoice {
   school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, term])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  schoolId  Int?
+  action    String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
 }

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { logAudit } from '@/lib/audit'
 
 async function getSchool(req: Request) {
   if (!checkRateLimit(getIp(req))) return null
@@ -65,6 +66,9 @@ export async function POST(req: Request) {
         breakdown: breakdown ?? {},
       },
     })
+    if (status === 'sent') {
+      logAudit({ schoolId: school.id, action: 'INVOICE_SENT', details: `Student: ${student.name} (${student.admNo}), Amount: ${amount}` }).catch(() => {})
+    }
     return NextResponse.json(invoice)
   } catch (err) {
     console.error('invoices POST error:', err)

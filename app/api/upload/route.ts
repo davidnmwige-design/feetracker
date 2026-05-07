@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sendEmail, paymentConfirmationHtml } from '@/lib/email'
+import { decrypt } from '@/lib/encrypt'
+import { logAudit } from '@/lib/audit'
 import * as XLSX from 'xlsx'
 
 function parseRow(row: any, bankType: string): {
@@ -152,9 +154,10 @@ export async function POST(req: Request) {
       results.notifications.push({ msg, phone })
 
       if (matched.parentEmail) {
+        const plainEmail = decrypt(matched.parentEmail)
         const hasFeeBreakdown = matched.tuitionFee > 0 || matched.sportsFee > 0 || matched.clubsFee > 0 || matched.otherFee > 0
         sendEmail({
-          to: matched.parentEmail,
+          to: plainEmail,
           subject: `Payment received for ${matched.name} — ${user.school!.name}`,
           html: paymentConfirmationHtml({
             schoolName: user.school!.name,
@@ -180,6 +183,7 @@ export async function POST(req: Request) {
     }
   }
 
+  await logAudit({ userId: user.id, schoolId, action: 'MPESA_UPLOAD', details: `${results.matched} matched, ${results.unmatched} unmatched of ${results.total} rows`, ipAddress: getIp(req) })
   return NextResponse.json(results)
   } catch (err) {
     console.error('upload error:', err)

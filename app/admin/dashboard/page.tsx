@@ -46,6 +46,9 @@ export default function AdminDashboard() {
             <Link href="/admin/flags" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
               Support flags
             </Link>
+            <Link href="/admin/audit" className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-100">
+              Audit
+            </Link>
           </div>
         </div>
 

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { maskEmail } from '@/lib/mask'
 
 function clearanceCertEmailHtml({
   schoolName,
@@ -446,10 +447,10 @@ export default function Students() {
                             ) : (
                               <span
                                 onClick={() => setEditingEmail({ id: student.id, value: student.parentEmail || '' })}
-                                title="Click to edit"
+                                title={student.parentEmail ? 'Click to edit' : 'Click to add email'}
                                 style={{cursor: 'text', color: student.parentEmail ? '#0a1f4e' : '#94a3b8', fontSize: '12px', display: 'block'}}
                               >
-                                {student.parentEmail || '+ add email'}
+                                {student.parentEmail ? maskEmail(student.parentEmail) : '+ add email'}
                               </span>
                             )}
                           </td>

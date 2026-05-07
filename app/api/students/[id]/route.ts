@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
+import { encrypt, decrypt } from '@/lib/encrypt'
 
 export async function GET(
   req: Request,
@@ -37,7 +38,10 @@ export async function GET(
     })
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
-    return NextResponse.json(student)
+    return NextResponse.json({
+      ...student,
+      parentEmail: student.parentEmail ? decrypt(student.parentEmail) : student.parentEmail,
+    })
   } catch (err) {
     console.error('students/[id] GET error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
@@ -77,7 +81,8 @@ export async function PATCH(
     const data: Record<string, string | null> = {}
 
     if ('parentEmail' in body) {
-      data.parentEmail = sanitize(body.parentEmail || '', 200).toLowerCase() || null
+      const raw = sanitize(body.parentEmail || '', 200).toLowerCase() || null
+      data.parentEmail = raw ? encrypt(raw) : null
     }
     if ('parentName' in body) {
       data.parentName = sanitize(body.parentName || '', 200) || null
@@ -90,7 +95,10 @@ export async function PATCH(
       where: { id: studentId },
       data
     })
-    return NextResponse.json(updated)
+    return NextResponse.json({
+      ...updated,
+      parentEmail: updated.parentEmail ? decrypt(updated.parentEmail) : updated.parentEmail,
+    })
   } catch (err) {
     console.error('students/[id] PATCH error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })

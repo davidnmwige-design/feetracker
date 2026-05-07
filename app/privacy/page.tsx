@@ -72,37 +72,58 @@ export default function Privacy() {
               <p style={{marginBottom: '12px'}}>All data is stored in a PostgreSQL database hosted on Vercel's infrastructure within secure data centres. We apply the following security measures:</p>
               <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
                 <li>Passwords are hashed using bcrypt before storage — we never store plaintext passwords</li>
-                <li>All data is transmitted over HTTPS/TLS encryption</li>
-                <li>Authentication uses secure JWT session tokens</li>
+                <li>Parent email addresses are encrypted at rest using AES-256-CBC field-level encryption</li>
+                <li>All data is transmitted over HTTPS/TLS with HTTP Strict Transport Security (HSTS) enforced</li>
+                <li>Authentication uses secure JWT session tokens with a 24-hour expiry</li>
+                <li>Session invalidation: you can sign out all devices at once from Settings</li>
                 <li>Each school's data is logically isolated — users can only access data belonging to their school</li>
+                <li>Security headers are enforced on all pages (CSP, X-Frame-Options, X-Content-Type-Options)</li>
+                <li>All sensitive actions are recorded in a tamper-evident audit log</li>
                 <li>Access to the production database is restricted to authorised engineers only</li>
               </ul>
             </div>
           </section>
 
           <section>
-            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>6. Data Retention</h2>
-            <p style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
-              Your data is retained for as long as your school account is active. If you wish to delete your account and all associated data, contact us at <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>. We will process deletion requests within 14 business days. Certain financial records may be retained for up to 7 years as required by Kenyan tax and financial regulations.
-            </p>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>6. Audit Logging</h2>
+            <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
+              <p style={{marginBottom: '12px'}}>FeeTracker records an audit log of sensitive actions performed within your account. Logged events include:</p>
+              <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                <li>Login successes and failures</li>
+                <li>Student imports and M-Pesa statement uploads</li>
+                <li>Invoice dispatch and clearance certificate generation</li>
+                <li>Plan upgrade requests and data exports</li>
+                <li>Account deletion</li>
+              </ul>
+              <p style={{marginTop: '12px'}}>Audit logs are visible to FeeTracker platform administrators and may be used to investigate security incidents or support requests.</p>
+            </div>
           </section>
 
           <section>
-            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>7. Your Rights</h2>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>7. Data Retention and Deletion</h2>
+            <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
+              <p style={{marginBottom: '12px'}}>Your data is retained for as long as your school account is active. You can permanently delete your account and all associated data at any time from <strong>Settings → Danger zone → Delete my account</strong>. Deletion is immediate and irreversible — all students, payments, invoices, and your user account are removed from our systems.</p>
+              <p>Certain financial records may be retained for up to 7 years as required by Kenyan tax and financial regulations.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>8. Your Rights</h2>
             <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
               <p style={{marginBottom: '12px'}}>As a user of FeeTracker, you have the right to:</p>
               <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
                 <li>Access the personal data we hold about your school and account</li>
                 <li>Request correction of inaccurate data</li>
-                <li>Request deletion of your account and associated data</li>
-                <li>Export your student and payment data at any time from the Reports page</li>
+                <li><strong>Delete your account and all data instantly</strong> from Settings — no need to contact us</li>
+                <li><strong>Export all your data</strong> (students, payments, invoices) as an Excel file from Settings at any time</li>
+                <li>Sign out of all devices at once from Settings → Session security</li>
               </ul>
-              <p style={{marginTop: '12px'}}>To exercise any of these rights, contact us at <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>.</p>
+              <p style={{marginTop: '12px'}}>For other data rights requests, contact us at <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>.</p>
             </div>
           </section>
 
           <section>
-            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>8. Contact Us</h2>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>9. Contact Us</h2>
             <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
               <p>If you have any questions about this Privacy Policy or how your data is handled, please reach us at:</p>
               <div style={{marginTop: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px'}}>

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { logAudit } from '@/lib/audit'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -46,6 +47,8 @@ export async function GET(req: Request) {
 
     const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0)
     const balance = student.feeRequired - totalPaid
+
+    logAudit({ userId: user.id, schoolId: user.school.id, action: 'CERTIFICATE_GENERATED', details: `Student: ${student.name} (${student.admNo})`, ipAddress: getIp(req) }).catch(() => {})
 
     return NextResponse.json({
       student: {

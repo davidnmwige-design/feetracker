@@ -1,5 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const TERMS = [
@@ -29,6 +31,7 @@ const PLAN_UPGRADES: Record<string, Array<{ name: string; maxStudents: number | 
 }
 
 export default function Settings() {
+  const router = useRouter()
   const [terms, setTerms] = useState<any[]>([])
   const [school, setSchool] = useState<any>(null)
   const [studentCount, setStudentCount] = useState(0)
@@ -47,6 +50,13 @@ export default function Settings() {
   const [upgradeSuccess, setUpgradeSuccess] = useState(false)
   const [upgradeError, setUpgradeError] = useState('')
   const [upgradeEmail, setUpgradeEmail] = useState('')
+
+  const [exporting, setExporting] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     fetchData()
@@ -120,6 +130,53 @@ export default function Settings() {
       setUpgradeError('Something went wrong')
     } finally {
       setUpgradeLoading(false)
+    }
+  }
+
+  async function handleExport() {
+    setExporting(true)
+    try {
+      const res = await fetch('/api/export')
+      if (!res.ok) { setExporting(false); return }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'feetracker-export.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  async function handleSignOutAll() {
+    setSigningOut(true)
+    try {
+      await fetch('/api/sign-out-all', { method: 'POST' })
+      await signOut({ callbackUrl: '/login' })
+    } finally {
+      setSigningOut(false)
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirmText !== 'DELETE') return
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      const res = await fetch('/api/account', { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        setDeleteError(data.error || 'Something went wrong')
+        setDeleting(false)
+        return
+      }
+      await signOut({ redirect: false })
+      router.push('/?deleted=1')
+    } catch {
+      setDeleteError('Something went wrong')
+      setDeleting(false)
     }
   }
 
@@ -488,6 +545,50 @@ export default function Settings() {
               </div>
             </div>
 
+            {/* Export data */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Export your data</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+                Download all your school data — students, payments, and invoices — as an Excel file.
+              </p>
+              <button
+                onClick={handleExport}
+                disabled={exporting}
+                style={{background: exporting ? '#94a3b8' : '#0a1f4e', color: '#fff', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: exporting ? 'not-allowed' : 'pointer'}}
+              >
+                {exporting ? 'Exporting...' : 'Export all data (.xlsx)'}
+              </button>
+            </div>
+
+            {/* Session security */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Session security</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+                Sign out of all devices immediately. Any browser or device with an active session will be logged out.
+              </p>
+              <button
+                onClick={handleSignOutAll}
+                disabled={signingOut}
+                style={{background: signingOut ? '#94a3b8' : '#c8a84b', color: signingOut ? '#fff' : '#0a1f4e', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: signingOut ? 'not-allowed' : 'pointer'}}
+              >
+                {signingOut ? 'Signing out...' : 'Sign out of all devices'}
+              </button>
+            </div>
+
+            {/* Danger zone */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '2px solid #fecaca', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#dc2626', marginBottom: '4px'}}>Danger zone</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+                Permanently delete your account and all school data. This cannot be undone.
+              </p>
+              <button
+                onClick={() => { setShowDeleteModal(true); setDeleteConfirmText(''); setDeleteError('') }}
+                style={{background: '#dc2626', color: '#fff', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer'}}
+              >
+                Delete my account
+              </button>
+            </div>
+
             <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px'}}>
               <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '16px'}}>Term history</h2>
               {terms.length === 0 ? (
@@ -592,6 +693,46 @@ export default function Settings() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
+          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', maxWidth: '440px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+            <h3 style={{fontSize: '16px', fontWeight: 700, color: '#dc2626', marginBottom: '12px'}}>Delete account</h3>
+            <p style={{fontSize: '13px', color: '#475569', lineHeight: 1.6, marginBottom: '16px'}}>
+              This will permanently delete all your school data including students, payments, and invoices. <strong>This cannot be undone.</strong>
+            </p>
+            <p style={{fontSize: '13px', color: '#0f172a', marginBottom: '8px', fontWeight: 600}}>Type DELETE to confirm</p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              placeholder="DELETE"
+              style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box'}}
+            />
+            {deleteError && <p style={{color: '#ef4444', fontSize: '12px', marginBottom: '12px'}}>{deleteError}</p>}
+            <div style={{display: 'flex', gap: '10px'}}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                style={{flex: 1, background: '#f1f5f9', color: '#64748b', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer'}}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmText !== 'DELETE' || deleting}
+                style={{
+                  flex: 2, background: deleteConfirmText !== 'DELETE' || deleting ? '#94a3b8' : '#dc2626',
+                  color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                  border: 'none', cursor: deleteConfirmText !== 'DELETE' || deleting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {deleting ? 'Deleting...' : 'Permanently delete everything'}
+              </button>
+            </div>
           </div>
         </div>
       )}

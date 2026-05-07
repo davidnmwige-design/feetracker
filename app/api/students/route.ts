@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
+import { encrypt, decrypt } from '@/lib/encrypt'
+import { logAudit } from '@/lib/audit'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -29,7 +31,12 @@ export async function GET(req: Request) {
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(students)
+    const decrypted = students.map(s => ({
+      ...s,
+      parentEmail: s.parentEmail ? decrypt(s.parentEmail) : s.parentEmail,
+    }))
+
+    return NextResponse.json(decrypted)
   } catch (err) {
     console.error('students GET error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
@@ -95,11 +102,12 @@ export async function POST(req: Request) {
         : Number(row['Fee Required'] || row['feeRequired'] || 0)
 
       const parentEmail = String(row['Parent Email'] || row['parentEmail'] || row['parent_email'] || '')
+      const encryptedEmail = parentEmail ? encrypt(parentEmail) : null
       const student = await prisma.student.upsert({
         where: { admNo_schoolId: { admNo, schoolId } },
         update: {
           tuitionFee, sportsFee, clubsFee, otherFee, feeRequired,
-          ...(parentEmail ? { parentEmail } : {}),
+          ...(encryptedEmail ? { parentEmail: encryptedEmail } : {}),
         },
         create: {
           name: String(row['Name'] || row['name'] || row['NAME'] || ''),
@@ -108,7 +116,7 @@ export async function POST(req: Request) {
           stream: String(row['Stream'] || row['stream'] || ''),
           parentName: String(row['Parent Name'] || row['parentName'] || ''),
           parentPhone: String(row['Parent Phone'] || row['parentPhone'] || ''),
-          parentEmail: parentEmail || null,
+          parentEmail: encryptedEmail,
           feeRequired,
           tuitionFee,
           sportsFee,
@@ -120,6 +128,7 @@ export async function POST(req: Request) {
       created.push(student)
     }
 
+    await logAudit({ userId: user.id, schoolId, action: 'STUDENT_IMPORT', details: `${created.length} students imported` })
     return NextResponse.json({ count: created.length })
   } catch (err) {
     console.error('students POST error:', err)
@@ -146,7 +155,8 @@ export async function PATCH(req: Request) {
 
     const body = await req.json()
     const studentId = Number(body.studentId)
-    const parentEmail = sanitize(body.parentEmail || '', 200).toLowerCase() || null
+    const rawEmail = sanitize(body.parentEmail || '', 200).toLowerCase() || null
+    const parentEmail = rawEmail ? encrypt(rawEmail) : null
 
     const student = await prisma.student.findFirst({
       where: { id: studentId, schoolId: user.school.id }
@@ -157,7 +167,7 @@ export async function PATCH(req: Request) {
       where: { id: studentId },
       data: { parentEmail }
     })
-    return NextResponse.json(updated)
+    return NextResponse.json({ ...updated, parentEmail: rawEmail })
   } catch (err) {
     console.error('students PATCH error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })

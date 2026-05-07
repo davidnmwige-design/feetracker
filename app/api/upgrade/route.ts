@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
+import { logAudit } from '@/lib/audit'
 
 export async function POST(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -83,6 +84,7 @@ export async function POST(req: Request) {
       html: adminHtml,
     }).catch(err => console.error('Upgrade email error:', err))
 
+    logAudit({ userId: user.id, schoolId: user.school.id, action: 'PLAN_UPGRADE_REQUESTED', details: `${user.school.currentPlan} → ${requestedPlan}`, ipAddress: getIp(req) }).catch(() => {})
     return NextResponse.json({ success: true, requestId: request.id, adminEmail: session.user.email })
   } catch (err) {
     console.error('upgrade POST error:', err)
