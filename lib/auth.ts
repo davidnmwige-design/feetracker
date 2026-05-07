@@ -49,15 +49,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Initial sign-in: embed sessionVersion in token
         token.sessionVersion = (user as any).sessionVersion ?? 1
         token.userId = (user as any).id
-      } else if (token.email) {
-        // Subsequent requests: validate sessionVersion hasn't been incremented
+      } else if (token.email && token.sessionVersion !== undefined) {
+        // Only validate sessionVersion for tokens that already carry it.
+        // Old tokens without sessionVersion are allowed through for backwards
+        // compatibility — they will naturally expire within 24 hours.
         try {
-          const dbUser = await prisma.user.findUnique({ where: { email: token.email as string } })
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email as string },
+            select: { sessionVersion: true },
+          })
           if (dbUser && dbUser.sessionVersion !== (token.sessionVersion as number)) {
-            return null as any // force re-login
+            // Force expiry by back-dating exp — NextAuth treats this as unauthenticated
+            return { ...token, exp: 0 }
           }
         } catch {
-          // DB error — allow request to continue rather than locking everyone out
+          // DB error — continue with existing token rather than locking users out
         }
       }
       return token
