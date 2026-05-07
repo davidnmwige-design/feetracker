@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { sanitize } from '@/lib/sanitize'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -50,7 +51,7 @@ export async function PATCH(req: Request) {
     const allowed = ['paybill', 'accountNumberFormat'] as const
     const data: Record<string, string | null> = {}
     for (const key of allowed) {
-      if (key in body) data[key] = body[key] ?? null
+      if (key in body) data[key] = body[key] != null ? sanitize(String(body[key]), 200) : null
     }
 
     const school = await prisma.school.update({

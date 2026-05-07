@@ -64,6 +64,13 @@ export async function POST(req: Request) {
     const formData = await req.formData()
     const file = formData.get('file') as File
 
+    if (!file || !/\.(xlsx|xls|csv)$/i.test(file.name)) {
+      return NextResponse.json({ error: 'Only .xlsx, .xls, and .csv files are accepted' }, { status: 400 })
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size must be under 10MB' }, { status: 400 })
+    }
+
     const buffer = await file.arrayBuffer()
     const workbook = XLSX.read(buffer, { type: 'array' })
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
