@@ -398,8 +398,8 @@ export default function Settings() {
                   onClick={startNewTerm}
                   disabled={!selectedTerm || starting}
                   style={{
-                    background: (!selectedTerm || starting) ? '#94a3b8' : '#0a1f4e',
-                    color: '#fff', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                    background: (!selectedTerm || starting) ? '#94a3b8' : '#c8a84b',
+                    color: (!selectedTerm || starting) ? '#fff' : '#0a1f4e', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
                     border: 'none', cursor: (!selectedTerm || starting) ? 'not-allowed' : 'pointer'
                   }}
                 >
@@ -417,7 +417,7 @@ export default function Settings() {
               <div className="set-invoice-row" style={{display: 'flex', gap: '10px'}}>
                 <button
                   onClick={downloadInvoice}
-                  style={{flex: 1, background: '#0a1f4e', color: '#fff', padding: '10px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer'}}
+                  style={{flex: 1, background: '#c8a84b', color: '#0a1f4e', padding: '10px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer'}}
                 >
                   Download Invoice PDF
                 </button>

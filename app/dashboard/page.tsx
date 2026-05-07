@@ -111,7 +111,7 @@ export default async function Dashboard() {
                   <td style={{padding: '10px 14px', fontWeight: 600}}>KES {payment.amount.toLocaleString()}</td>
                   <td style={{padding: '10px 14px', color: '#64748b'}}>{payment.student ? payment.student.name + ' · ' + payment.student.class : '—'}</td>
                   <td style={{padding: '10px 14px'}}>
-                    <span style={{background: payment.matched ? '#e1f5ee' : '#fcebeb', color: payment.matched ? '#0a1f4e' : '#a32d2d', fontSize: '10px', padding: '3px 8px', borderRadius: '999px', fontWeight: 600}}>
+                    <span style={{background: payment.matched ? '#e1f5ee' : '#fcebeb', color: payment.matched ? '#166534' : '#a32d2d', fontSize: '10px', padding: '3px 8px', borderRadius: '999px', fontWeight: 600}}>
                       {payment.matched ? 'Matched' : 'Review'}
                     </span>
                   </td>

@@ -146,8 +146,8 @@ export default function Upload() {
             disabled={!file || loading}
             style={{
               width: '100%', marginTop: '16px',
-              background: (!file || loading) ? '#94a3b8' : '#0a1f4e',
-              color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+              background: (!file || loading) ? '#94a3b8' : '#c8a84b',
+              color: (!file || loading) ? '#fff' : '#0a1f4e', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
               border: 'none', cursor: (!file || loading) ? 'not-allowed' : 'pointer'
             }}
           >

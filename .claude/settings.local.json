@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(Get-ChildItem *)",
+      "PowerShell(tree \"C:\\\\Users\\\\david\\\\feetracker\\\\app\" -F)",
+      "PowerShell(tree \"C:\\\\Users\\\\david\\\\feetracker\\\\lib\" -F)",
+      "Bash(npm install *)",
+      "Bash(npx prisma *)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(node -e \"require\\('nodemailer'\\); console.log\\('ok'\\)\")",
+      "Bash(git reset *)",
+      "Bash(node \"C:/Users/david/feetracker/scripts/generate-sample-csv.js\" 50 \"C:/Users/david/feetracker/public/sample-students-50.csv\")"
+    ]
+  }
+}

@@ -93,7 +93,7 @@ export default function Reports() {
 
             <div className="rpt-grid-3" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px'}}>
               {[
-                {label: 'Fully paid', value: fullyPaid, color: '#0a1f4e', bg: '#e1f5ee'},
+                {label: 'Fully paid', value: fullyPaid, color: '#166534', bg: '#e1f5ee'},
                 {label: 'Partial payment', value: partial, color: '#92681a', bg: '#fef9ec'},
                 {label: 'No payment', value: unpaid, color: '#e24b4a', bg: '#fcebeb'},
               ].map(card => (
@@ -123,7 +123,7 @@ export default function Reports() {
                       const balance = student.feeRequired - paid
                       const status = balance <= 0 ? 'Paid' : paid > 0 ? 'Partial' : 'Unpaid'
                       const statusStyle = status === 'Paid'
-                        ? {background: '#e1f5ee', color: '#0a1f4e'}
+                        ? {background: '#e1f5ee', color: '#166534'}
                         : status === 'Partial'
                         ? {background: '#fef9ec', color: '#92681a'}
                         : {background: '#fcebeb', color: '#a32d2d'}

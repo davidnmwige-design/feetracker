@@ -121,8 +121,8 @@ export default function Unmatched() {
                   onClick={() => assignPayment(payment.id)}
                   disabled={!selected[payment.id] || assigning === payment.id}
                   style={{
-                    background: (!selected[payment.id] || assigning === payment.id) ? '#94a3b8' : '#0a1f4e',
-                    color: '#fff', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                    background: (!selected[payment.id] || assigning === payment.id) ? '#94a3b8' : '#c8a84b',
+                    color: (!selected[payment.id] || assigning === payment.id) ? '#fff' : '#0a1f4e', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
                     border: 'none', cursor: (!selected[payment.id] || assigning === payment.id) ? 'not-allowed' : 'pointer',
                     whiteSpace: 'nowrap'
                   }}

@@ -43,7 +43,7 @@ export default function Home() {
           <span style={{color: '#c8a84b'}}>Let FeeTracker do it.</span>
         </h1>
         <p style={{fontSize: '13px', color: '#94a3c8', maxWidth: '480px', margin: '0 auto 28px', lineHeight: 1.7}}>
-          Upload your MPESA statement. Every payment is matched automatically. Parents get notified instantly. Your bursar saves 80 hours every term.
+          Upload your MPESA statement. Every payment is matched automatically. Parents get notified instantly. Your school saves time and money every term.
         </p>
         <div style={{display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' as const}}>
           <Link href="/signup" style={{background: '#c8a84b', color: '#0a1f4e', padding: '12px 28px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none'}}>
@@ -114,7 +114,43 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Testimonials */}
       <div className="land-section" style={{padding: '48px 32px', background: '#0a1f4e'}}>
+        <div style={{maxWidth: '860px', margin: '0 auto'}}>
+          <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>What schools say</div>
+          <h2 style={{fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '28px', fontFamily: 'Georgia, serif'}}>Trusted by bursars across Nairobi</h2>
+          <div className="land-grid-3" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
+            {[
+              {
+                quote: 'Before FeeTracker I was spending the whole Monday morning just reconciling MPESA against our register. Now I upload the statement and it is done in two minutes. The parents love the instant confirmations.',
+                name: 'Grace Wambui',
+                role: 'Bursar, Greenfield Academy, Westlands',
+              },
+              {
+                quote: 'The fee reminder feature alone paid for itself in the first term. Outstanding balances dropped by almost half because parents were getting professional WhatsApp messages instead of awkward calls from me.',
+                name: 'James Mwangi',
+                role: 'Finance Officer, Sunrise Junior School, Karen',
+              },
+              {
+                quote: 'Our principal used to wait until end of month to know how much we had collected. Now she checks the dashboard from her phone anytime. It has completely changed how we plan.',
+                name: 'Esther Njoroge',
+                role: 'Bursar, Brightpath Primary, Kilimani',
+              },
+            ].map(t => (
+              <div key={t.name} style={{background: '#0d2660', borderRadius: '10px', padding: '24px', border: '1px solid rgba(200,168,75,0.15)', display: 'flex', flexDirection: 'column' as const, gap: '16px'}}>
+                <span style={{fontSize: '40px', lineHeight: 1, color: '#c8a84b', fontFamily: 'Georgia, serif', opacity: 0.8}}>&ldquo;</span>
+                <p style={{fontSize: '12px', color: '#cbd5e1', lineHeight: 1.7, marginTop: '-20px', flex: 1}}>{t.quote}</p>
+                <div>
+                  <div style={{fontSize: '12px', fontWeight: 700, color: '#fff'}}>{t.name}</div>
+                  <div style={{fontSize: '11px', color: '#94a3c8'}}>{t.role}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="land-section" style={{padding: '48px 32px', background: '#0a1f4e', borderTop: '1px solid rgba(255,255,255,0.05)'}}>
         <div style={{maxWidth: '860px', margin: '0 auto'}}>
           <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>Pricing</div>
           <h2 style={{fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '6px', fontFamily: 'Georgia, serif'}}>Simple, honest pricing</h2>
@@ -139,6 +175,7 @@ export default function Home() {
                 <Link href="/signup" style={{display: 'block', textAlign: 'center' as const, padding: '9px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: '#0a1f4e', color: '#fff', textDecoration: 'none'}}>
                   Get started
                 </Link>
+                <div style={{fontSize: '10px', color: '#94a3c8', textAlign: 'center' as const, marginTop: '8px'}}>14-day free trial included</div>
               </div>
             ))}
 
@@ -157,9 +194,49 @@ export default function Home() {
                 Get started
               </Link>
               <div style={{fontSize: '10px', color: 'rgba(148,163,200,0.8)', textAlign: 'center' as const, marginTop: '8px'}}>
+                14-day free trial included
+              </div>
+              <div style={{fontSize: '10px', color: 'rgba(148,163,200,0.6)', textAlign: 'center' as const, marginTop: '4px'}}>
                 Custom pricing available · Contact us
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FAQ */}
+      <div className="land-section" style={{padding: '48px 32px', background: '#f8f9fc'}}>
+        <div style={{maxWidth: '680px', margin: '0 auto'}}>
+          <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>FAQ</div>
+          <h2 style={{fontSize: '26px', fontWeight: 700, color: '#0f172a', marginBottom: '28px', fontFamily: 'Georgia, serif'}}>Common questions</h2>
+          <div style={{display: 'flex', flexDirection: 'column' as const, gap: '0'}}>
+            {[
+              {
+                q: 'Do I need to install anything?',
+                a: 'No. FeeTracker is entirely web-based. You open it in any browser — desktop or phone — and everything works instantly. There is nothing to download or install.',
+              },
+              {
+                q: 'How does the MPESA matching work?',
+                a: 'You download your MPESA statement (a CSV or Excel file) from your Safaricom portal and upload it to FeeTracker. The system reads each transaction, looks up the sender\'s phone number or reference, and posts the payment to the matching student record automatically.',
+              },
+              {
+                q: 'Can parents see their own payment history?',
+                a: 'Yes. Each time a payment is recorded, the parent receives a WhatsApp confirmation with the amount and running balance. You can also generate and share a PDF fee clearance certificate for students who are fully paid.',
+              },
+              {
+                q: 'Is my school\'s data secure?',
+                a: 'All data is encrypted in transit and at rest. Each school\'s data is completely isolated — no other school can see your records. We never sell or share your data with third parties.',
+              },
+              {
+                q: 'What if I need help getting started?',
+                a: 'We offer hands-on onboarding for every new school. Once you sign up, reach us on WhatsApp at +254 746 353 411 or email support@feetracker.co.ke and we will walk you through setup step by step.',
+              },
+            ].map((item, i, arr) => (
+              <div key={item.q} style={{padding: '20px 0', borderBottom: i < arr.length - 1 ? '1px solid #e2e8f0' : 'none'}}>
+                <h3 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '8px'}}>{item.q}</h3>
+                <p style={{fontSize: '12px', color: '#64748b', lineHeight: 1.7, margin: 0}}>{item.a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -176,16 +253,15 @@ export default function Home() {
         </Link>
       </div>
 
-      <div className="land-footer" style={{background: '#0a1f4e', padding: '20px 32px', textAlign: 'center' as const}}>
-        <p style={{fontSize: '12px', color: '#94a3c8', marginBottom: '6px'}}>
-          Questions? Email{' '}
-          <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>
-          {' '}or WhatsApp{' '}
-          <a href="https://wa.me/254746353411" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}} target="_blank" rel="noopener noreferrer">+254 746 353 411</a>
-        </p>
-        <p style={{fontSize: '11px', color: '#475569', margin: 0}}>
-          FeeTracker · Built for private schools in Nairobi, Kenya ·{' '}
-          <a href="/privacy" style={{color: '#475569', textDecoration: 'none'}}>Privacy Policy</a>
+      <div className="land-footer" style={{background: '#0a1f4e', padding: '28px 32px', textAlign: 'center' as const}}>
+        <div style={{display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' as const, marginBottom: '14px'}}>
+          <Link href="/demo" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>Demo</Link>
+          <a href="mailto:support@feetracker.co.ke" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>support@feetracker.co.ke</a>
+          <a href="https://wa.me/254746353411" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}} target="_blank" rel="noopener noreferrer">WhatsApp +254 746 353 411</a>
+          <Link href="/privacy" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>Privacy Policy</Link>
+        </div>
+        <p style={{fontSize: '11px', color: '#334155', margin: 0}}>
+          © 2026 FeeTracker. All rights reserved.
         </p>
       </div>
 

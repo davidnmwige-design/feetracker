@@ -70,74 +70,100 @@ function clearanceCertEmailHtml({
 async function buildCertificateDoc(data: any) {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  const w = 210
-  doc.setDrawColor(10, 31, 78)
-  doc.setLineWidth(4)
-  doc.line(20, 15, w - 20, 15)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(16)
-  doc.setTextColor(10, 31, 78)
-  doc.text(data.school.name.toUpperCase(), w / 2, 30, { align: 'center' })
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(10)
-  doc.setTextColor(120, 120, 120)
-  doc.text(data.school.term, w / 2, 38, { align: 'center' })
-  doc.setDrawColor(200, 200, 200)
-  doc.setLineWidth(0.3)
-  doc.line(20, 44, w - 20, 44)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(13)
-  doc.setTextColor(10, 31, 78)
-  doc.text('FEE CLEARANCE CERTIFICATE', w / 2, 58, { align: 'center' })
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(10)
-  doc.setTextColor(80, 80, 80)
-  doc.text('This certifies that the student below has settled all fee', w / 2, 70, { align: 'center' })
-  doc.text('obligations for the current academic term.', w / 2, 77, { align: 'center' })
-  const rows = [
-    ['Student Name', data.student.name],
-    ['Admission No', data.student.admNo],
-    ['Class', data.student.class + ' ' + data.student.stream],
-    ['Fee Required', 'KES ' + data.student.feeRequired.toLocaleString()],
-    ['Total Paid', 'KES ' + data.student.totalPaid.toLocaleString()],
-    ['Outstanding Balance', 'KES 0'],
+  const W = 210
+  const today = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
+  const term = data.school?.term || data.school?.currentTerm || ''
+  const schoolName = data.school?.name || ''
+
+  // Double border
+  doc.setDrawColor(10, 31, 78); doc.setLineWidth(1.5); doc.rect(8, 8, W - 16, 281)
+  doc.setLineWidth(0.4); doc.rect(11, 11, W - 22, 275)
+
+  // Navy header + gold rule
+  doc.setFillColor(10, 31, 78); doc.rect(0, 0, W, 44, 'F')
+  doc.setFillColor(200, 168, 75); doc.rect(0, 44, W, 2.5, 'F')
+
+  // Watermark (drawn first so body text renders on top)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(88); doc.setTextColor(215, 222, 237)
+  doc.text('CLEARED', W / 2, 178, { align: 'center', angle: 45 })
+
+  // School name in gold
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(200, 168, 75)
+  doc.text(schoolName.toUpperCase(), W / 2, 17, { align: 'center' })
+  // OFFICIAL DOCUMENT with letter-spacing
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(200, 168, 75)
+  doc.setCharSpace(2.5); doc.text('OFFICIAL DOCUMENT', W / 2, 27, { align: 'center' }); doc.setCharSpace(0)
+  // Term label
+  doc.setFontSize(10); doc.setTextColor(170, 195, 225)
+  doc.text(term, W / 2, 37, { align: 'center' })
+
+  // Certificate title + gold underline
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(10, 31, 78)
+  doc.text('FEE CLEARANCE CERTIFICATE', W / 2, 64, { align: 'center' })
+  doc.setFillColor(200, 168, 75); doc.rect(38, 68, 134, 1, 'F')
+
+  // Intro line
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(100, 116, 139)
+  doc.text('This is to certify that:', W / 2, 82, { align: 'center' })
+
+  // Student name
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(23); doc.setTextColor(10, 31, 78)
+  doc.text(data.student.name.toUpperCase(), W / 2, 95, { align: 'center' })
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 116, 139)
+  const classStr = data.student.class + (data.student.stream ? ' ' + data.student.stream : '')
+  doc.text('Admission No: ' + data.student.admNo + '   |   Class: ' + classStr, W / 2, 104, { align: 'center' })
+
+  // Body text
+  doc.setFontSize(11); doc.setTextColor(71, 85, 105)
+  doc.text('has fully settled all fee obligations for', W / 2, 118, { align: 'center' })
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(10, 31, 78)
+  doc.text(term, W / 2, 127, { align: 'center' })
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(71, 85, 105)
+  doc.text('and is therefore cleared to sit examinations.', W / 2, 136, { align: 'center' })
+
+  // Fee detail box
+  doc.setFillColor(248, 249, 252); doc.setDrawColor(220, 228, 240); doc.setLineWidth(0.3)
+  doc.rect(36, 144, 138, 40, 'FD')
+  const feeRows: [string, string, string][] = [
+    ['Fee Required', 'KES ' + data.student.feeRequired.toLocaleString(), '#64748b'],
+    ['Total Paid', 'KES ' + data.student.totalPaid.toLocaleString(), '#0a7c3e'],
+    ['Outstanding Balance', 'KES 0', '#0a7c3e'],
   ]
-  let y = 92
-  rows.forEach(([label, value]) => {
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(120, 120, 120)
-    doc.setFontSize(9)
-    doc.text(label, 40, y)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(20, 20, 20)
-    doc.setFontSize(10)
-    doc.text(value, 105, y)
-    doc.setDrawColor(230, 230, 230)
-    doc.setLineWidth(0.2)
-    doc.line(40, y + 3, w - 40, y + 3)
-    y += 14
+  let fy = 153
+  feeRows.forEach(([label, value, color]) => {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 116, 139)
+    doc.text(label, 44, fy)
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...(color === '#64748b' ? [100, 116, 139] as [number,number,number] : [10, 124, 78] as [number,number,number]))
+    doc.text(value, W - 44, fy, { align: 'right' })
+    fy += 10
   })
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(11)
-  doc.setTextColor(10, 31, 78)
-  doc.text('Status: CLEARED', w / 2, y + 10, { align: 'center' })
-  doc.setDrawColor(10, 31, 78)
-  doc.setLineWidth(0.4)
-  doc.line(40, 230, 90, 230)
-  doc.line(120, 230, 170, 230)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9)
-  doc.setTextColor(100, 100, 100)
-  doc.text('Bursar', 65, 236, { align: 'center' })
-  doc.text('Principal', 145, 236, { align: 'center' })
-  doc.text(data.school.name, 65, 242, { align: 'center' })
-  doc.text(data.school.name, 145, 242, { align: 'center' })
-  doc.setDrawColor(10, 31, 78)
-  doc.setLineWidth(4)
-  doc.line(20, 270, w - 20, 270)
-  doc.setFontSize(8)
-  doc.setTextColor(160, 160, 160)
-  doc.text('Generated by FeeTracker · ' + new Date().toLocaleDateString('en-KE'), w / 2, 278, { align: 'center' })
+
+  // CLEARED stamp box
+  doc.setDrawColor(10, 124, 78); doc.setLineWidth(1); doc.rect(74, 195, 62, 21)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(10, 124, 78)
+  doc.text('CLEARED', W / 2, 209, { align: 'center' })
+
+  // Signature lines
+  doc.setDrawColor(180, 192, 215); doc.setLineWidth(0.4)
+  doc.line(24, 228, 90, 228); doc.line(120, 228, 186, 228)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(10, 31, 78)
+  doc.text('Bursar', 57, 235, { align: 'center' })
+  doc.text('Principal', 153, 235, { align: 'center' })
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(130, 140, 158)
+  doc.text('Authorised Signatory', 57, 241, { align: 'center' })
+  doc.text('Authorised Signatory', 153, 241, { align: 'center' })
+
+  // Date + validity
+  doc.setFontSize(9); doc.setTextColor(100, 116, 139)
+  doc.text('Date issued: ' + today, W / 2, 258, { align: 'center' })
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(8)
+  doc.text('This certificate is valid for ' + term + ' only.', W / 2, 265, { align: 'center' })
+
+  // Navy footer
+  doc.setFillColor(10, 31, 78); doc.rect(0, 272, W, 25, 'F')
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(200, 168, 75)
+  doc.text('Generated by FeeTracker · support@feetracker.co.ke', W / 2, 282, { align: 'center' })
+
   return doc
 }
 
@@ -328,8 +354,8 @@ export default function Students() {
               onClick={handleUpload}
               disabled={!file || uploading}
               style={{
-                background: (!file || uploading) ? '#94a3b8' : '#0a1f4e',
-                color: '#fff', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                background: (!file || uploading) ? '#94a3b8' : '#c8a84b',
+                color: (!file || uploading) ? '#fff' : '#0a1f4e', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
                 border: 'none', cursor: (!file || uploading) ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap'
               }}
             >
@@ -397,7 +423,7 @@ export default function Students() {
                           <td style={{padding: '10px 14px'}}>
                             <span style={{
                               background: cleared ? '#e1f5ee' : paid > 0 ? '#fef9ec' : '#fcebeb',
-                              color: cleared ? '#0a1f4e' : paid > 0 ? '#92681a' : '#a32d2d',
+                              color: cleared ? '#166534' : paid > 0 ? '#92681a' : '#a32d2d',
                               fontSize: '10px', padding: '3px 8px', borderRadius: '999px', fontWeight: 600, whiteSpace: 'nowrap'
                             }}>
                               {cleared ? 'Cleared' : paid > 0 ? 'Partial' : 'Unpaid'}

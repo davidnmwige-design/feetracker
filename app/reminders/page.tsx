@@ -258,13 +258,13 @@ export default function Reminders() {
                   setTimeout(() => window.open(url, '_blank'), i * 1500)
                 })
               }}
-              style={{background: '#0a1f4e', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}
+              style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}
             >
               Send WhatsApp to all {withBalance.length} parents
             </button>
             <button
               onClick={openBulkModal}
-              style={{background: '#fff', color: '#0a1f4e', border: '2px solid #0a1f4e', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}
+              style={{background: '#0a1f4e', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}
             >
               Send email to all {withBalance.length} parents
             </button>
