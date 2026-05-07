@@ -3,14 +3,14 @@ import Link from 'next/link'
 export default function Privacy() {
   return (
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
-      <div style={{background: '#0a1f4e', padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+      <div style={{background: '#0a1f4e', padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
         <span style={{fontSize: '18px', fontWeight: 700, color: '#c8a84b', fontFamily: 'Georgia, serif'}}>FeeTracker</span>
         <Link href="/signup" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '7px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
           Get started
         </Link>
       </div>
 
-      <div style={{maxWidth: '720px', margin: '0 auto', padding: '48px 32px'}}>
+      <div style={{maxWidth: '720px', margin: '0 auto', padding: '48px 16px'}}>
         <div style={{marginBottom: '32px'}}>
           <div style={{fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', color: '#c8a84b', marginBottom: '8px'}}>Legal</div>
           <h1 style={{fontSize: '28px', fontWeight: 700, color: '#0f172a', fontFamily: 'Georgia, serif', marginBottom: '8px'}}>Privacy Policy</h1>

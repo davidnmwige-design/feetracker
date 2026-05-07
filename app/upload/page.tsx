@@ -70,7 +70,7 @@ export default function Upload() {
   }
 
   return (
-    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
+    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
       <style>{`
         @media (max-width: 640px) {
           .upl-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }

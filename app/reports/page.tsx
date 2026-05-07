@@ -40,7 +40,7 @@ export default function Reports() {
   const unpaid = students.filter(s => s.payments.length === 0).length
 
   return (
-    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
+    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
       <style>{`
         @media (max-width: 640px) {
           .rpt-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
@@ -108,8 +108,8 @@ export default function Reports() {
               <div style={{padding: '14px 16px', borderBottom: '1px solid #f1f5f9'}}>
                 <h2 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a'}}>Student breakdown</h2>
               </div>
-              <div className="rpt-table-wrap">
-                <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px'}}>
+              <div className="rpt-table-wrap" style={{overflowX: 'auto', width: '100%'}}>
+                <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '520px'}}>
                   <thead>
                     <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9'}}>
                       {['Name', 'Class', 'Fee Required', 'Paid', 'Balance', 'Status'].map(h => (

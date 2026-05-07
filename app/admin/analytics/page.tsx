@@ -36,7 +36,7 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
             { label: 'Total schools', value: totalSchools },
             { label: 'Total students', value: totalStudents },

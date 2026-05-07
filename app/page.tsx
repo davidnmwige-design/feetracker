@@ -2,9 +2,25 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div style={{fontFamily: 'Arial, sans-serif', background: '#fff', color: '#0f172a'}}>
+    <div style={{fontFamily: 'Arial, sans-serif', background: '#fff', color: '#0f172a', overflowX: 'hidden'}}>
+      <style>{`
+        @media (max-width: 768px) {
+          .land-nav { flex-wrap: wrap !important; gap: 12px !important; padding: 12px 16px !important; }
+          .land-hero { padding: 40px 16px !important; }
+          .land-stats { grid-template-columns: 1fr !important; }
+          .land-section { padding: 32px 16px !important; }
+          .land-grid-3 { grid-template-columns: 1fr !important; }
+          .land-grid-2 { grid-template-columns: 1fr !important; }
+          .land-grid-4 { grid-template-columns: 1fr 1fr !important; }
+          .land-cta { padding: 40px 16px !important; }
+          .land-footer { padding: 16px !important; }
+        }
+        @media (max-width: 480px) {
+          .land-grid-4 { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
 
-      <nav style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', borderBottom: '1px solid #e2e8f0'}}>
+      <nav className="land-nav" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', borderBottom: '1px solid #e2e8f0'}}>
         <span style={{fontSize: '18px', fontWeight: 700, color: '#0f2d6e', fontFamily: 'Georgia, serif'}}>
           Fee<span style={{color: '#c8a84b'}}>Tracker</span>
         </span>
@@ -18,7 +34,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <div style={{background: '#0a1f4e', color: '#fff', padding: '56px 32px', textAlign: 'center'}}>
+      <div className="land-hero" style={{background: '#0a1f4e', color: '#fff', padding: '56px 32px', textAlign: 'center'}}>
         <div style={{display: 'inline-block', background: 'rgba(200,168,75,0.15)', color: '#c8a84b', border: '1px solid rgba(200,168,75,0.3)', fontSize: '10px', padding: '5px 14px', borderRadius: '4px', marginBottom: '20px', letterSpacing: '1px', textTransform: 'uppercase' as const}}>
           Built for Nairobi schools
         </div>
@@ -42,7 +58,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', background: '#0d2660', borderTop: '1px solid rgba(255,255,255,0.05)'}}>
+      <div className="land-stats" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', background: '#0d2660', borderTop: '1px solid rgba(255,255,255,0.05)'}}>
         {[['80hrs', 'Saved per term'], ['100%', 'Payment visibility'], ['5min', 'Setup time']].map(([num, label]) => (
           <div key={label} style={{padding: '20px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)'}}>
             <div style={{fontSize: '26px', fontWeight: 700, color: '#c8a84b', marginBottom: '4px'}}>{num}</div>
@@ -51,11 +67,11 @@ export default function Home() {
         ))}
       </div>
 
-      <div style={{padding: '48px 32px', background: '#f8f9fc'}}>
+      <div className="land-section" style={{padding: '48px 32px', background: '#f8f9fc'}}>
         <div style={{maxWidth: '860px', margin: '0 auto'}}>
           <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>The problem</div>
           <h2 style={{fontSize: '26px', fontWeight: 700, color: '#0f172a', marginBottom: '28px', fontFamily: 'Georgia, serif'}}>Does this sound familiar?</h2>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px'}}>
+          <div className="land-grid-3" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px'}}>
             {[
               ['Parents calling all day', 'Your bursar spends hours answering "Did you receive my payment?" instead of doing real work.'],
               ['Manual MPESA checking', 'Scrolling through hundreds of MPESA messages and updating Excel sheets by hand every single day.'],
@@ -71,11 +87,11 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{padding: '48px 32px', background: '#fff'}}>
+      <div className="land-section" style={{padding: '48px 32px', background: '#fff'}}>
         <div style={{maxWidth: '860px', margin: '0 auto'}}>
           <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>The solution</div>
           <h2 style={{fontSize: '26px', fontWeight: 700, color: '#0f172a', marginBottom: '28px', fontFamily: 'Georgia, serif'}}>Everything your bursar needs</h2>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px'}}>
+          <div className="land-grid-2" style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px'}}>
             {[
               ['1', 'Automatic MPESA matching', 'Upload your statement and every payment is instantly matched to the right student.'],
               ['2', 'Instant WhatsApp notifications', 'Parents receive a confirmation the moment their payment is recorded. No more calls.'],
@@ -98,12 +114,12 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{padding: '48px 32px', background: '#0a1f4e'}}>
+      <div className="land-section" style={{padding: '48px 32px', background: '#0a1f4e'}}>
         <div style={{maxWidth: '860px', margin: '0 auto'}}>
           <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>Pricing</div>
           <h2 style={{fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '6px', fontFamily: 'Georgia, serif'}}>Simple, honest pricing</h2>
           <p style={{fontSize: '12px', color: '#94a3c8', marginBottom: '28px'}}>Less than the cost of one hour of your bursar's time per day</p>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px'}}>
+          <div className="land-grid-4" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px'}}>
             {[
               {name: 'Starter', sub: 'Up to 300 students', price: '4,500', setup: '15,000', featured: false},
               {name: 'Growth', sub: '300 – 600 students', price: '6,500', setup: '20,000', featured: true},
@@ -148,7 +164,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{padding: '60px 32px', background: '#fff', textAlign: 'center' as const}}>
+      <div className="land-cta" style={{padding: '60px 32px', background: '#fff', textAlign: 'center' as const}}>
         <h2 style={{fontSize: '28px', fontWeight: 700, color: '#0f172a', marginBottom: '10px', fontFamily: 'Georgia, serif'}}>
           Ready to save your bursar 80 hours this term?
         </h2>
@@ -160,7 +176,7 @@ export default function Home() {
         </Link>
       </div>
 
-      <div style={{background: '#0a1f4e', padding: '20px 32px', textAlign: 'center' as const}}>
+      <div className="land-footer" style={{background: '#0a1f4e', padding: '20px 32px', textAlign: 'center' as const}}>
         <p style={{fontSize: '12px', color: '#94a3c8', marginBottom: '6px'}}>
           Questions? Email{' '}
           <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>

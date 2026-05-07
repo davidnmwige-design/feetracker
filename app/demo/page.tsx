@@ -602,7 +602,7 @@ export default function Demo() {
   const [tab, setTab] = useState<Tab>('dashboard')
 
   return (
-    <div style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
       <style>{`
         @media (max-width: 640px) {
           .demo-content { padding: 16px !important; }
@@ -661,7 +661,7 @@ export default function Demo() {
       </div>
 
       {/* Content */}
-      <div className="demo-content" style={{ padding: '24px 32px', maxWidth: '960px' }}>
+      <div className="demo-content" style={{ padding: '24px 32px', maxWidth: '960px', margin: '0 auto' }}>
         {tab === 'dashboard'   && <TabDashboard />}
         {tab === 'students'    && <TabStudents />}
         {tab === 'upload'      && <TabUpload />}
