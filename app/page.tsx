@@ -114,43 +114,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Testimonials */}
       <div className="land-section" style={{padding: '48px 32px', background: '#0a1f4e'}}>
-        <div style={{maxWidth: '860px', margin: '0 auto'}}>
-          <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>What schools say</div>
-          <h2 style={{fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '28px', fontFamily: 'Georgia, serif'}}>Trusted by bursars across Nairobi</h2>
-          <div className="land-grid-3" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
-            {[
-              {
-                quote: 'Before FeeTracker I was spending the whole Monday morning just reconciling MPESA against our register. Now I upload the statement and it is done in two minutes. The parents love the instant confirmations.',
-                name: 'Grace Wambui',
-                role: 'Bursar, Greenfield Academy, Westlands',
-              },
-              {
-                quote: 'The fee reminder feature alone paid for itself in the first term. Outstanding balances dropped by almost half because parents were getting professional WhatsApp messages instead of awkward calls from me.',
-                name: 'James Mwangi',
-                role: 'Finance Officer, Sunrise Junior School, Karen',
-              },
-              {
-                quote: 'Our principal used to wait until end of month to know how much we had collected. Now she checks the dashboard from her phone anytime. It has completely changed how we plan.',
-                name: 'Esther Njoroge',
-                role: 'Bursar, Brightpath Primary, Kilimani',
-              },
-            ].map(t => (
-              <div key={t.name} style={{background: '#0d2660', borderRadius: '10px', padding: '24px', border: '1px solid rgba(200,168,75,0.15)', display: 'flex', flexDirection: 'column' as const, gap: '16px'}}>
-                <span style={{fontSize: '40px', lineHeight: 1, color: '#c8a84b', fontFamily: 'Georgia, serif', opacity: 0.8}}>&ldquo;</span>
-                <p style={{fontSize: '12px', color: '#cbd5e1', lineHeight: 1.7, marginTop: '-20px', flex: 1}}>{t.quote}</p>
-                <div>
-                  <div style={{fontSize: '12px', fontWeight: 700, color: '#fff'}}>{t.name}</div>
-                  <div style={{fontSize: '11px', color: '#94a3c8'}}>{t.role}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="land-section" style={{padding: '48px 32px', background: '#0a1f4e', borderTop: '1px solid rgba(255,255,255,0.05)'}}>
         <div style={{maxWidth: '860px', margin: '0 auto'}}>
           <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>Pricing</div>
           <h2 style={{fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '6px', fontFamily: 'Georgia, serif'}}>Simple, honest pricing</h2>
