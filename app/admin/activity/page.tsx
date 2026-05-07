@@ -30,7 +30,8 @@ export default function AdminActivity() {
           <div className="p-4 border-b border-gray-100">
             <h2 className="font-medium text-gray-900">All signups (newest first)</h2>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{minWidth: '560px'}}>
             <thead>
               <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
                 <th className="p-3">School</th>
@@ -69,6 +70,7 @@ export default function AdminActivity() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>

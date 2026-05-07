@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 function clearanceCertEmailHtml({
   schoolName,
@@ -141,6 +142,7 @@ async function buildCertificateDoc(data: any) {
 }
 
 export default function Students() {
+  const router = useRouter()
   const [students, setStudents] = useState<any[]>([])
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -276,16 +278,16 @@ export default function Students() {
   }
 
   return (
-    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
+    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
       <style>{`
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .stu-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
           .stu-header-actions { flex-wrap: wrap; width: 100%; }
-          .stu-content { padding: 16px !important; }
+          .stu-content { padding: 12px !important; }
           .stu-import-row { flex-direction: column !important; }
           .stu-search-row { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
-          .stu-search-row input { width: 100% !important; }
-          .stu-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .stu-search-row input { width: 100% !important; box-sizing: border-box; }
+          .stu-table-wrap td, .stu-table-wrap th { padding: 8px 10px !important; font-size: 11px !important; }
         }
       `}</style>
 
@@ -355,8 +357,8 @@ export default function Students() {
               {students.length === 0 ? 'No students yet. Import a CSV to get started.' : 'No students match your search.'}
             </div>
           ) : (
-            <div className="stu-table-wrap">
-              <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px'}}>
+            <div className="stu-table-wrap" style={{overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any}}>
+              <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '860px'}}>
                 <thead>
                   <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9'}}>
                     {['Name', 'Adm No', 'Class', 'Fee Required', 'Paid', 'Balance', 'Status', 'Parent Email', ''].map(h => (
@@ -373,12 +375,12 @@ export default function Students() {
                     const isEditingEmail = editingEmail?.id === student.id
                     return (
                       <>
-                        <tr key={student.id} style={{borderBottom: showFees ? 'none' : '1px solid #f8fafc'}}>
+                        <tr key={student.id} style={{borderBottom: showFees ? 'none' : '1px solid #f8fafc', cursor: 'pointer'}} onClick={() => router.push('/students/' + student.id)}>
                           <td style={{padding: '10px 14px', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap'}}>
                             {student.name}
                             {hasFeeBreakdown(student) && (
                               <button
-                                onClick={() => setExpandedFees(showFees ? null : student.id)}
+                                onClick={e => { e.stopPropagation(); setExpandedFees(showFees ? null : student.id) }}
                                 style={{marginLeft: '6px', fontSize: '10px', color: '#c8a84b', background: 'none', border: 'none', cursor: 'pointer', padding: 0}}
                               >
                                 {showFees ? '▲ fees' : '▼ fees'}
@@ -401,7 +403,7 @@ export default function Students() {
                               {cleared ? 'Cleared' : paid > 0 ? 'Partial' : 'Unpaid'}
                             </span>
                           </td>
-                          <td style={{padding: '10px 14px', minWidth: '180px'}}>
+                          <td style={{padding: '10px 14px', minWidth: '180px'}} onClick={e => e.stopPropagation()}>
                             {isEditingEmail ? (
                               <input
                                 type="email"
@@ -425,7 +427,7 @@ export default function Students() {
                               </span>
                             )}
                           </td>
-                          <td style={{padding: '10px 14px'}}>
+                          <td style={{padding: '10px 14px'}} onClick={e => e.stopPropagation()}>
                             {cleared && (
                               <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap' as const}}>
                                 <button

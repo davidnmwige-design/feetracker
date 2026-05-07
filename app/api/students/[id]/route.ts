@@ -4,6 +4,46 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!checkRateLimit(getIp(req))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
+  const session = await auth()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const { id } = await params
+    const studentId = Number(id)
+    if (!studentId) return NextResponse.json({ error: 'Invalid student ID' }, { status: 400 })
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { school: true }
+    })
+    if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+
+    const student = await prisma.student.findFirst({
+      where: { id: studentId, schoolId: user.school.id },
+      include: {
+        payments: { orderBy: { paidAt: 'desc' } },
+        school: true,
+      }
+    })
+    if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+
+    return NextResponse.json(student)
+  } catch (err) {
+    console.error('students/[id] GET error:', err)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

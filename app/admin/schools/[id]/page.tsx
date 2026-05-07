@@ -7,12 +7,7 @@ const PLANS = {
   Starter: { monthly: 4500, setup: 15000 },
   Growth: { monthly: 6500, setup: 20000 },
   Premium: { monthly: 9000, setup: 25000 },
-}
-
-function getPlan(studentCount: number) {
-  if (studentCount <= 300) return 'Starter'
-  if (studentCount <= 600) return 'Growth'
-  return 'Premium'
+  Enterprise: { monthly: 15000, setup: 35000 },
 }
 
 export default function SchoolDetail() {
@@ -42,8 +37,8 @@ export default function SchoolDetail() {
   if (!school) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">School not found</div>
 
   const studentCount = school._count?.students || 0
-  const planName = getPlan(studentCount)
-  const plan = PLANS[planName as keyof typeof PLANS]
+  const planName = school.currentPlan || 'Starter'
+  const plan = PLANS[planName as keyof typeof PLANS] || PLANS.Starter
   const totalExpected = school.students?.reduce((sum: number, s: any) => sum + s.feeRequired, 0) || 0
   const totalCollected = school.students?.reduce((sum: number, s: any) =>
     sum + s.payments.reduce((p: number, pay: any) => p + pay.amount, 0), 0) || 0
@@ -55,7 +50,7 @@ export default function SchoolDetail() {
           <Link href="/admin/billing" className="text-gray-400 hover:text-gray-600 text-sm">← Back to billing</Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-medium text-gray-900 mb-4">School details</h2>
             <div className="space-y-3">

@@ -43,7 +43,8 @@ export default function AdminFlags() {
             <div className="p-4 border-b border-gray-100">
               <h2 className="font-medium text-red-600">Schools with no students</h2>
             </div>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm" style={{minWidth: '480px'}}>
               <thead>
                 <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
                   <th className="p-3">School</th>
@@ -66,6 +67,7 @@ export default function AdminFlags() {
               </tbody>
             </table>
           </div>
+          </div>
         )}
 
         {trialExpired.length > 0 && (
@@ -73,7 +75,8 @@ export default function AdminFlags() {
             <div className="p-4 border-b border-gray-100">
               <h2 className="font-medium text-amber-600">Trial expired — conversion opportunity</h2>
             </div>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm" style={{minWidth: '480px'}}>
               <thead>
                 <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
                   <th className="p-3">School</th>
@@ -95,6 +98,7 @@ export default function AdminFlags() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 

@@ -80,7 +80,8 @@ export default function AdminBilling() {
               <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full">{upgradeRequests.length}</span>
               <h2 className="font-medium text-gray-900">Pending Plan Upgrade Requests</h2>
             </div>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm" style={{minWidth: '640px'}}>
               <thead>
                 <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
                   <th className="p-3">School</th>
@@ -128,10 +129,11 @@ export default function AdminBilling() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Monthly recurring</p>
             <p className="text-2xl font-semibold text-gray-900">KES {totalMonthly.toLocaleString()}</p>
@@ -154,7 +156,8 @@ export default function AdminBilling() {
           <div className="p-4 border-b border-gray-100">
             <h2 className="font-medium text-gray-900">School billing — {new Date().toLocaleString('en-KE', { month: 'long', year: 'numeric' })}</h2>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{minWidth: '640px'}}>
             <thead>
               <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
                 <th className="p-3">School</th>
@@ -203,6 +206,7 @@ export default function AdminBilling() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>

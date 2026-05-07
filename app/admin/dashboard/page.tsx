@@ -49,7 +49,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Total schools</p>
             <p className="text-2xl font-semibold text-gray-900">{totalSchools}</p>
@@ -75,7 +75,8 @@ export default function AdminDashboard() {
           <div className="p-4 border-b border-gray-100">
             <h2 className="font-medium text-gray-900">All schools</h2>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{minWidth: '640px'}}>
             <thead>
               <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
                 <th className="p-3">School</th>
@@ -121,6 +122,7 @@ export default function AdminDashboard() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>
