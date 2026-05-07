@@ -43,6 +43,11 @@ export default function Settings() {
   const [acctFmtSaving, setAcctFmtSaving] = useState(false)
   const [acctFmtSaved, setAcctFmtSaved] = useState(false)
 
+  const [replyToEmail, setReplyToEmail] = useState('')
+  const [emailSignature, setEmailSignature] = useState('')
+  const [emailSettingsSaving, setEmailSettingsSaving] = useState(false)
+  const [emailSettingsSaved, setEmailSettingsSaved] = useState(false)
+
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [requestedPlan, setRequestedPlan] = useState('')
   const [upgradeNotes, setUpgradeNotes] = useState('')
@@ -74,6 +79,8 @@ export default function Settings() {
     const studentsData = await studentsRes.json()
     setSchool(schoolData)
     setAcctFmt(schoolData?.accountNumberFormat || '')
+    setReplyToEmail(schoolData?.replyToEmail || '')
+    setEmailSignature(schoolData?.emailSignature || '')
     setTerms(termsData)
     setStudentCount(Array.isArray(studentsData) ? studentsData.length : 0)
     setLoading(false)
@@ -93,6 +100,23 @@ export default function Settings() {
       setTimeout(() => setAcctFmtSaved(false), 3000)
     } finally {
       setAcctFmtSaving(false)
+    }
+  }
+
+  async function saveEmailSettings() {
+    setEmailSettingsSaving(true)
+    setEmailSettingsSaved(false)
+    try {
+      await fetch('/api/school', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ replyToEmail, emailSignature }),
+      })
+      setSchool((prev: any) => prev ? { ...prev, replyToEmail, emailSignature } : prev)
+      setEmailSettingsSaved(true)
+      setTimeout(() => setEmailSettingsSaved(false), 3000)
+    } finally {
+      setEmailSettingsSaving(false)
     }
   }
 
@@ -430,6 +454,52 @@ export default function Settings() {
                   }}
                 >
                   {acctFmtSaved ? '✓ Saved' : acctFmtSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+
+            {/* Email settings */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Email Settings</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>Control how emails appear to parents</p>
+              <div style={{background: '#f0f4f9', border: '1px solid #d4ddf0', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#475569'}}>
+                <strong>From:</strong> {school?.name || 'Your school'} via FeeTracker
+                {replyToEmail && <><br /><strong>Reply-To:</strong> {replyToEmail}</>}
+              </div>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                <div>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>School email address (reply-to)</label>
+                  <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 6px'}}>Parents will see this as the reply-to address</p>
+                  <input
+                    type="email"
+                    value={replyToEmail}
+                    onChange={e => setReplyToEmail(e.target.value)}
+                    placeholder="e.g. info@stmarys.ac.ke"
+                    style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none', boxSizing: 'border-box'}}
+                  />
+                </div>
+                <div>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Email signature</label>
+                  <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 6px'}}>Appears at the bottom of all emails</p>
+                  <textarea
+                    value={emailSignature}
+                    onChange={e => setEmailSignature(e.target.value)}
+                    placeholder="e.g. Bursary Office | St. Mary's Academy | Tel: 0712 345 678"
+                    rows={2}
+                    style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none', resize: 'vertical', boxSizing: 'border-box'}}
+                  />
+                </div>
+                <button
+                  onClick={saveEmailSettings}
+                  disabled={emailSettingsSaving}
+                  style={{
+                    background: emailSettingsSaved ? '#0a7c3e' : '#c8a84b',
+                    color: emailSettingsSaved ? '#fff' : '#0a1f4e',
+                    padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                    border: 'none', cursor: emailSettingsSaving ? 'not-allowed' : 'pointer', width: 'fit-content',
+                  }}
+                >
+                  {emailSettingsSaved ? '✓ Saved' : emailSettingsSaving ? 'Saving…' : 'Save email settings'}
                 </button>
               </div>
             </div>

@@ -48,7 +48,7 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json()
-    const allowed = ['paybill', 'accountNumberFormat'] as const
+    const allowed = ['paybill', 'accountNumberFormat', 'replyToEmail', 'emailSignature'] as const
     const data: Record<string, string | null> = {}
     for (const key of allowed) {
       if (key in body) data[key] = body[key] != null ? sanitize(String(body[key]), 200) : null

@@ -105,32 +105,53 @@ async function buildCertificateDoc(data: any) {
 
   // Intro line
   doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(100, 116, 139)
-  doc.text('This is to certify that:', W / 2, 82, { align: 'center' })
+  doc.text('This is to certify that:', W / 2, 80, { align: 'center' })
 
-  // Student name
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(23); doc.setTextColor(10, 31, 78)
-  doc.text(data.student.name.toUpperCase(), W / 2, 95, { align: 'center' })
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 116, 139)
+  // Student name (large)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(10, 31, 78)
+  doc.text(data.student.name.toUpperCase(), W / 2, 92, { align: 'center' })
+
+  // Two-column student details box
   const classStr = data.student.class + (data.student.stream ? ' ' + data.student.stream : '')
-  doc.text('Admission No: ' + data.student.admNo + '   |   Class: ' + classStr, W / 2, 104, { align: 'center' })
+  const detailRows: [string, string][] = [
+    ['Admission No.', data.student.admNo],
+    ['Class / Stream', classStr],
+    ['Term', term],
+  ]
+  const boxX = 36; const boxW = 138; const rowH = 11; const boxY = 100
+  doc.setFillColor(248, 249, 252); doc.setDrawColor(220, 228, 240); doc.setLineWidth(0.3)
+  doc.rect(boxX, boxY, boxW, detailRows.length * rowH + 8, 'FD')
+  detailRows.forEach(([label, value], i) => {
+    const y = boxY + 9 + i * rowH
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 116, 139)
+    doc.text(label, boxX + 6, y)
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42)
+    doc.text(value, boxX + boxW - 6, y, { align: 'right' })
+    if (i < detailRows.length - 1) {
+      doc.setDrawColor(230, 235, 245); doc.setLineWidth(0.2)
+      doc.line(boxX + 2, y + 3, boxX + boxW - 2, y + 3)
+    }
+  })
 
   // Body text
-  doc.setFontSize(11); doc.setTextColor(71, 85, 105)
-  doc.text('has fully settled all fee obligations for', W / 2, 118, { align: 'center' })
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(10, 31, 78)
-  doc.text(term, W / 2, 127, { align: 'center' })
+  const afterBox = boxY + detailRows.length * rowH + 16
   doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(71, 85, 105)
-  doc.text('and is therefore cleared to sit examinations.', W / 2, 136, { align: 'center' })
+  doc.text('has fully settled all fee obligations for', W / 2, afterBox, { align: 'center' })
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(10, 31, 78)
+  doc.text(term, W / 2, afterBox + 9, { align: 'center' })
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(71, 85, 105)
+  doc.text('and is therefore cleared to sit examinations.', W / 2, afterBox + 18, { align: 'center' })
 
   // Fee detail box
+  const feeBoxY = afterBox + 26
   doc.setFillColor(248, 249, 252); doc.setDrawColor(220, 228, 240); doc.setLineWidth(0.3)
-  doc.rect(36, 144, 138, 40, 'FD')
+  doc.rect(36, feeBoxY, 138, 40, 'FD')
   const feeRows: [string, string, string][] = [
     ['Fee Required', 'KES ' + data.student.feeRequired.toLocaleString(), '#64748b'],
     ['Total Paid', 'KES ' + data.student.totalPaid.toLocaleString(), '#0a7c3e'],
     ['Outstanding Balance', 'KES 0', '#0a7c3e'],
   ]
-  let fy = 153
+  let fy = feeBoxY + 9
   feeRows.forEach(([label, value, color]) => {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 116, 139)
     doc.text(label, 44, fy)
@@ -140,25 +161,28 @@ async function buildCertificateDoc(data: any) {
   })
 
   // CLEARED stamp box
-  doc.setDrawColor(10, 124, 78); doc.setLineWidth(1); doc.rect(74, 195, 62, 21)
+  const stampY = feeBoxY + 50
+  doc.setDrawColor(10, 124, 78); doc.setLineWidth(1); doc.rect(74, stampY, 62, 21)
   doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(10, 124, 78)
-  doc.text('CLEARED', W / 2, 209, { align: 'center' })
+  doc.text('CLEARED', W / 2, stampY + 14, { align: 'center' })
 
   // Signature lines
+  const sigY = stampY + 38
   doc.setDrawColor(180, 192, 215); doc.setLineWidth(0.4)
-  doc.line(24, 228, 90, 228); doc.line(120, 228, 186, 228)
+  doc.line(24, sigY, 90, sigY); doc.line(120, sigY, 186, sigY)
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(10, 31, 78)
-  doc.text('Bursar', 57, 235, { align: 'center' })
-  doc.text('Principal', 153, 235, { align: 'center' })
+  doc.text('Bursar', 57, sigY + 7, { align: 'center' })
+  doc.text('Principal', 153, sigY + 7, { align: 'center' })
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(130, 140, 158)
-  doc.text('Authorised Signatory', 57, 241, { align: 'center' })
-  doc.text('Authorised Signatory', 153, 241, { align: 'center' })
+  doc.text('Authorised Signatory', 57, sigY + 13, { align: 'center' })
+  doc.text('Authorised Signatory', 153, sigY + 13, { align: 'center' })
 
   // Date + validity
+  const dateY = sigY + 26
   doc.setFontSize(9); doc.setTextColor(100, 116, 139)
-  doc.text('Date issued: ' + today, W / 2, 258, { align: 'center' })
+  doc.text('Date issued: ' + today, W / 2, dateY, { align: 'center' })
   doc.setFont('helvetica', 'italic'); doc.setFontSize(8)
-  doc.text('This certificate is valid for ' + term + ' only.', W / 2, 265, { align: 'center' })
+  doc.text('This certificate is valid for ' + term + ' only.', W / 2, dateY + 7, { align: 'center' })
 
   // Navy footer
   doc.setFillColor(10, 31, 78); doc.rect(0, 272, W, 25, 'F')
@@ -257,6 +281,8 @@ export default function Students() {
           to: emailInput.trim(),
           subject: `Fee Clearance Certificate — ${student.name} — ${certData.school.term}`,
           html,
+          schoolName: certData.school.name,
+          replyTo: certData.school.replyToEmail || undefined,
           pdfBase64,
           pdfFilename: student.name.replace(/\s+/g, '_') + '_clearance.pdf',
         }),
@@ -384,12 +410,12 @@ export default function Students() {
               {students.length === 0 ? 'No students yet. Import a CSV to get started.' : 'No students match your search.'}
             </div>
           ) : (
-            <div className="stu-table-wrap" style={{overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any}}>
+            <div className="stu-table-wrap" style={{overflowX: 'auto', overflowY: 'auto', maxHeight: '660px', WebkitOverflowScrolling: 'touch' as any}}>
               <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '860px'}}>
-                <thead>
-                  <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9'}}>
+                <thead style={{position: 'sticky', top: 0, zIndex: 1}}>
+                  <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9', background: '#fff'}}>
                     {['Name', 'Adm No', 'Class', 'Fee Required', 'Paid', 'Balance', 'Status', 'Parent Email', ''].map(h => (
-                      <th key={h} style={{padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap'}}>{h}</th>
+                      <th key={h} style={{padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap', background: '#fff'}}>{h}</th>
                     ))}
                   </tr>
                 </thead>

@@ -26,6 +26,8 @@ export default function Signup() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [agreedToPolicy, setAgreedToPolicy] = useState(false)
   const [form, setForm] = useState({
     name: '',
@@ -38,6 +40,7 @@ export default function Signup() {
 
   const rules = checkPassword(form.password)
   const passwordValid = rules.length && rules.upper && rules.lower && rules.number
+  const passwordsMatch = form.password.length > 0 && confirmPassword === form.password
 
   async function handleSubmit() {
     if (!passwordValid) {
@@ -134,6 +137,35 @@ export default function Signup() {
               )}
             </div>
 
+            <div>
+              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Confirm password</label>
+              <div style={{position: 'relative'}}>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+                  style={{paddingRight: '40px'}}
+                  placeholder="Repeat your password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(v => !v)}
+                  style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', padding: '2px'}}
+                >
+                  {showConfirmPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+              {confirmPassword.length > 0 && (
+                <div style={{marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px'}}>
+                  {passwordsMatch
+                    ? <><span style={{color: '#0a7c4e', fontWeight: 700}}>✓</span><span style={{color: '#0a7c4e'}}>Passwords match</span></>
+                    : <><span style={{color: '#e24b4a', fontWeight: 700}}>✗</span><span style={{color: '#e24b4a'}}>Passwords do not match</span></>
+                  }
+                </div>
+              )}
+            </div>
+
             <div style={{borderTop: '1px solid #f1f5f9', paddingTop: '16px'}}>
               <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: '14px'}}>School details</p>
               <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
@@ -187,9 +219,9 @@ export default function Signup() {
 
             <button
               onClick={handleSubmit}
-              disabled={loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !agreedToPolicy}
+              disabled={loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !passwordsMatch || !agreedToPolicy}
               style={{
-                background: (loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !agreedToPolicy) ? '#94a3b8' : '#0a1f4e',
+                background: (loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !passwordsMatch || !agreedToPolicy) ? '#94a3b8' : '#0a1f4e',
                 color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
                 border: 'none', cursor: 'pointer', width: '100%', marginTop: '4px'
               }}

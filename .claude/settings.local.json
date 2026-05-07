@@ -14,7 +14,8 @@
       "Bash(npx next *)",
       "Bash(node -e \"require\\('nodemailer'\\); console.log\\('ok'\\)\")",
       "Bash(git reset *)",
-      "Bash(node \"C:/Users/david/feetracker/scripts/generate-sample-csv.js\" 50 \"C:/Users/david/feetracker/public/sample-students-50.csv\")"
+      "Bash(node \"C:/Users/david/feetracker/scripts/generate-sample-csv.js\" 50 \"C:/Users/david/feetracker/public/sample-students-50.csv\")",
+      "PowerShell(New-Item *)"
     ]
   }
 }

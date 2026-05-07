@@ -63,15 +63,21 @@ function CTA() {
 
 // ── Tab 1: Dashboard ──────────────────────────────────────────────────────────
 
+const TOTAL_FEE  = STUDENTS.reduce((s, st) => s + st.fee,  0)
+const TOTAL_PAID = STUDENTS.reduce((s, st) => s + st.paid, 0)
+const TOTAL_OUTSTANDING = TOTAL_FEE - TOTAL_PAID
+const ZERO_PAY = STUDENTS.filter(s => s.paid === 0).length
+const COLLECTION_RATE = Math.round(TOTAL_PAID / TOTAL_FEE * 100)
+
 function TabDashboard() {
   return (
     <div>
       <div className="demo-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '20px' }}>
         {[
-          { label: 'Expected',     value: 'KES 397,000', color: '#0f172a' },
-          { label: 'Collected',    value: 'KES 230,000', color: '#0a1f4e' },
-          { label: 'Outstanding',  value: 'KES 167,000', color: '#c8a84b' },
-          { label: 'Zero payment', value: '2',           color: '#e24b4a' },
+          { label: 'Expected',     value: `KES ${TOTAL_FEE.toLocaleString()}`,         color: '#0f172a' },
+          { label: 'Collected',    value: `KES ${TOTAL_PAID.toLocaleString()}`,         color: '#0a1f4e' },
+          { label: 'Outstanding',  value: `KES ${TOTAL_OUTSTANDING.toLocaleString()}`,  color: '#c8a84b' },
+          { label: 'Zero payment', value: String(ZERO_PAY),                             color: '#e24b4a' },
         ].map(c => (
           <div key={c.label} style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px' }}>
             <p style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' as const, letterSpacing: '0.5px', margin: '0 0 6px' }}>{c.label}</p>
@@ -427,54 +433,78 @@ function TabCertificate() {
 
       // Certify text
       doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(100, 116, 139)
-      doc.text('This is to certify that:', W / 2, 82, { align: 'center' })
+      doc.text('This is to certify that:', W / 2, 80, { align: 'center' })
 
       // Student name
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(23); doc.setTextColor(10, 31, 78)
-      doc.text(s.name.toUpperCase(), W / 2, 95, { align: 'center' })
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 116, 139)
-      doc.text(`Admission No: ${s.admNo}   |   Class: ${s.cls}`, W / 2, 104, { align: 'center' })
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(10, 31, 78)
+      doc.text(s.name.toUpperCase(), W / 2, 92, { align: 'center' })
 
-      doc.setFontSize(11); doc.text('has fully settled all fee obligations for', W / 2, 117, { align: 'center' })
+      // Two-column student details box
+      const detailRows: [string, string][] = [
+        ['Admission No.', s.admNo],
+        ['Class / Stream', s.cls],
+        ['Term', SCHOOL.term],
+      ]
+      const boxX = 36; const boxW = 138; const rowH = 11; const boxY = 100
+      doc.setFillColor(248, 249, 252); doc.setDrawColor(220, 228, 240); doc.setLineWidth(0.3)
+      doc.rect(boxX, boxY, boxW, detailRows.length * rowH + 8, 'FD')
+      detailRows.forEach(([label, value], i) => {
+        const y = boxY + 9 + i * rowH
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 116, 139)
+        doc.text(label, boxX + 6, y)
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42)
+        doc.text(value, boxX + boxW - 6, y, { align: 'right' })
+        if (i < detailRows.length - 1) {
+          doc.setDrawColor(230, 235, 245); doc.setLineWidth(0.2)
+          doc.line(boxX + 2, y + 3, boxX + boxW - 2, y + 3)
+        }
+      })
+
+      const afterBox = boxY + detailRows.length * rowH + 16
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(71, 85, 105)
+      doc.text('has fully settled all fee obligations for', W / 2, afterBox, { align: 'center' })
       doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(10, 31, 78)
-      doc.text(SCHOOL.term, W / 2, 126, { align: 'center' })
+      doc.text(SCHOOL.term, W / 2, afterBox + 9, { align: 'center' })
 
       // Fee detail box
+      const feeBoxY = afterBox + 26
       doc.setFillColor(248, 249, 252); doc.setDrawColor(220, 228, 240); doc.setLineWidth(0.3)
-      doc.rect(36, 134, 138, 46, 'FD')
+      doc.rect(36, feeBoxY, 138, 40, 'FD')
       const feeRows: [string, string, number, number, number][] = [
-        ['Total fees required:', 'KES ' + s.fee.toLocaleString(), 100, 116, 139],
-        ['Total amount paid:', 'KES ' + s.paid.toLocaleString(), 10, 124, 78],
-        ['Outstanding balance:', 'KES 0', 10, 124, 78],
+        ['Fee Required:', 'KES ' + s.fee.toLocaleString(), 100, 116, 139],
+        ['Total Paid:', 'KES ' + s.paid.toLocaleString(), 10, 124, 78],
+        ['Outstanding Balance:', 'KES 0', 10, 124, 78],
       ]
       feeRows.forEach(([label, value, r, g, b], i) => {
-        const y = 148 + i * 13
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 116, 139); doc.text(label, 44, y)
+        const y = feeBoxY + 9 + i * 10
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 116, 139); doc.text(label, 44, y)
         doc.setFont('helvetica', 'bold'); doc.setTextColor(r, g, b); doc.text(value, W - 44, y, { align: 'right' })
       })
 
       // CLEARED stamp
-      doc.setDrawColor(10, 124, 78); doc.setLineWidth(1); doc.rect(74, 188, 62, 21)
+      const stampY = feeBoxY + 50
+      doc.setDrawColor(10, 124, 78); doc.setLineWidth(1); doc.rect(74, stampY, 62, 21)
       doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(10, 124, 78)
-      doc.text('CLEARED', W / 2, 202, { align: 'center' })
+      doc.text('CLEARED', W / 2, stampY + 14, { align: 'center' })
 
       // Signature lines
+      const sigY = stampY + 38
       doc.setDrawColor(180, 192, 215); doc.setLineWidth(0.4)
-      doc.line(24, 228, 90, 228); doc.line(120, 228, 186, 228)
+      doc.line(24, sigY, 90, sigY); doc.line(120, sigY, 186, sigY)
       doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(10, 31, 78)
-      doc.text('Bursar', 57, 234, { align: 'center' }); doc.text('Principal', 153, 234, { align: 'center' })
+      doc.text('Bursar', 57, sigY + 7, { align: 'center' }); doc.text('Principal', 153, sigY + 7, { align: 'center' })
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(130, 140, 158)
-      doc.text('Authorised Signatory', 57, 240, { align: 'center' })
-      doc.text('Authorised Signatory', 153, 240, { align: 'center' })
-      doc.text(SCHOOL.name, 57, 246, { align: 'center' }); doc.text(SCHOOL.name, 153, 246, { align: 'center' })
+      doc.text('Authorised Signatory', 57, sigY + 13, { align: 'center' })
+      doc.text('Authorised Signatory', 153, sigY + 13, { align: 'center' })
 
       // Date issued
+      const dateY = sigY + 26
       doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 116, 139)
-      doc.text('Date issued: ' + today, W / 2, 258, { align: 'center' })
+      doc.text('Date issued: ' + today, W / 2, dateY, { align: 'center' })
 
       // Validity
       doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(150, 162, 178)
-      doc.text('This certificate is valid for ' + SCHOOL.term + ' only.', W / 2, 265, { align: 'center' })
+      doc.text('This certificate is valid for ' + SCHOOL.term + ' only.', W / 2, dateY + 7, { align: 'center' })
 
       // Footer
       doc.setFillColor(10, 31, 78); doc.rect(0, 272, W, 25, 'F')
@@ -828,7 +858,7 @@ export default function Demo() {
           <p style={{ fontSize: '12px', color: '#94a3c8', margin: 0 }}>{SCHOOL.name} · {SCHOOL.term} · Paybill {SCHOOL.paybill}</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ background: '#c8a84b', color: '#0a1f4e', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700 }}>58% collected</span>
+          <span style={{ background: '#c8a84b', color: '#0a1f4e', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700 }}>{COLLECTION_RATE}% collected</span>
           <Link href="/signup" style={{ background: '#c8a84b', color: '#0a1f4e', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, textDecoration: 'none' }}>
             Get started free
           </Link>

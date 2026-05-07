@@ -16,6 +16,8 @@ export interface EmailOptions {
   to: string
   subject: string
   html: string
+  fromName?: string
+  replyTo?: string
   pdfBase64?: string
   pdfFilename?: string
 }
@@ -26,12 +28,14 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
     return
   }
   const transporter = createTransporter()
+  const fromName = opts.fromName || 'FeeTracker'
   const mailOptions: nodemailer.SendMailOptions = {
-    from: `"FeeTracker" <${process.env.EMAIL_USER}>`,
+    from: `"${fromName}" <${process.env.EMAIL_USER}>`,
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
   }
+  if (opts.replyTo) mailOptions.replyTo = opts.replyTo
   if (opts.pdfBase64) {
     mailOptions.attachments = [{
       filename: opts.pdfFilename || 'document.pdf',
@@ -87,8 +91,8 @@ export function paymentConfirmationHtml({
   return `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
       <div style="background:#0a1f4e;padding:24px;text-align:center">
-        <h1 style="color:#c8a84b;margin:0;font-family:Georgia,serif;font-size:22px">FeeTracker</h1>
-        <p style="color:#94a3c8;margin:6px 0 0;font-size:12px">${schoolName}</p>
+        <h1 style="color:#fff;margin:0;font-family:Georgia,serif;font-size:20px">${schoolName}</h1>
+        <p style="color:#c8a84b;margin:6px 0 0;font-size:11px;letter-spacing:1.5px">POWERED BY FEETRACKER</p>
       </div>
       <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
         <h2 style="color:#0f172a;font-size:18px;margin-bottom:8px">Payment Received</h2>
@@ -132,7 +136,7 @@ export function paymentConfirmationHtml({
         </div>` : ''}
       </div>
       <div style="padding:16px;background:#f8f9fc;text-align:center">
-        <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker &middot; support@feetracker.co.ke</p>
+        <p style="color:#94a3b8;font-size:11px;margin:0">${schoolName} &middot; Powered by FeeTracker &middot; support@feetracker.co.ke</p>
       </div>
     </div>
   `

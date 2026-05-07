@@ -21,26 +21,46 @@ export default function SchoolDetail() {
   const [notesLoading, setNotesLoading] = useState(true)
   const [addingNote, setAddingNote] = useState(false)
   const [billingHistory, setBillingHistory] = useState<any[]>([])
+  const [contract, setContract] = useState<{ fileName: string; fileSize: number; uploadedAt: string } | null>(null)
+  const [contractLoading, setContractLoading] = useState(true)
+  const [contractUploading, setContractUploading] = useState(false)
+  const [contractDeleting, setContractDeleting] = useState(false)
 
   useEffect(() => {
     fetch('/api/admin/schools/' + id)
       .then(r => r.json())
-      .then(data => {
-        setSchool(data)
-        setLoading(false)
-      })
+      .then(data => { setSchool(data); setLoading(false) })
 
     fetch('/api/admin/schools/' + id + '/notes')
       .then(r => r.json())
-      .then(data => {
-        setNotes(Array.isArray(data) ? data : [])
-        setNotesLoading(false)
-      })
+      .then(data => { setNotes(Array.isArray(data) ? data : []); setNotesLoading(false) })
 
     fetch('/api/admin/billing?schoolId=' + id)
       .then(r => r.json())
       .then(data => setBillingHistory(Array.isArray(data) ? data : []))
+
+    fetch('/api/admin/schools/' + id + '/contract?meta=1')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { setContract(data || null); setContractLoading(false) })
+      .catch(() => { setContract(null); setContractLoading(false) })
   }, [id])
+
+  async function uploadContract(file: File) {
+    setContractUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch('/api/admin/schools/' + id + '/contract', { method: 'POST', body: fd })
+    if (res.ok) setContract(await res.json())
+    setContractUploading(false)
+  }
+
+  async function deleteContract() {
+    if (!confirm('Delete this contract?')) return
+    setContractDeleting(true)
+    await fetch('/api/admin/schools/' + id + '/contract', { method: 'DELETE' })
+    setContract(null)
+    setContractDeleting(false)
+  }
 
   async function addNote() {
     if (!note.trim() || addingNote) return
@@ -80,13 +100,12 @@ export default function SchoolDetail() {
   const paidBilling = billingHistory.filter(r => r.isPaid)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/admin/billing" className="text-gray-400 hover:text-gray-600 text-sm">← Back to billing</Link>
-        </div>
+    <div style={{ maxWidth: '900px' }}>
+      <div className="mb-6">
+        <Link href="/admin/schools" className="text-gray-400 hover:text-gray-600 text-sm">← Back to schools</Link>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-medium text-gray-900 mb-4">School details</h2>
             <div className="space-y-3">
@@ -188,6 +207,47 @@ export default function SchoolDetail() {
           </div>
         )}
 
+        {/* Contract section */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+          <h2 className="font-medium text-gray-900 mb-4">Contract</h2>
+          {contractLoading ? (
+            <p className="text-sm text-gray-400">Loading…</p>
+          ) : contract ? (
+            <div>
+              <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{contract.fileName}</p>
+                  <p className="text-xs text-gray-400">
+                    {(contract.fileSize / 1024).toFixed(1)} KB · Uploaded {new Date(contract.uploadedAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+                <a href={'/api/admin/schools/' + id + '/contract'} target="_blank" rel="noopener noreferrer"
+                  className="text-sm text-blue-700 hover:underline font-medium">
+                  View PDF
+                </a>
+              </div>
+              <div className="flex gap-2">
+                <label className="cursor-pointer border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50">
+                  {contractUploading ? 'Uploading…' : 'Replace contract'}
+                  <input type="file" accept=".pdf" className="hidden" onChange={e => e.target.files?.[0] && uploadContract(e.target.files[0])} />
+                </label>
+                <button onClick={deleteContract} disabled={contractDeleting}
+                  className="border border-red-200 text-red-600 px-3 py-1.5 rounded-lg text-sm hover:bg-red-50 disabled:opacity-50">
+                  {contractDeleting ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-gray-400 mb-3">No contract uploaded for this school.</p>
+              <label className="cursor-pointer inline-block text-white px-4 py-2 rounded-lg text-sm" style={{ backgroundColor: '#0a1f4e' }}>
+                {contractUploading ? 'Uploading…' : 'Upload contract PDF'}
+                <input type="file" accept=".pdf" className="hidden" onChange={e => e.target.files?.[0] && uploadContract(e.target.files[0])} />
+              </label>
+            </div>
+          )}
+        </div>
+
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="font-medium text-gray-900 mb-4">Notes</h2>
           <div className="flex gap-2 mb-4">
@@ -235,7 +295,6 @@ export default function SchoolDetail() {
             </div>
           )}
         </div>
-      </div>
     </div>
   )
 }
