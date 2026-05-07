@@ -1,4 +1,26 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker.co.ke'
+
+export const metadata: Metadata = {
+  title: 'FeeTracker — School Fee Management for Nairobi Schools',
+  description: 'Upload your MPESA statement and every payment is matched automatically. Parents get instant confirmations. Built for private schools in Nairobi, Kenya.',
+  openGraph: {
+    title: 'FeeTracker — School Fee Management for Nairobi Schools',
+    description: 'Upload your MPESA statement and every payment is matched automatically. Parents get instant confirmations. Built for private schools in Nairobi, Kenya.',
+    url: APP_URL,
+    siteName: 'FeeTracker',
+    images: [{ url: `${APP_URL}/og-image.png`, width: 1200, height: 630, alt: 'FeeTracker' }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FeeTracker — School Fee Management for Nairobi Schools',
+    description: 'Upload your MPESA statement and every payment is matched automatically. Parents get instant confirmations.',
+    images: [`${APP_URL}/og-image.png`],
+  },
+}
 
 export default function Home() {
   return (

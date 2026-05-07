@@ -1,13 +1,18 @@
 import type { NextConfig } from "next";
 
 const APP_URL = process.env.NEXTAUTH_URL || 'https://feetracker.co.ke'
+const VERCEL_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker-seven.vercel.app'
+const CUSTOM_DOMAIN = 'https://feetracker.co.ke'
+
+// Allow both the Vercel deployment URL and the custom domain
+const allowedOrigins = [...new Set([APP_URL, VERCEL_URL, CUSTOM_DOMAIN])].join(' ')
 
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
-  "connect-src 'self'",
+  `connect-src 'self' ${allowedOrigins}`,
   "font-src 'self' data:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
