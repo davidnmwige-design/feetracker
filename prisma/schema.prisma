@@ -28,7 +28,8 @@ model School {
   currentTerm         String               @default("Term 1 2026")
   currentPlan         String               @default("Starter")
   createdAt           DateTime             @default(now())
-  trialEndsAt         DateTime?
+  trialEndsAt             DateTime?
+  trialExpiryNotified     Boolean              @default(false)
   userId              Int                  @unique
   user                User                 @relation(fields: [userId], references: [id])
   students            Student[]

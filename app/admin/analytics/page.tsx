@@ -1,9 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
 
 const PLAN_MONTHLY: Record<string, number> = { Starter: 4500, Growth: 6500, Premium: 9000, Enterprise: 15000 }
 const PLAN_COLORS: Record<string, string> = { Starter: '#64748b', Growth: '#3b82f6', Premium: '#f59e0b', Enterprise: '#c8a84b' }
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
@@ -61,6 +63,20 @@ export default function AdminAnalytics() {
     .sort((a, b) => (b._count?.students || 0) - (a._count?.students || 0))
     .slice(0, 10)
 
+  // Build last-6-month MRR from school createdAt + plan
+  const revenueData = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now)
+    d.setDate(1)
+    d.setMonth(now.getMonth() - (5 - i))
+    const year = d.getFullYear()
+    const month = d.getMonth()
+    const monthEnd = new Date(year, month + 1, 0, 23, 59, 59)
+    const revenue = schools
+      .filter(s => new Date(s.createdAt) <= monthEnd)
+      .reduce((sum, s) => sum + (PLAN_MONTHLY[s.currentPlan || 'Starter'] || 4500), 0)
+    return { month: MONTH_NAMES[month], revenue }
+  })
+
   if (loading) return <div style={{ textAlign: 'center', padding: '60px', color: '#94a3b8' }}>Loading analytics…</div>
 
   return (
@@ -78,6 +94,37 @@ export default function AdminAnalytics() {
         <StatCard label="Monthly revenue" value={`KES ${monthlyRevenue.toLocaleString()}`} color="#0a7c4e" />
         <StatCard label="Annual run rate" value={`KES ${Math.round(annualRunRate / 1000)}K`} color="#0a7c4e" />
         <StatCard label="On free trial" value={trialSchools.length} />
+      </div>
+
+      {/* Revenue chart */}
+      <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Monthly recurring revenue — last 6 months</h2>
+        <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 16px' }}>Estimated MRR based on active schools and their plans</p>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={revenueData} margin={{ top: 24, right: 16, left: 16, bottom: 4 }} barSize={36}>
+            <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+            <YAxis
+              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={v => v === 0 ? '0' : `KES ${(v / 1000).toFixed(0)}K`}
+              width={60}
+            />
+            <Tooltip
+              formatter={(v) => [`KES ${Number(v).toLocaleString()}`, 'Revenue']}
+              contentStyle={{ fontSize: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}
+              cursor={{ fill: 'rgba(200,168,75,0.08)' }}
+            />
+            <Bar dataKey="revenue" fill="#0a1f4e" radius={[4, 4, 0, 0]}>
+              <LabelList
+                dataKey="revenue"
+                position="top"
+                formatter={(v) => { const n = Number(v); return n === 0 ? '' : `KES ${(n / 1000).toFixed(0)}K` }}
+                style={{ fill: '#c8a84b', fontSize: '10px', fontWeight: 700 }}
+              />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>

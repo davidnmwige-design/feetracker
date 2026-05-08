@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { logAudit } from '@/lib/audit'
+import { sendEmail } from '@/lib/email'
 
 export async function DELETE(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -27,6 +28,31 @@ export async function DELETE(req: Request) {
       details: `School: ${user.school?.name ?? 'none'}`,
       ipAddress: getIp(req),
     })
+
+    const settings = await prisma.platformSettings.findUnique({ where: { id: 1 } })
+    if (settings?.notifyAccountDeleted !== false) {
+      sendEmail({
+        to: 'davidnmwige@gmail.com',
+        subject: `Account deleted: ${user.school?.name || user.email}`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
+          <div style="background:#050f2c;padding:20px 24px">
+            <h1 style="color:#c8a84b;font-size:16px;margin:0;font-weight:700;letter-spacing:1px">FEETRACKER</h1>
+            <p style="color:#94a3b8;font-size:11px;margin:4px 0 0;letter-spacing:1px;text-transform:uppercase">Account deleted</p>
+          </div>
+          <div style="padding:24px;background:#fff;border:1px solid #e2e8f0">
+            <p style="color:#0f172a;font-size:15px;font-weight:700;margin:0 0 16px">A school account has been deleted.</p>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">School</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${user.school?.name || '—'}</td></tr>
+              <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">Admin name</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${user.name}</td></tr>
+              <tr><td style="padding:8px 0;color:#64748b">Email</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right">${user.email}</td></tr>
+            </table>
+          </div>
+          <div style="padding:14px 24px;background:#f8f9fc;text-align:center">
+            <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker Platform &middot; Admin notification</p>
+          </div>
+        </div>`
+      }).catch(err => console.error('account deletion notification error:', err))
+    }
 
     if (user.school) {
       const schoolId = user.school.id

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { sendEmail } from '@/lib/email'
 
 export const revalidate = 0
 
@@ -20,8 +21,41 @@ export default async function Dashboard() {
 
   const school = user.school
 
-  if (school.trialEndsAt && new Date() > school.trialEndsAt) {
-    redirect('/trial-expired')
+  if (school.trialEndsAt) {
+    const now = new Date()
+    const msUntilEnd = school.trialEndsAt.getTime() - now.getTime()
+    if (msUntilEnd <= 0) {
+      redirect('/trial-expired')
+    }
+    if (msUntilEnd <= 2 * 24 * 60 * 60 * 1000 && !school.trialExpiryNotified) {
+      const settings = await prisma.platformSettings.findUnique({ where: { id: 1 } })
+      if (settings?.notifyTrialExpiry !== false) {
+        const trialEnd = school.trialEndsAt.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
+        sendEmail({
+          to: 'davidnmwige@gmail.com',
+          subject: `Trial expiring soon: ${school.name}`,
+          html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
+            <div style="background:#050f2c;padding:20px 24px">
+              <h1 style="color:#c8a84b;font-size:16px;margin:0;font-weight:700;letter-spacing:1px">FEETRACKER</h1>
+              <p style="color:#94a3b8;font-size:11px;margin:4px 0 0;letter-spacing:1px;text-transform:uppercase">Trial expiry alert</p>
+            </div>
+            <div style="padding:24px;background:#fff;border:1px solid #e2e8f0">
+              <p style="color:#0f172a;font-size:15px;font-weight:700;margin:0 0 8px">A school's trial is expiring soon.</p>
+              <p style="color:#64748b;font-size:13px;margin:0 0 16px">This school has not upgraded and their trial expires on <strong>${trialEnd}</strong>.</p>
+              <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">School</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${school.name}</td></tr>
+                <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">Admin email</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${user.email}</td></tr>
+                <tr><td style="padding:8px 0;color:#64748b">Trial ends</td><td style="padding:8px 0;font-weight:700;color:#e24b4a;text-align:right">${trialEnd}</td></tr>
+              </table>
+            </div>
+            <div style="padding:14px 24px;background:#f8f9fc;text-align:center">
+              <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker Platform &middot; Admin notification</p>
+            </div>
+          </div>`
+        }).catch(err => console.error('trial expiry notification error:', err))
+      }
+      await prisma.school.update({ where: { id: school.id }, data: { trialExpiryNotified: true } })
+    }
   }
 
   const students = await prisma.student.findMany({

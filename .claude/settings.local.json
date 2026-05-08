@@ -15,7 +15,8 @@
       "Bash(node -e \"require\\('nodemailer'\\); console.log\\('ok'\\)\")",
       "Bash(git reset *)",
       "Bash(node \"C:/Users/david/feetracker/scripts/generate-sample-csv.js\" 50 \"C:/Users/david/feetracker/public/sample-students-50.csv\")",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('recharts:', p.dependencies.recharts\\)\")"
     ]
   }
 }
