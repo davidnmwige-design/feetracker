@@ -48,6 +48,17 @@ export default function Settings() {
   const [emailSettingsSaving, setEmailSettingsSaving] = useState(false)
   const [emailSettingsSaved, setEmailSettingsSaved] = useState(false)
 
+  const [whatsappNumber, setWhatsappNumber] = useState('')
+  const [whatsappSaving, setWhatsappSaving] = useState(false)
+  const [whatsappSaved, setWhatsappSaved] = useState(false)
+
+  const [penaltyEnabled, setPenaltyEnabled] = useState(false)
+  const [penaltyType, setPenaltyType] = useState('fixed')
+  const [penaltyAmount, setPenaltyAmount] = useState(0)
+  const [penaltyDueDate, setPenaltyDueDate] = useState(15)
+  const [penaltySaving, setPenaltySaving] = useState(false)
+  const [penaltySaved, setPenaltySaved] = useState(false)
+
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [requestedPlan, setRequestedPlan] = useState('')
   const [upgradeNotes, setUpgradeNotes] = useState('')
@@ -55,6 +66,15 @@ export default function Settings() {
   const [upgradeSuccess, setUpgradeSuccess] = useState(false)
   const [upgradeError, setUpgradeError] = useState('')
   const [upgradeEmail, setUpgradeEmail] = useState('')
+
+  const [teamMembers, setTeamMembers] = useState<any[]>([])
+  const [teamLoading, setTeamLoading] = useState(false)
+  const [inviteName, setInviteName] = useState('')
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState('accountant')
+  const [inviting, setInviting] = useState(false)
+  const [inviteSuccess, setInviteSuccess] = useState('')
+  const [inviteError, setInviteError] = useState('')
 
   const [exporting, setExporting] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
@@ -69,11 +89,13 @@ export default function Settings() {
 
   async function fetchData() {
     setLoading(true)
+    setTeamLoading(true)
     const [schoolRes, termsRes, studentsRes] = await Promise.all([
       fetch('/api/school'),
       fetch('/api/terms'),
       fetch('/api/students')
     ])
+    fetch('/api/team').then(r => r.json()).then(d => { setTeamMembers(Array.isArray(d) ? d : []); setTeamLoading(false) })
     const schoolData = await schoolRes.json()
     const termsData = await termsRes.json()
     const studentsData = await studentsRes.json()
@@ -81,6 +103,11 @@ export default function Settings() {
     setAcctFmt(schoolData?.accountNumberFormat || '')
     setReplyToEmail(schoolData?.replyToEmail || '')
     setEmailSignature(schoolData?.emailSignature || '')
+    setWhatsappNumber(schoolData?.whatsappNumber || '')
+    setPenaltyEnabled(schoolData?.penaltyEnabled || false)
+    setPenaltyType(schoolData?.penaltyType || 'fixed')
+    setPenaltyAmount(schoolData?.penaltyAmount || 0)
+    setPenaltyDueDate(schoolData?.penaltyDueDate || 15)
     setTerms(termsData)
     setStudentCount(Array.isArray(studentsData) ? studentsData.length : 0)
     setLoading(false)
@@ -101,6 +128,46 @@ export default function Settings() {
     } finally {
       setAcctFmtSaving(false)
     }
+  }
+
+  async function inviteMember() {
+    if (!inviteName.trim() || !inviteEmail.trim() || inviting) return
+    setInviting(true); setInviteError(''); setInviteSuccess('')
+    try {
+      const res = await fetch('/api/team', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: inviteName.trim(), email: inviteEmail.trim(), role: inviteRole }) })
+      const data = await res.json()
+      if (!res.ok) { setInviteError(data.error || 'Failed to invite'); } else {
+        setTeamMembers(prev => [...prev, data])
+        setInviteSuccess('Invitation sent! They will receive an email with login details.')
+        setInviteName(''); setInviteEmail('')
+        setTimeout(() => setInviteSuccess(''), 5000)
+      }
+    } catch { setInviteError('Something went wrong') }
+    setInviting(false)
+  }
+
+  async function removeMember(memberId: number) {
+    if (!confirm('Remove this team member?')) return
+    await fetch('/api/team', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId }) })
+    setTeamMembers(prev => prev.filter(m => m.id !== memberId))
+  }
+
+  async function saveWhatsapp() {
+    setWhatsappSaving(true); setWhatsappSaved(false)
+    try {
+      await fetch('/api/school', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ whatsappNumber }) })
+      setSchool((prev: any) => prev ? { ...prev, whatsappNumber } : prev)
+      setWhatsappSaved(true); setTimeout(() => setWhatsappSaved(false), 3000)
+    } finally { setWhatsappSaving(false) }
+  }
+
+  async function savePenalty() {
+    setPenaltySaving(true); setPenaltySaved(false)
+    try {
+      await fetch('/api/school', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ penaltyEnabled, penaltyType, penaltyAmount, penaltyDueDate }) })
+      setSchool((prev: any) => prev ? { ...prev, penaltyEnabled, penaltyType, penaltyAmount, penaltyDueDate } : prev)
+      setPenaltySaved(true); setTimeout(() => setPenaltySaved(false), 3000)
+    } finally { setPenaltySaving(false) }
   }
 
   async function saveEmailSettings() {
@@ -458,6 +525,93 @@ export default function Settings() {
               </div>
             </div>
 
+            {/* WhatsApp number */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>School WhatsApp number</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+                Your school's WhatsApp number used to send reminders and invoices to parents. Shown to staff on reminder pages.
+              </p>
+              <div style={{display: 'flex', gap: '10px'}}>
+                <input
+                  type="tel"
+                  value={whatsappNumber}
+                  onChange={e => setWhatsappNumber(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveWhatsapp() }}
+                  placeholder="e.g. 0722000000"
+                  style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none'}}
+                />
+                <button
+                  onClick={saveWhatsapp}
+                  disabled={whatsappSaving}
+                  style={{background: whatsappSaved ? '#0a7c3e' : '#c8a84b', color: whatsappSaved ? '#fff' : '#0a1f4e', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: whatsappSaving ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const}}
+                >
+                  {whatsappSaved ? '✓ Saved' : whatsappSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+
+            {/* Late payment penalty */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Late payment penalty</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+                Automatically add a penalty to students who haven't paid by a specified date each month.
+              </p>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
+                <label style={{display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer'}}>
+                  <input type="checkbox" checked={penaltyEnabled} onChange={e => setPenaltyEnabled(e.target.checked)} style={{accentColor: '#0a1f4e', width: '16px', height: '16px'}} />
+                  <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>Enable late payment penalties</span>
+                </label>
+                {penaltyEnabled && (
+                  <>
+                    <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap' as const}}>
+                      <label style={{display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: '#0f172a'}}>
+                        <input type="radio" name="penaltyType" value="fixed" checked={penaltyType === 'fixed'} onChange={() => setPenaltyType('fixed')} style={{accentColor: '#0a1f4e'}} />
+                        Fixed amount (KES)
+                      </label>
+                      <label style={{display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: '#0f172a'}}>
+                        <input type="radio" name="penaltyType" value="percentage" checked={penaltyType === 'percentage'} onChange={() => setPenaltyType('percentage')} style={{accentColor: '#0a1f4e'}} />
+                        Percentage of balance (%)
+                      </label>
+                    </div>
+                    <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap' as const}}>
+                      <div style={{flex: 1, minWidth: '140px'}}>
+                        <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>
+                          {penaltyType === 'fixed' ? 'Penalty amount (KES)' : 'Penalty percentage (%)'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={penaltyAmount}
+                          onChange={e => setPenaltyAmount(Number(e.target.value))}
+                          style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
+                        />
+                      </div>
+                      <div style={{flex: 1, minWidth: '140px'}}>
+                        <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>Penalty applies after day</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="31"
+                          value={penaltyDueDate}
+                          onChange={e => setPenaltyDueDate(Number(e.target.value))}
+                          placeholder="e.g. 15"
+                          style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
+                        />
+                        <p style={{fontSize: '11px', color: '#94a3b8', margin: '4px 0 0'}}>Penalty applies after the {penaltyDueDate}th of each month</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+                <button
+                  onClick={savePenalty}
+                  disabled={penaltySaving}
+                  style={{background: penaltySaved ? '#0a7c3e' : '#c8a84b', color: penaltySaved ? '#fff' : '#0a1f4e', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: penaltySaving ? 'not-allowed' : 'pointer', width: 'fit-content'}}
+                >
+                  {penaltySaved ? '✓ Saved' : penaltySaving ? 'Saving…' : 'Save penalty settings'}
+                </button>
+              </div>
+            </div>
+
             {/* Email settings */}
             <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
               <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Email Settings</h2>
@@ -643,6 +797,47 @@ export default function Settings() {
               >
                 {signingOut ? 'Signing out...' : 'Sign out of all devices'}
               </button>
+            </div>
+
+            {/* Team members */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Team members</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+                Invite staff members to access this school account. Roles: Admin (full), Accountant (upload + reminders), Principal (view only), Viewer (read-only dashboard).
+              </p>
+              {teamLoading ? <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading…</p> : (
+                <>
+                  {teamMembers.length > 0 && (
+                    <div style={{marginBottom: '16px', border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden'}}>
+                      {teamMembers.map((m, i) => (
+                        <div key={m.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < teamMembers.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '12px'}}>
+                          <div>
+                            <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', margin: 0}}>{m.user?.name}</p>
+                            <p style={{fontSize: '11px', color: '#94a3b8', margin: '2px 0 0'}}>{m.user?.email} · <strong>{m.role}</strong></p>
+                          </div>
+                          <button onClick={() => removeMember(m.id)} style={{fontSize: '11px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: '5px', cursor: 'pointer'}}>Remove</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', marginBottom: '10px'}}>Invite a team member</p>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <input type="text" value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="Full name" style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' as const}} />
+                    <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="Email address" style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' as const}} />
+                    <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}>
+                      <option value="admin">Admin — full access</option>
+                      <option value="accountant">Accountant — upload + send reminders</option>
+                      <option value="principal">Principal — view dashboard + reports</option>
+                      <option value="viewer">Viewer — read-only</option>
+                    </select>
+                    {inviteError && <p style={{fontSize: '12px', color: '#e24b4a', margin: 0}}>{inviteError}</p>}
+                    {inviteSuccess && <p style={{fontSize: '12px', color: '#0a7c3e', margin: 0}}>{inviteSuccess}</p>}
+                    <button onClick={inviteMember} disabled={inviting || !inviteName.trim() || !inviteEmail.trim()} style={{background: inviting ? '#94a3b8' : '#0a1f4e', color: '#fff', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: inviting ? 'not-allowed' : 'pointer', width: 'fit-content'}}>
+                      {inviting ? 'Sending invite…' : 'Send invitation'}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Danger zone */}

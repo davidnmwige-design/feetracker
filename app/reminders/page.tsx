@@ -86,6 +86,11 @@ export default function Reminders() {
   const [emailFormError, setEmailFormError] = useState('')
   const emailInputRef = useRef<HTMLInputElement>(null)
 
+  // Scheduled reminders
+  const [schedule, setSchedule] = useState<any>({ enabled: false, frequency: 'weekly', dayOfWeek: 1, dayOfMonth: 1, time: '08:00' })
+  const [scheduleSaving, setScheduleSaving] = useState(false)
+  const [scheduleSaved, setScheduleSaved] = useState(false)
+
   // Bulk email modal
   const [bulkModal, setBulkModal] = useState(false)
   const [bulkEmails, setBulkEmails] = useState<Record<number, string>>({})
@@ -96,12 +101,39 @@ export default function Reminders() {
     Promise.all([
       fetch('/api/students').then(r => r.json()),
       fetch('/api/school').then(r => r.json()),
-    ]).then(([studentsData, schoolData]) => {
+      fetch('/api/reminders/schedule').then(r => r.json()),
+    ]).then(([studentsData, schoolData, scheduleData]) => {
       setStudents(studentsData)
       setSchool(schoolData)
+      setSchedule(scheduleData || { enabled: false, frequency: 'weekly', dayOfWeek: 1, dayOfMonth: 1, time: '08:00' })
       setLoading(false)
     })
   }, [])
+
+  async function saveSchedule() {
+    setScheduleSaving(true); setScheduleSaved(false)
+    try {
+      const res = await fetch('/api/reminders/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(schedule) })
+      const data = await res.json()
+      if (res.ok) { setSchedule(data); setScheduleSaved(true); setTimeout(() => setScheduleSaved(false), 3000) }
+    } finally { setScheduleSaving(false) }
+  }
+
+  function getNextSendDate() {
+    if (!schedule.enabled) return null
+    const now = new Date()
+    const result = new Date(now)
+    if (schedule.frequency === 'weekly') {
+      const diff = (schedule.dayOfWeek - now.getDay() + 7) % 7 || 7
+      result.setDate(now.getDate() + diff)
+    } else {
+      result.setDate(schedule.dayOfMonth)
+      if (result <= now) result.setMonth(result.getMonth() + 1)
+    }
+    return result.toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
   useEffect(() => {
     if (emailFormId !== null) setTimeout(() => emailInputRef.current?.focus(), 50)
@@ -275,6 +307,72 @@ export default function Reminders() {
       </div>
 
       <div className="rem-content" style={{padding: '24px 32px'}}>
+        {/* WhatsApp info banner */}
+        {!loading && school && (
+          <div style={{background: '#f0fff4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', fontSize: '12px', color: '#166534'}}>
+            <p style={{margin: '0 0 4px', fontWeight: 700}}>
+              {school.whatsappNumber ? `Sending from: ${school.whatsappNumber}` : 'No school WhatsApp number set'}
+            </p>
+            <p style={{margin: 0}}>
+              Messages will be sent from your phone's WhatsApp. Make sure you are logged into your school WhatsApp account before clicking send.
+              {!school.whatsappNumber && <> <a href="/settings" style={{color: '#166534', fontWeight: 600}}>Set your number in Settings</a>.</>}
+            </p>
+          </div>
+        )}
+
+        {/* Scheduled reminders */}
+        {!loading && (
+          <div style={{background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '20px', marginBottom: '20px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0}}>Scheduled reminders</h2>
+              <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                <input type="checkbox" checked={schedule.enabled} onChange={e => setSchedule((s: any) => ({ ...s, enabled: e.target.checked }))} style={{accentColor: '#0a1f4e', width: '16px', height: '16px'}} />
+                <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{schedule.enabled ? 'Enabled' : 'Disabled'}</span>
+              </label>
+            </div>
+            {schedule.enabled && (
+              <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                <div style={{display: 'flex', gap: '12px', flexWrap: 'wrap' as const}}>
+                  <div>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px'}}>Frequency</label>
+                    <select value={schedule.frequency} onChange={e => setSchedule((s: any) => ({ ...s, frequency: e.target.value }))} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                  {schedule.frequency === 'weekly' ? (
+                    <div>
+                      <label style={{fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px'}}>Day of week</label>
+                      <select value={schedule.dayOfWeek} onChange={e => setSchedule((s: any) => ({ ...s, dayOfWeek: Number(e.target.value) }))} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                        {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
+                      </select>
+                    </div>
+                  ) : (
+                    <div>
+                      <label style={{fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px'}}>Day of month</label>
+                      <select value={schedule.dayOfMonth} onChange={e => setSchedule((s: any) => ({ ...s, dayOfMonth: Number(e.target.value) }))} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                        {Array.from({length: 28}, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}{['st','nd','rd'][d-1] || 'th'}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  <div>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px'}}>Time</label>
+                    <input type="time" value={schedule.time} onChange={e => setSchedule((s: any) => ({ ...s, time: e.target.value }))} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', outline: 'none'}} />
+                  </div>
+                </div>
+                {getNextSendDate() && (
+                  <p style={{fontSize: '12px', color: '#0a7c3e', background: '#e1f5ee', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '8px 12px', margin: 0}}>
+                    Next reminders will be sent on <strong>{getNextSendDate()}</strong> at {schedule.time}
+                  </p>
+                )}
+              </div>
+            )}
+            <button onClick={saveSchedule} disabled={scheduleSaving} style={{marginTop: '14px', background: scheduleSaved ? '#0a7c3e' : '#c8a84b', color: scheduleSaved ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: scheduleSaving ? 'not-allowed' : 'pointer'}}>
+              {scheduleSaved ? '✓ Saved' : scheduleSaving ? 'Saving…' : 'Save schedule'}
+            </button>
+          </div>
+        )}
+
         {!loading && withBalance.length > 0 && (
           <div className="rem-bulk-row" style={{display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' as const}}>
             <button

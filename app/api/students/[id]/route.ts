@@ -41,6 +41,7 @@ export async function GET(
     return NextResponse.json({
       ...student,
       parentEmail: student.parentEmail ? decrypt(student.parentEmail) : student.parentEmail,
+      parent2Email: student.parent2Email ? decrypt(student.parent2Email) : student.parent2Email,
     })
   } catch (err) {
     console.error('students/[id] GET error:', err)

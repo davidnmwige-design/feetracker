@@ -48,10 +48,18 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json()
-    const allowed = ['paybill', 'accountNumberFormat', 'replyToEmail', 'emailSignature'] as const
-    const data: Record<string, string | null> = {}
-    for (const key of allowed) {
+    const data: Record<string, unknown> = {}
+    const strings = ['paybill', 'accountNumberFormat', 'replyToEmail', 'emailSignature', 'whatsappNumber', 'penaltyType']
+    const booleans = ['penaltyEnabled']
+    const numbers = ['penaltyAmount', 'penaltyDueDate']
+    for (const key of strings) {
       if (key in body) data[key] = body[key] != null ? sanitize(String(body[key]), 200) : null
+    }
+    for (const key of booleans) {
+      if (key in body) data[key] = Boolean(body[key])
+    }
+    for (const key of numbers) {
+      if (key in body) data[key] = Number(body[key]) || 0
     }
 
     const school = await prisma.school.update({

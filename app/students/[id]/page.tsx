@@ -209,6 +209,11 @@ export default function StudentDetail() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
+  const [feeCategories, setFeeCategories] = useState<any[]>([])
+  const [editingFees, setEditingFees] = useState(false)
+  const [feeEdits, setFeeEdits] = useState<{name: string; amount: number}[]>([])
+  const [savingFees, setSavingFees] = useState(false)
+
   const [certModal, setCertModal] = useState(false)
   const [certEmail, setCertEmail] = useState('')
   const [certSending, setCertSending] = useState(false)
@@ -226,7 +231,30 @@ export default function StudentDetail() {
       .then(r => { if (!r.ok) { setNotFound(true); setLoading(false); return null } return r.json() })
       .then(data => { if (data) { setStudent(data); setLoading(false) } })
       .catch(() => { setNotFound(true); setLoading(false) })
+    fetch('/api/fee-categories?studentId=' + id)
+      .then(r => r.json()).then(d => setFeeCategories(Array.isArray(d) ? d : []))
   }, [id])
+
+  function startEditFees() {
+    const cats = feeCategories.length > 0
+      ? feeCategories.map(c => ({ name: c.name, amount: c.amount }))
+      : [{ name: 'Tuition Fee', amount: 0 }]
+    setFeeEdits(cats)
+    setEditingFees(true)
+  }
+
+  async function saveFees() {
+    if (savingFees) return
+    setSavingFees(true)
+    const res = await fetch('/api/fee-categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId: id, categories: feeEdits }) })
+    const data = await res.json()
+    if (res.ok) {
+      setFeeCategories(data.categories)
+      setStudent((prev: any) => prev ? { ...prev, feeRequired: data.total } : prev)
+      setEditingFees(false)
+    }
+    setSavingFees(false)
+  }
 
   useEffect(() => { if (certModal) setTimeout(() => certInputRef.current?.focus(), 50) }, [certModal])
   useEffect(() => { if (reminderModal) setTimeout(() => reminderInputRef.current?.focus(), 50) }, [reminderModal])
@@ -315,6 +343,18 @@ export default function StudentDetail() {
   const paid = student.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
   const balance = student.feeRequired - paid
   const cleared = balance <= 0
+
+  // Penalty calculation
+  const school = student.school
+  const penaltyEnabled = school?.penaltyEnabled && balance > 0
+  const today = new Date()
+  const pastDueDate = penaltyEnabled && today.getDate() > (school?.penaltyDueDate || 15)
+  const penaltyAmt = pastDueDate
+    ? school?.penaltyType === 'percentage'
+      ? Math.round(balance * (school?.penaltyAmount || 0) / 100)
+      : (school?.penaltyAmount || 0)
+    : 0
+  const totalWithPenalty = balance + penaltyAmt
   const partial = paid > 0 && !cleared
   const progressPct = student.feeRequired > 0 ? Math.min((paid / student.feeRequired) * 100, 100) : 0
   const statusLabel = cleared ? 'Paid' : partial ? 'Partial' : 'Unpaid'
@@ -371,45 +411,114 @@ export default function StudentDetail() {
         <div style={sectionStyle}>
           <h2 style={sectionTitle}>Parent / Guardian</h2>
           <p style={sectionSubtitle}>Contact information</p>
-          <InfoRow label="Parent name" value={student.parentName} />
+          <InfoRow label="Parent 1 name" value={student.parentName} />
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9'}}>
-            <span style={{fontSize: '13px', color: '#64748b'}}>Phone</span>
+            <span style={{fontSize: '13px', color: '#64748b'}}>Parent 1 phone</span>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.parentPhone || '—'}</span>
               {student.parentPhone && (
-                <a
-                  href={`https://wa.me/${whatsappPhone}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{background: '#25D366', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', textDecoration: 'none'}}
-                >
+                <a href={`https://wa.me/${whatsappPhone}`} target="_blank" rel="noopener noreferrer"
+                  style={{background: '#25D366', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', textDecoration: 'none'}}>
                   WhatsApp
                 </a>
               )}
             </div>
           </div>
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0'}}>
-            <span style={{fontSize: '13px', color: '#64748b'}}>Email</span>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: student.parent2Name ? '1px solid #f1f5f9' : 'none'}}>
+            <span style={{fontSize: '13px', color: '#64748b'}}>Parent 1 email</span>
             {student.parentEmail ? (
-              <a href={`mailto:${student.parentEmail}`} style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', textDecoration: 'none'}}>
-                {student.parentEmail}
-              </a>
-            ) : (
-              <span style={{fontSize: '13px', color: '#94a3b8'}}>—</span>
-            )}
+              <a href={`mailto:${student.parentEmail}`} style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', textDecoration: 'none'}}>{student.parentEmail}</a>
+            ) : <span style={{fontSize: '13px', color: '#94a3b8'}}>—</span>}
           </div>
+          {student.parent2Name && (
+            <>
+              <InfoRow label="Parent 2 name" value={student.parent2Name} />
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9'}}>
+                <span style={{fontSize: '13px', color: '#64748b'}}>Parent 2 phone</span>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                  <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.parent2Phone || '—'}</span>
+                  {student.parent2Phone && (
+                    <a href={`https://wa.me/254${student.parent2Phone.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" rel="noopener noreferrer"
+                      style={{background: '#25D366', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', textDecoration: 'none'}}>
+                      WhatsApp
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0'}}>
+                <span style={{fontSize: '13px', color: '#64748b'}}>Parent 2 email</span>
+                {student.parent2Email ? (
+                  <a href={`mailto:${student.parent2Email}`} style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', textDecoration: 'none'}}>{student.parent2Email}</a>
+                ) : <span style={{fontSize: '13px', color: '#94a3b8'}}>—</span>}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Financial Records */}
         <div style={sectionStyle}>
-          <h2 style={sectionTitle}>Financial records</h2>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
+            <h2 style={sectionTitle}>Financial records</h2>
+            <button onClick={editingFees ? () => setEditingFees(false) : startEditFees} style={{fontSize: '12px', background: 'none', border: '1px solid #e2e8f0', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer', color: '#64748b', fontWeight: 600}}>
+              {editingFees ? 'Cancel' : 'Edit fees'}
+            </button>
+          </div>
           <p style={sectionSubtitle}>Fee summary for {student.school?.currentTerm}</p>
+
+          {/* Edit fees form */}
+          {editingFees && (
+            <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
+              <p style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '12px'}}>Fee categories</p>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px'}}>
+                {feeEdits.map((cat, i) => (
+                  <div key={i} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                    <input
+                      value={cat.name}
+                      onChange={e => setFeeEdits(prev => prev.map((c, j) => j === i ? { ...c, name: e.target.value } : c))}
+                      placeholder="Category name"
+                      style={{flex: 2, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none'}}
+                    />
+                    <input
+                      type="number"
+                      value={cat.amount}
+                      onChange={e => setFeeEdits(prev => prev.map((c, j) => j === i ? { ...c, amount: Number(e.target.value) } : c))}
+                      placeholder="Amount"
+                      style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none'}}
+                    />
+                    <button onClick={() => setFeeEdits(prev => prev.filter((_, j) => j !== i))} style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '16px', padding: '0 4px'}}>✕</button>
+                  </div>
+                ))}
+              </div>
+              <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap' as const}}>
+                <button onClick={() => setFeeEdits(prev => [...prev, { name: '', amount: 0 }])} style={{fontSize: '12px', background: 'none', border: '1px dashed #c8a84b', color: '#92681a', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer'}}>
+                  + Add category
+                </button>
+                <button onClick={saveFees} disabled={savingFees} style={{fontSize: '13px', background: savingFees ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '7px 18px', borderRadius: '6px', cursor: savingFees ? 'not-allowed' : 'pointer', fontWeight: 700}}>
+                  {savingFees ? 'Saving…' : 'Save fees'}
+                </button>
+              </div>
+              <p style={{fontSize: '11px', color: '#94a3b8', marginTop: '8px'}}>
+                Total: KES {feeEdits.reduce((s, c) => s + (Number(c.amount) || 0), 0).toLocaleString()}
+              </p>
+            </div>
+          )}
+
+          {/* Penalty badge */}
+          {penaltyAmt > 0 && (
+            <div style={{background: '#fcebeb', border: '1px solid #fecaca', borderRadius: '6px', padding: '10px 14px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <div>
+                <span style={{background: '#a32d2d', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', marginRight: '8px'}}>PENALTY</span>
+                <span style={{fontSize: '12px', color: '#a32d2d'}}>Late payment penalty applied (after {school?.penaltyDueDate}th)</span>
+              </div>
+              <span style={{fontSize: '13px', fontWeight: 700, color: '#a32d2d'}}>+KES {penaltyAmt.toLocaleString()}</span>
+            </div>
+          )}
 
           <div className="det-metric-row" style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
             {[
               { label: 'Fee required', value: `KES ${student.feeRequired.toLocaleString()}`, color: '#0f172a' },
               { label: 'Total paid', value: `KES ${paid.toLocaleString()}`, color: '#0a1f4e' },
-              { label: 'Balance', value: `KES ${Math.max(balance, 0).toLocaleString()}`, color: balance > 0 ? '#e24b4a' : '#0a7c3e' },
+              { label: penaltyAmt > 0 ? 'Balance + Penalty' : 'Balance', value: penaltyAmt > 0 ? `KES ${Math.max(totalWithPenalty, 0).toLocaleString()}` : `KES ${Math.max(balance, 0).toLocaleString()}`, color: balance > 0 ? '#e24b4a' : '#0a7c3e' },
             ].map(card => (
               <div key={card.label} style={{flex: 1, background: '#f8f9fc', borderRadius: '8px', padding: '14px'}}>
                 <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px'}}>{card.label}</p>

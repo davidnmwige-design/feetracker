@@ -34,6 +34,7 @@ export async function GET(req: Request) {
     const decrypted = students.map(s => ({
       ...s,
       parentEmail: s.parentEmail ? decrypt(s.parentEmail) : s.parentEmail,
+      parent2Email: s.parent2Email ? decrypt(s.parent2Email) : s.parent2Email,
     }))
 
     return NextResponse.json(decrypted)
@@ -102,12 +103,17 @@ export async function POST(req: Request) {
         : Number(row['Fee Required'] || row['feeRequired'] || 0)
 
       const parentEmail = String(row['Parent Email'] || row['parentEmail'] || row['parent_email'] || '')
+      const parent2Email = String(row['Parent 2 Email'] || row['parent2Email'] || '')
       const encryptedEmail = parentEmail ? encrypt(parentEmail) : null
+      const encryptedEmail2 = parent2Email ? encrypt(parent2Email) : null
       const student = await prisma.student.upsert({
         where: { admNo_schoolId: { admNo, schoolId } },
         update: {
           tuitionFee, sportsFee, clubsFee, otherFee, feeRequired,
           ...(encryptedEmail ? { parentEmail: encryptedEmail } : {}),
+          parent2Name: String(row['Parent 2 Name'] || row['parent2Name'] || '') || null,
+          parent2Phone: String(row['Parent 2 Phone'] || row['parent2Phone'] || '') || null,
+          ...(encryptedEmail2 ? { parent2Email: encryptedEmail2 } : {}),
         },
         create: {
           name: String(row['Name'] || row['name'] || row['NAME'] || ''),
@@ -117,6 +123,9 @@ export async function POST(req: Request) {
           parentName: String(row['Parent Name'] || row['parentName'] || ''),
           parentPhone: String(row['Parent Phone'] || row['parentPhone'] || ''),
           parentEmail: encryptedEmail,
+          parent2Name: String(row['Parent 2 Name'] || row['parent2Name'] || '') || null,
+          parent2Phone: String(row['Parent 2 Phone'] || row['parent2Phone'] || '') || null,
+          parent2Email: encryptedEmail2,
           feeRequired,
           tuitionFee,
           sportsFee,

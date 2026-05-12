@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id             Int      @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   name           String
-  email          String   @unique
+  email          String       @unique
   password       String
-  isAdmin        Boolean  @default(false)
-  sessionVersion Int      @default(1)
-  createdAt      DateTime @default(now())
+  isAdmin        Boolean      @default(false)
+  sessionVersion Int          @default(1)
+  createdAt      DateTime     @default(now())
   school         School?
+  schoolUsers    SchoolUser[]
 }
 
 model School {
@@ -25,11 +26,16 @@ model School {
   accountNumberFormat String?
   replyToEmail        String?
   emailSignature      String?
+  whatsappNumber      String?
   currentTerm         String               @default("Term 1 2026")
   currentPlan         String               @default("Starter")
   createdAt           DateTime             @default(now())
   trialEndsAt             DateTime?
   trialExpiryNotified     Boolean              @default(false)
+  penaltyEnabled      Boolean              @default(false)
+  penaltyType         String               @default("fixed")
+  penaltyAmount       Float                @default(0)
+  penaltyDueDate      Int                  @default(15)
   userId              Int                  @unique
   user                User                 @relation(fields: [userId], references: [id])
   students            Student[]
@@ -40,6 +46,20 @@ model School {
   billingRecords      BillingRecord[]
   invoices            Invoice[]
   contract            Contract?
+  schoolUsers         SchoolUser[]
+  reminderSchedule    ReminderSchedule?
+}
+
+model SchoolUser {
+  id        Int      @id @default(autoincrement())
+  schoolId  Int
+  userId    Int
+  role      String   @default("viewer")
+  createdAt DateTime @default(now())
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, userId])
 }
 
 model PlanUpgradeRequest {
@@ -64,26 +84,38 @@ model Term {
 }
 
 model Student {
-  id          Int       @id @default(autoincrement())
-  name        String
-  admNo       String
-  class       String
-  stream      String?
-  parentName  String?
-  parentPhone String?
-  parentEmail String?
-  feeRequired Float     @default(0)
-  tuitionFee  Float     @default(0)
-  sportsFee   Float     @default(0)
-  clubsFee    Float     @default(0)
-  otherFee    Float     @default(0)
-  createdAt   DateTime  @default(now())
-  schoolId    Int
-  school      School    @relation(fields: [schoolId], references: [id])
-  payments    Payment[]
-  invoices    Invoice[]
+  id           Int          @id @default(autoincrement())
+  name         String
+  admNo        String
+  class        String
+  stream       String?
+  parentName   String?
+  parentPhone  String?
+  parentEmail  String?
+  parent2Name  String?
+  parent2Phone String?
+  parent2Email String?
+  feeRequired  Float        @default(0)
+  tuitionFee   Float        @default(0)
+  sportsFee    Float        @default(0)
+  clubsFee     Float        @default(0)
+  otherFee     Float        @default(0)
+  createdAt    DateTime     @default(now())
+  schoolId     Int
+  school       School       @relation(fields: [schoolId], references: [id])
+  payments     Payment[]
+  invoices     Invoice[]
+  feeCategories FeeCategory[]
 
   @@unique([admNo, schoolId])
+}
+
+model FeeCategory {
+  id        Int     @id @default(autoincrement())
+  studentId Int
+  name      String
+  amount    Float
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
@@ -169,9 +201,22 @@ model Contract {
   school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }
 
+model ReminderSchedule {
+  id           Int       @id @default(autoincrement())
+  schoolId     Int       @unique
+  enabled      Boolean   @default(false)
+  frequency    String    @default("weekly")
+  dayOfWeek    Int       @default(1)
+  dayOfMonth   Int       @default(1)
+  time         String    @default("08:00")
+  lastSentAt   DateTime?
+  createdAt    DateTime  @default(now())
+  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
 model PlatformSettings {
   id              Int     @id @default(1)
-  trialDays       Int     @default(14)
+  trialDays       Int     @default(30)
   defaultPlan     String  @default("Starter")
   maintenanceMode Boolean @default(false)
   announcement    String  @default("")

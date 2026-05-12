@@ -29,16 +29,19 @@ export default function Home() {
         @media (max-width: 768px) {
           .land-nav { flex-wrap: wrap !important; gap: 12px !important; padding: 12px 16px !important; }
           .land-hero { padding: 40px 16px !important; }
+          .land-hero h1 { font-size: 26px !important; }
           .land-stats { grid-template-columns: 1fr !important; }
           .land-section { padding: 32px 16px !important; }
           .land-grid-3 { grid-template-columns: 1fr !important; }
           .land-grid-2 { grid-template-columns: 1fr !important; }
           .land-grid-4 { grid-template-columns: 1fr 1fr !important; }
           .land-cta { padding: 40px 16px !important; }
+          .land-cta h2 { font-size: 22px !important; }
           .land-footer { padding: 16px !important; }
         }
         @media (max-width: 480px) {
           .land-grid-4 { grid-template-columns: 1fr !important; }
+          .land-hero h1 { font-size: 22px !important; }
         }
       `}</style>
 
@@ -161,7 +164,7 @@ export default function Home() {
                 <Link href="/signup" style={{display: 'block', textAlign: 'center' as const, padding: '9px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: '#0a1f4e', color: '#fff', textDecoration: 'none'}}>
                   Get started
                 </Link>
-                <div style={{fontSize: '10px', color: '#94a3c8', textAlign: 'center' as const, marginTop: '8px'}}>14-day free trial included</div>
+                <div style={{fontSize: '10px', color: '#94a3c8', textAlign: 'center' as const, marginTop: '8px'}}>30-day free trial included</div>
               </div>
             ))}
 
@@ -180,7 +183,7 @@ export default function Home() {
                 Get started
               </Link>
               <div style={{fontSize: '10px', color: 'rgba(148,163,200,0.8)', textAlign: 'center' as const, marginTop: '8px'}}>
-                14-day free trial included
+                30-day free trial included
               </div>
               <div style={{fontSize: '10px', color: 'rgba(148,163,200,0.6)', textAlign: 'center' as const, marginTop: '4px'}}>
                 Custom pricing available · Contact us
