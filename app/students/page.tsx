@@ -192,6 +192,20 @@ async function buildCertificateDoc(data: any) {
   return doc
 }
 
+const CLASSES = ['Form 1', 'Form 2', 'Form 3', 'Form 4', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'PP1', 'PP2']
+
+function getInitialCategories(student: any): {name: string; amount: number}[] {
+  const cats = (student.feeCategories || []) as {name: string; amount: number}[]
+  if (cats.length > 0) return cats.map(c => ({ name: c.name, amount: c.amount }))
+  const legacy: {name: string; amount: number}[] = []
+  if (student.tuitionFee > 0) legacy.push({ name: 'Tuition Fee', amount: student.tuitionFee })
+  if (student.sportsFee > 0) legacy.push({ name: 'Sports Fee', amount: student.sportsFee })
+  if (student.clubsFee > 0) legacy.push({ name: 'Clubs Fee', amount: student.clubsFee })
+  if (student.otherFee > 0) legacy.push({ name: 'Other Fee', amount: student.otherFee })
+  if (legacy.length === 0) legacy.push({ name: 'Tuition Fee', amount: student.feeRequired })
+  return legacy
+}
+
 export default function Students() {
   const router = useRouter()
   const [students, setStudents] = useState<any[]>([])
@@ -207,6 +221,26 @@ export default function Students() {
   const [emailSending, setEmailSending] = useState(false)
   const [emailResult, setEmailResult] = useState<'sent' | 'error' | null>(null)
   const [sentEmails, setSentEmails] = useState<Set<number>>(new Set())
+
+  // Inline fee editor
+  const [feeEditId, setFeeEditId] = useState<number | null>(null)
+  const [feeEditRows, setFeeEditRows] = useState<{name: string; amount: number}[]>([])
+  const [feeEditSaving, setFeeEditSaving] = useState(false)
+
+  // Add student modal
+  const [addModal, setAddModal] = useState(false)
+  const [addForm, setAddForm] = useState({ name: '', admNo: '', studentClass: 'Form 1', stream: '', parentName: '', parentPhone: '', parentEmail: '', parent2Name: '', parent2Phone: '', parent2Email: '' })
+  const [addCategories, setAddCategories] = useState([{ name: 'Tuition Fee', amount: 0 }])
+  const [addSaving, setAddSaving] = useState(false)
+  const [addError, setAddError] = useState('')
+
+  // Bulk fee update modal
+  const [bulkModal, setBulkModal] = useState(false)
+  const [bulkClass, setBulkClass] = useState('All')
+  const [bulkCategory, setBulkCategory] = useState('')
+  const [bulkAmount, setBulkAmount] = useState(0)
+  const [bulkSaving, setBulkSaving] = useState(false)
+  const [bulkResult, setBulkResult] = useState<string | null>(null)
   const emailInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { fetchStudents() }, [])
@@ -319,6 +353,100 @@ export default function Students() {
     setEditingEmail(null)
   }
 
+  // Inline fee editor handlers
+  function openFeeEditor(student: any) {
+    setFeeEditId(student.id)
+    setFeeEditRows(getInitialCategories(student))
+    setExpandedFees(null)
+  }
+
+  function closeFeeEditor() {
+    setFeeEditId(null)
+    setFeeEditRows([])
+  }
+
+  async function saveFeeEdits(studentId: number) {
+    if (feeEditSaving) return
+    setFeeEditSaving(true)
+    const res = await fetch('/api/fee-categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId, categories: feeEditRows }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setStudents(prev => prev.map(s => s.id === studentId
+        ? { ...s, feeRequired: data.total, feeCategories: data.categories }
+        : s
+      ))
+      closeFeeEditor()
+    }
+    setFeeEditSaving(false)
+  }
+
+  // Add student handlers
+  function openAddModal() {
+    setAddForm({ name: '', admNo: '', studentClass: 'Form 1', stream: '', parentName: '', parentPhone: '', parentEmail: '', parent2Name: '', parent2Phone: '', parent2Email: '' })
+    setAddCategories([{ name: 'Tuition Fee', amount: 0 }])
+    setAddError('')
+    setAddModal(true)
+  }
+
+  async function saveNewStudent() {
+    if (addSaving) return
+    if (!addForm.name.trim() || !addForm.admNo.trim()) {
+      setAddError('Name and admission number are required')
+      return
+    }
+    setAddSaving(true)
+    setAddError('')
+    const res = await fetch('/api/students/single', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...addForm, categories: addCategories }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setAddError(data.error || 'Failed to add student')
+      setAddSaving(false)
+      return
+    }
+    setStudents(prev => [data, ...prev])
+    setAddModal(false)
+    setAddSaving(false)
+  }
+
+  // Bulk update handlers
+  function openBulkModal() {
+    const names = [...new Set(students.flatMap(s => (s.feeCategories || []).map((c: any) => c.name)))] as string[]
+    setBulkCategory(names[0] || '')
+    setBulkClass('All')
+    setBulkAmount(0)
+    setBulkResult(null)
+    setBulkModal(true)
+  }
+
+  async function runBulkUpdate() {
+    if (bulkSaving || !bulkCategory) return
+    setBulkSaving(true)
+    setBulkResult(null)
+    const res = await fetch('/api/fee-categories/bulk', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ classFilter: bulkClass, categoryName: bulkCategory, newAmount: bulkAmount }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setBulkResult(`Updated ${data.updated} student${data.updated !== 1 ? 's' : ''}`)
+      await fetchStudents()
+    } else {
+      setBulkResult('Error: ' + (data.error || 'Something went wrong'))
+    }
+    setBulkSaving(false)
+  }
+
+  const allCategoryNames = [...new Set(students.flatMap(s => (s.feeCategories || []).map((c: any) => c.name)))] as string[]
+
   const filtered = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     (s.admNo || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -349,8 +477,14 @@ export default function Students() {
           <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px'}}>Students</h1>
           <p style={{fontSize: '12px', color: '#94a3c8'}}>{students.length} students enrolled</p>
         </div>
-        <div className="stu-header-actions" style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
-          <Link href="/dashboard" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
+        <div className="stu-header-actions" style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' as const}}>
+          <button onClick={openAddModal} style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '8px 14px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'}}>
+            + Add student
+          </button>
+          <button onClick={openBulkModal} style={{background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)', padding: '8px 14px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap'}}>
+            Bulk fee update
+          </button>
+          <Link href="/dashboard" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none', whiteSpace: 'nowrap'}}>
             ← Dashboard
           </Link>
         </div>
@@ -414,8 +548,8 @@ export default function Students() {
               <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '860px'}}>
                 <thead style={{position: 'sticky', top: 0, zIndex: 1}}>
                   <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9', background: '#fff'}}>
-                    {['Name', 'Adm No', 'Class', 'Fee Required', 'Paid', 'Balance', 'Status', 'Parent Email', ''].map(h => (
-                      <th key={h} style={{padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap', background: '#fff'}}>{h}</th>
+                    {['Name', 'Adm No', 'Class', 'Fee Required', '', 'Paid', 'Balance', 'Status', 'Parent Email', ''].map((h, i) => (
+                      <th key={i} style={{padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap', background: '#fff'}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -424,58 +558,53 @@ export default function Students() {
                     const paid = student.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
                     const balance = student.feeRequired - paid
                     const cleared = balance <= 0
-                    const showFees = expandedFees === student.id
                     const isEditingEmail = editingEmail?.id === student.id
+                    const isFeeEdit = feeEditId === student.id
+                    const feeTotal = feeEditRows.reduce((s, r) => s + (Number(r.amount) || 0), 0)
+
                     return (
                       <>
-                        <tr key={student.id} style={{borderBottom: showFees ? 'none' : '1px solid #f8fafc', cursor: 'pointer'}} onClick={() => router.push('/students/' + student.id)}>
-                          <td style={{padding: '10px 14px', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap'}}>
-                            {student.name}
-                            {hasFeeBreakdown(student) && (
-                              <button
-                                onClick={e => { e.stopPropagation(); setExpandedFees(showFees ? null : student.id) }}
-                                style={{marginLeft: '6px', fontSize: '10px', color: '#c8a84b', background: 'none', border: 'none', cursor: 'pointer', padding: 0}}
-                              >
-                                {showFees ? '▲ fees' : '▼ fees'}
-                              </button>
-                            )}
-                          </td>
+                        <tr key={student.id} style={{borderBottom: isFeeEdit ? 'none' : '1px solid #f8fafc', cursor: 'pointer', background: isFeeEdit ? '#fffdf5' : undefined}} onClick={() => router.push('/students/' + student.id)}>
+                          <td style={{padding: '10px 14px', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap'}}>{student.name}</td>
                           <td style={{padding: '10px 14px', color: '#64748b'}}>{student.admNo || '—'}</td>
-                          <td style={{padding: '10px 14px', color: '#64748b', whiteSpace: 'nowrap'}}>{student.class} {student.stream}</td>
+                          <td style={{padding: '10px 14px', color: '#64748b', whiteSpace: 'nowrap'}}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>
                           <td style={{padding: '10px 14px', whiteSpace: 'nowrap'}}>KES {student.feeRequired.toLocaleString()}</td>
-                          <td style={{padding: '10px 14px', color: '#0a1f4e', fontWeight: 600, whiteSpace: 'nowrap'}}>KES {paid.toLocaleString()}</td>
-                          <td style={{padding: '10px 14px', color: balance > 0 ? '#e24b4a' : '#64748b', fontWeight: balance > 0 ? 600 : 400, whiteSpace: 'nowrap'}}>
-                            KES {balance.toLocaleString()}
+                          {/* Pencil edit button */}
+                          <td style={{padding: '6px 4px'}} onClick={e => e.stopPropagation()}>
+                            <button
+                              onClick={() => isFeeEdit ? closeFeeEditor() : openFeeEditor(student)}
+                              title="Edit fee categories"
+                              style={{
+                                background: isFeeEdit ? '#c8a84b' : 'none',
+                                border: isFeeEdit ? 'none' : '1px solid #e2e8f0',
+                                borderRadius: '4px', padding: '3px 7px', cursor: 'pointer',
+                                fontSize: '12px', color: isFeeEdit ? '#0a1f4e' : '#94a3b8',
+                                fontWeight: isFeeEdit ? 700 : 400,
+                              }}
+                            >
+                              ✏
+                            </button>
                           </td>
+                          <td style={{padding: '10px 14px', color: '#0a1f4e', fontWeight: 600, whiteSpace: 'nowrap'}}>KES {paid.toLocaleString()}</td>
+                          <td style={{padding: '10px 14px', color: balance > 0 ? '#e24b4a' : '#64748b', fontWeight: balance > 0 ? 600 : 400, whiteSpace: 'nowrap'}}>KES {balance.toLocaleString()}</td>
                           <td style={{padding: '10px 14px'}}>
-                            <span style={{
-                              background: cleared ? '#e1f5ee' : paid > 0 ? '#fef9ec' : '#fcebeb',
-                              color: cleared ? '#166534' : paid > 0 ? '#92681a' : '#a32d2d',
-                              fontSize: '10px', padding: '3px 8px', borderRadius: '999px', fontWeight: 600, whiteSpace: 'nowrap'
-                            }}>
+                            <span style={{background: cleared ? '#e1f5ee' : paid > 0 ? '#fef9ec' : '#fcebeb', color: cleared ? '#166534' : paid > 0 ? '#92681a' : '#a32d2d', fontSize: '10px', padding: '3px 8px', borderRadius: '999px', fontWeight: 600, whiteSpace: 'nowrap'}}>
                               {cleared ? 'Cleared' : paid > 0 ? 'Partial' : 'Unpaid'}
                             </span>
                           </td>
-                          <td style={{padding: '10px 14px', minWidth: '180px'}} onClick={e => e.stopPropagation()}>
+                          <td style={{padding: '10px 14px', minWidth: '160px'}} onClick={e => e.stopPropagation()}>
                             {isEditingEmail ? (
-                              <input
-                                type="email"
-                                value={editingEmail!.value}
+                              <input type="email" value={editingEmail!.value}
                                 onChange={e => setEditingEmail({ id: student.id, value: e.target.value })}
                                 onBlur={() => saveEmail(student.id, editingEmail!.value)}
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter') saveEmail(student.id, editingEmail!.value)
-                                  if (e.key === 'Escape') setEditingEmail(null)
-                                }}
+                                onKeyDown={e => { if (e.key === 'Enter') saveEmail(student.id, editingEmail!.value); if (e.key === 'Escape') setEditingEmail(null) }}
                                 autoFocus
-                                style={{border: '1px solid #c8a84b', borderRadius: '4px', padding: '3px 6px', fontSize: '12px', outline: 'none', width: '180px'}}
+                                style={{border: '1px solid #c8a84b', borderRadius: '4px', padding: '3px 6px', fontSize: '12px', outline: 'none', width: '160px'}}
                               />
                             ) : (
-                              <span
-                                onClick={() => setEditingEmail({ id: student.id, value: student.parentEmail || '' })}
+                              <span onClick={() => setEditingEmail({ id: student.id, value: student.parentEmail || '' })}
                                 title={student.parentEmail ? 'Click to edit' : 'Click to add email'}
-                                style={{cursor: 'text', color: student.parentEmail ? '#0a1f4e' : '#94a3b8', fontSize: '12px', display: 'block'}}
-                              >
+                                style={{cursor: 'text', color: student.parentEmail ? '#0a1f4e' : '#94a3b8', fontSize: '12px', display: 'block'}}>
                                 {student.parentEmail ? maskEmail(student.parentEmail) : '+ add email'}
                               </span>
                             )}
@@ -483,30 +612,68 @@ export default function Students() {
                           <td style={{padding: '10px 14px'}} onClick={e => e.stopPropagation()}>
                             {cleared && (
                               <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap' as const}}>
-                                <button
-                                  onClick={() => downloadCertificate(student.id, student.name)}
-                                  style={{fontSize: '11px', color: '#c8a84b', background: 'none', border: '1px solid #c8a84b', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap'}}
-                                >
+                                <button onClick={() => downloadCertificate(student.id, student.name)}
+                                  style={{fontSize: '11px', color: '#c8a84b', background: 'none', border: '1px solid #c8a84b', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap'}}>
                                   Certificate
                                 </button>
-                                <button
-                                  onClick={() => openEmailModal(student)}
-                                  style={{fontSize: '11px', color: sentEmails.has(student.id) ? '#0a7c3e' : '#0a1f4e', background: 'none', border: '1px solid ' + (sentEmails.has(student.id) ? '#0a7c3e' : '#0a1f4e'), padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap'}}
-                                >
+                                <button onClick={() => openEmailModal(student)}
+                                  style={{fontSize: '11px', color: sentEmails.has(student.id) ? '#0a7c3e' : '#0a1f4e', background: 'none', border: '1px solid ' + (sentEmails.has(student.id) ? '#0a7c3e' : '#0a1f4e'), padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap'}}>
                                   {sentEmails.has(student.id) ? '✓ Sent' : 'Send via email'}
                                 </button>
                               </div>
                             )}
                           </td>
                         </tr>
-                        {showFees && hasFeeBreakdown(student) && (
-                          <tr key={student.id + '-fees'} style={{borderBottom: '1px solid #f8fafc', background: '#fafbfc'}}>
-                            <td colSpan={9} style={{padding: '0 14px 12px 28px'}}>
-                              <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap' as const}}>
-                                {student.tuitionFee > 0 && <span style={{fontSize: '11px', color: '#64748b'}}>Tuition: <strong>KES {student.tuitionFee.toLocaleString()}</strong></span>}
-                                {student.sportsFee > 0 && <span style={{fontSize: '11px', color: '#64748b'}}>Sports: <strong>KES {student.sportsFee.toLocaleString()}</strong></span>}
-                                {student.clubsFee > 0 && <span style={{fontSize: '11px', color: '#64748b'}}>Clubs: <strong>KES {student.clubsFee.toLocaleString()}</strong></span>}
-                                {student.otherFee > 0 && <span style={{fontSize: '11px', color: '#64748b'}}>Other: <strong>KES {student.otherFee.toLocaleString()}</strong></span>}
+
+                        {/* Inline fee editor accordion */}
+                        {isFeeEdit && (
+                          <tr key={student.id + '-feeedit'}>
+                            <td colSpan={10} style={{padding: 0, background: '#fdf8ee', borderBottom: '2px solid #c8a84b'}}>
+                              <div style={{padding: '16px 20px'}}>
+                                <p style={{fontSize: '12px', fontWeight: 700, color: '#92681a', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>
+                                  Edit fee categories — {student.name}
+                                </p>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px'}}>
+                                  {feeEditRows.map((row, i) => (
+                                    <div key={i} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                                      <input
+                                        value={row.name}
+                                        onChange={e => setFeeEditRows(prev => prev.map((r, j) => j === i ? { ...r, name: e.target.value } : r))}
+                                        placeholder="Category name"
+                                        style={{flex: 2, border: '1px solid #e2d9b8', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', background: '#fff', minWidth: '100px'}}
+                                      />
+                                      <input
+                                        type="number"
+                                        value={row.amount}
+                                        onChange={e => setFeeEditRows(prev => prev.map((r, j) => j === i ? { ...r, amount: Number(e.target.value) } : r))}
+                                        placeholder="0"
+                                        min="0"
+                                        style={{flex: 1, border: '1px solid #e2d9b8', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', background: '#fff', minWidth: '80px'}}
+                                      />
+                                      <button onClick={() => setFeeEditRows(prev => prev.filter((_, j) => j !== i))}
+                                        style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '14px', padding: '0 4px', flexShrink: 0}}>
+                                        ✕
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' as const}}>
+                                  <button onClick={() => setFeeEditRows(prev => [...prev, { name: '', amount: 0 }])}
+                                    style={{fontSize: '12px', background: 'none', border: '1px dashed #c8a84b', color: '#92681a', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer'}}>
+                                    + Add category
+                                  </button>
+                                  <span style={{fontSize: '12px', color: '#92681a', fontWeight: 700}}>
+                                    Total: KES {feeTotal.toLocaleString()}
+                                  </span>
+                                  <button onClick={() => saveFeeEdits(student.id)} disabled={feeEditSaving}
+                                    style={{background: feeEditSaving ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '6px 18px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: feeEditSaving ? 'not-allowed' : 'pointer'}}>
+                                    {feeEditSaving ? 'Saving…' : 'Save fees'}
+                                  </button>
+                                  <button onClick={closeFeeEditor}
+                                    style={{background: 'none', border: '1px solid #e2d9b8', color: '#64748b', padding: '6px 12px', borderRadius: '5px', fontSize: '12px', cursor: 'pointer'}}>
+                                    Cancel
+                                  </button>
+                                </div>
                               </div>
                             </td>
                           </tr>
@@ -520,6 +687,170 @@ export default function Students() {
           )}
         </div>
       </div>
+
+      {/* Add Student Modal */}
+      {addModal && (
+        <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px'}}
+          onClick={e => { if (e.target === e.currentTarget && !addSaving) setAddModal(false) }}>
+          <div style={{background: '#fff', borderRadius: '12px', width: '520px', maxWidth: '100%', maxHeight: '90vh', overflow: 'auto'}}>
+            <div style={{padding: '20px 24px', borderBottom: '1px solid #f1f5f9'}}>
+              <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0}}>Add student</h3>
+            </div>
+            <div style={{padding: '20px 24px'}}>
+              {addError && <div style={{background: '#fcebeb', border: '1px solid #f5c6c6', color: '#a32d2d', fontSize: '12px', padding: '10px 12px', borderRadius: '6px', marginBottom: '16px'}}>{addError}</div>}
+
+              <p style={{fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Student details</p>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px'}}>
+                {[{label:'Name *', key:'name', type:'text', placeholder:'e.g. John Kamau'},
+                  {label:'Admission No. *', key:'admNo', type:'text', placeholder:'e.g. ADM001'},
+                  {label:'Stream', key:'stream', type:'text', placeholder:'e.g. North'},
+                ].map(f => (
+                  <div key={f.key}>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>{f.label}</label>
+                    <input type={f.type} value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({...p, [f.key]: e.target.value}))}
+                      placeholder={f.placeholder}
+                      style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}} />
+                  </div>
+                ))}
+                <div>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>Class *</label>
+                  <select value={addForm.studentClass} onChange={e => setAddForm(p => ({...p, studentClass: e.target.value}))}
+                    style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', background: '#fff', boxSizing: 'border-box' as const}}>
+                    {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <p style={{fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Parent 1</p>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px'}}>
+                {[{label:'Name *', key:'parentName', placeholder:'e.g. Jane Kamau'},
+                  {label:'Phone *', key:'parentPhone', placeholder:'e.g. 0712345678'},
+                  {label:'Email', key:'parentEmail', placeholder:'parent@email.com'},
+                ].map(f => (
+                  <div key={f.key}>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>{f.label}</label>
+                    <input type="text" value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({...p, [f.key]: e.target.value}))}
+                      placeholder={f.placeholder}
+                      style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}} />
+                  </div>
+                ))}
+              </div>
+
+              <p style={{fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Parent 2 (optional)</p>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px'}}>
+                {[{label:'Name', key:'parent2Name', placeholder:''},
+                  {label:'Phone', key:'parent2Phone', placeholder:''},
+                  {label:'Email', key:'parent2Email', placeholder:''},
+                ].map(f => (
+                  <div key={f.key}>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>{f.label}</label>
+                    <input type="text" value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({...p, [f.key]: e.target.value}))}
+                      style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}} />
+                  </div>
+                ))}
+              </div>
+
+              <p style={{fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Fee categories</p>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px'}}>
+                {addCategories.map((cat, i) => (
+                  <div key={i} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                    <input value={cat.name} onChange={e => setAddCategories(p => p.map((c, j) => j === i ? {...c, name: e.target.value} : c))}
+                      placeholder="Category name"
+                      style={{flex: 2, border: '1px solid #e2e8f0', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none'}} />
+                    <input type="number" value={cat.amount} min="0"
+                      onChange={e => setAddCategories(p => p.map((c, j) => j === i ? {...c, amount: Number(e.target.value)} : c))}
+                      placeholder="0"
+                      style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', minWidth: '80px'}} />
+                    {addCategories.length > 1 && (
+                      <button onClick={() => setAddCategories(p => p.filter((_, j) => j !== i))}
+                        style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '14px', padding: '0 4px'}}>✕</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                <button onClick={() => setAddCategories(p => [...p, {name: '', amount: 0}])}
+                  style={{fontSize: '12px', background: 'none', border: '1px dashed #c8a84b', color: '#92681a', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer'}}>
+                  + Add category
+                </button>
+                <span style={{fontSize: '12px', color: '#0a1f4e', fontWeight: 700}}>
+                  Total: KES {addCategories.reduce((s, c) => s + (Number(c.amount) || 0), 0).toLocaleString()}
+                </span>
+              </div>
+
+              <div style={{display: 'flex', gap: '10px', justifyContent: 'flex-end'}}>
+                <button onClick={() => setAddModal(false)} disabled={addSaving}
+                  style={{padding: '9px 20px', borderRadius: '6px', fontSize: '13px', background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer', color: '#64748b'}}>
+                  Cancel
+                </button>
+                <button onClick={saveNewStudent} disabled={addSaving}
+                  style={{padding: '9px 24px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, background: addSaving ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', cursor: addSaving ? 'not-allowed' : 'pointer'}}>
+                  {addSaving ? 'Saving…' : 'Add student'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Fee Update Modal */}
+      {bulkModal && (
+        <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px'}}
+          onClick={e => { if (e.target === e.currentTarget && !bulkSaving) setBulkModal(false) }}>
+          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', width: '440px', maxWidth: '100%'}}>
+            <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Bulk fee update</h3>
+            <p style={{fontSize: '12px', color: '#64748b', marginBottom: '20px'}}>Update one fee category for all students in a class at once.</p>
+
+            <div style={{display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px'}}>
+              <div>
+                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Class</label>
+                <select value={bulkClass} onChange={e => setBulkClass(e.target.value)}
+                  style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}>
+                  <option value="All">All classes</option>
+                  {[...new Set(students.map(s => s.class))].sort().map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Fee category to update</label>
+                {allCategoryNames.length === 0 ? (
+                  <p style={{fontSize: '12px', color: '#94a3b8'}}>No fee categories found. Set categories on individual students first.</p>
+                ) : (
+                  <select value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}
+                    style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}>
+                    {allCategoryNames.map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                )}
+              </div>
+              <div>
+                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>New amount (KES)</label>
+                <input type="number" value={bulkAmount} min="0" onChange={e => setBulkAmount(Number(e.target.value))}
+                  style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}} />
+              </div>
+            </div>
+
+            {bulkResult && (
+              <div style={{background: bulkResult.startsWith('Error') ? '#fcebeb' : '#e1f5ee', border: `1px solid ${bulkResult.startsWith('Error') ? '#fecaca' : '#bbf7d0'}`, borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: bulkResult.startsWith('Error') ? '#a32d2d' : '#166534', fontWeight: 600}}>
+                {bulkResult}
+              </div>
+            )}
+
+            <div style={{display: 'flex', gap: '10px', justifyContent: 'flex-end'}}>
+              <button onClick={() => { setBulkModal(false); setBulkResult(null) }} disabled={bulkSaving}
+                style={{padding: '9px 20px', borderRadius: '6px', fontSize: '13px', background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer', color: '#64748b'}}>
+                {bulkResult ? 'Close' : 'Cancel'}
+              </button>
+              {!bulkResult && (
+                <button onClick={runBulkUpdate} disabled={bulkSaving || !bulkCategory || allCategoryNames.length === 0}
+                  style={{padding: '9px 24px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, background: bulkSaving ? '#94a3b8' : '#c8a84b', color: '#0a1f4e', border: 'none', cursor: bulkSaving ? 'not-allowed' : 'pointer'}}>
+                  {bulkSaving ? 'Updating…' : 'Update all'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {emailModal && (
         <div

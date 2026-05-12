@@ -459,15 +459,35 @@ export default function StudentDetail() {
         <div style={sectionStyle}>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
             <h2 style={sectionTitle}>Financial records</h2>
-            <button onClick={editingFees ? () => setEditingFees(false) : startEditFees} style={{fontSize: '12px', background: 'none', border: '1px solid #e2e8f0', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer', color: '#64748b', fontWeight: 600}}>
-              {editingFees ? 'Cancel' : 'Edit fees'}
+            <button onClick={editingFees ? () => setEditingFees(false) : startEditFees}
+              style={{fontSize: '12px', background: editingFees ? 'none' : '#c8a84b', border: editingFees ? '1px solid #e2e8f0' : 'none', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', color: editingFees ? '#64748b' : '#0a1f4e', fontWeight: 700}}>
+              {editingFees ? 'Cancel' : '✏ Edit fees'}
             </button>
           </div>
           <p style={sectionSubtitle}>Fee summary for {student.school?.currentTerm}</p>
 
+          {/* Fee categories — always visible when not editing */}
+          {!editingFees && feeCategories.length > 0 && (
+            <div style={{background: '#fdf8ee', border: '1px solid #e2d9b8', borderRadius: '8px', padding: '14px 16px', marginBottom: '14px'}}>
+              <p style={{fontSize: '11px', fontWeight: 700, color: '#92681a', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px'}}>Fee breakdown</p>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                {feeCategories.map((c: any) => (
+                  <div key={c.id} style={{display: 'flex', justifyContent: 'space-between'}}>
+                    <span style={{fontSize: '13px', color: '#64748b'}}>{c.name}</span>
+                    <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>KES {c.amount.toLocaleString()}</span>
+                  </div>
+                ))}
+                <div style={{display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2d9b8', paddingTop: '6px', marginTop: '2px'}}>
+                  <span style={{fontSize: '13px', fontWeight: 700, color: '#0a1f4e'}}>Total</span>
+                  <span style={{fontSize: '13px', fontWeight: 700, color: '#0a1f4e'}}>KES {student.feeRequired.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Edit fees form */}
           {editingFees && (
-            <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
+            <div style={{background: '#fdf8ee', border: '2px solid #c8a84b', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
               <p style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '12px'}}>Fee categories</p>
               <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px'}}>
                 {feeEdits.map((cat, i) => (
