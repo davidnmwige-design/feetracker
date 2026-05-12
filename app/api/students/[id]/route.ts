@@ -5,6 +5,7 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { encrypt, decrypt } from '@/lib/encrypt'
 import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { logAudit } from '@/lib/audit'
 
 export async function GET(
   req: Request,
@@ -109,6 +110,49 @@ export async function PATCH(
     })
   } catch (err) {
     console.error('students/[id] PATCH error:', err)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!checkRateLimit(getIp(req))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+  const session = await auth()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  try {
+    const { id } = await params
+    const studentId = Number(id)
+    if (!studentId) return NextResponse.json({ error: 'Invalid student ID' }, { status: 400 })
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { school: true },
+    })
+    if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+
+    const roleDelete = await getUserRole(user.id, user.school)
+    if (!hasPermission(roleDelete, 'students', 'DELETE')) return NextResponse.json(FORBIDDEN, { status: 403 })
+
+    const student = await prisma.student.findFirst({
+      where: { id: studentId, schoolId: user.school.id },
+    })
+    if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+
+    await prisma.feeCategory.deleteMany({ where: { studentId } })
+    await prisma.invoice.deleteMany({ where: { studentId } })
+    await prisma.payment.updateMany({ where: { studentId }, data: { studentId: null, matched: false } })
+    await prisma.student.delete({ where: { id: studentId } })
+
+    logAudit({ userId: user.id, schoolId: user.school.id, action: 'STUDENT_DELETED', details: `${student.name} (${student.admNo})`, ipAddress: getIp(req) }).catch(() => {})
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    console.error('students/[id] DELETE error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }

@@ -241,6 +241,9 @@ export default function Students() {
   const [bulkAmount, setBulkAmount] = useState(0)
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkResult, setBulkResult] = useState<string | null>(null)
+  const [bulkSuccess, setBulkSuccess] = useState(false)
+
+  const [downloading, setDownloading] = useState(false)
   const emailInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { fetchStudents() }, [])
@@ -255,6 +258,19 @@ export default function Students() {
     const data = await res.json()
     setStudents(data)
     setLoading(false)
+  }
+
+  async function downloadReport() {
+    setDownloading(true)
+    try {
+      const res = await fetch('/api/report')
+      if (!res.ok) { setDownloading(false); return }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = 'fee_report.xlsx'; a.click()
+      URL.revokeObjectURL(url)
+    } finally { setDownloading(false) }
   }
 
   async function handleUpload() {
@@ -418,11 +434,21 @@ export default function Students() {
 
   // Bulk update handlers
   function openBulkModal() {
-    const names = [...new Set(students.flatMap(s => (s.feeCategories || []).map((c: any) => c.name)))] as string[]
+    const fromCats = students.flatMap(s => (s.feeCategories || []).map((c: any) => c.name))
+    const fromLegacy = students.flatMap(s => {
+      const l: string[] = []
+      if (s.tuitionFee > 0) l.push('Tuition Fee')
+      if (s.sportsFee > 0) l.push('Sports Fee')
+      if (s.clubsFee > 0) l.push('Clubs Fee')
+      if (s.otherFee > 0) l.push('Other Fee')
+      return l
+    })
+    const names = [...new Set([...fromCats, ...fromLegacy])] as string[]
     setBulkCategory(names[0] || '')
     setBulkClass('All')
     setBulkAmount(0)
     setBulkResult(null)
+    setBulkSuccess(false)
     setBulkModal(true)
   }
 
@@ -430,22 +456,42 @@ export default function Students() {
     if (bulkSaving || !bulkCategory) return
     setBulkSaving(true)
     setBulkResult(null)
-    const res = await fetch('/api/fee-categories/bulk', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ classFilter: bulkClass, categoryName: bulkCategory, newAmount: bulkAmount }),
-    })
-    const data = await res.json()
-    if (res.ok) {
-      setBulkResult(`Updated ${data.updated} student${data.updated !== 1 ? 's' : ''}`)
-      await fetchStudents()
-    } else {
-      setBulkResult('Error: ' + (data.error || 'Something went wrong'))
+    try {
+      const res = await fetch('/api/fee-categories/bulk', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classFilter: bulkClass, categoryName: bulkCategory, newAmount: bulkAmount }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setBulkResult(`Updated ${data.updated} student${data.updated !== 1 ? 's' : ''} successfully`)
+        setBulkSuccess(true)
+        await fetchStudents()
+        setTimeout(() => setBulkModal(false), 2000)
+      } else {
+        setBulkResult('Error: ' + (data.error || 'Something went wrong'))
+        setBulkSuccess(false)
+      }
+    } catch {
+      setBulkResult('Error: Something went wrong')
+      setBulkSuccess(false)
     }
     setBulkSaving(false)
   }
 
-  const allCategoryNames = [...new Set(students.flatMap(s => (s.feeCategories || []).map((c: any) => c.name)))] as string[]
+  const allCategoryNames = [...new Set([
+    ...students.flatMap(s => (s.feeCategories || []).map((c: any) => c.name)),
+    ...students.flatMap(s => {
+      const l: string[] = []
+      if (s.tuitionFee > 0) l.push('Tuition Fee')
+      if (s.sportsFee > 0) l.push('Sports Fee')
+      if (s.clubsFee > 0) l.push('Clubs Fee')
+      if (s.otherFee > 0) l.push('Other Fee')
+      return l
+    }),
+  ])] as string[]
+
+  const uniqueClasses = [...new Set(students.map(s => s.class).filter(Boolean))].sort() as string[]
 
   const filtered = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -459,32 +505,35 @@ export default function Students() {
   }
 
   return (
-    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
+    <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden', maxWidth: '100vw'}}>
       <style>{`
-        @media (max-width: 768px) {
-          .stu-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
-          .stu-header-actions { flex-wrap: wrap; width: 100%; }
+        @media (max-width: 640px) {
+          .stu-header { flex-direction: column !important; gap: 14px !important; padding: 16px !important; }
+          .stu-header-actions { flex-direction: column !important; width: 100% !important; }
+          .stu-header-actions button, .stu-header-actions a { width: 100% !important; text-align: center !important; box-sizing: border-box !important; display: block !important; }
           .stu-content { padding: 12px !important; }
           .stu-import-row { flex-direction: column !important; }
-          .stu-search-row { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
-          .stu-search-row input { width: 100% !important; box-sizing: border-box; }
-          .stu-table-wrap td, .stu-table-wrap th { padding: 8px 10px !important; font-size: 11px !important; }
+          .stu-search-row { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
+          .stu-search-row input { width: 100% !important; box-sizing: border-box !important; }
         }
       `}</style>
 
-      <div className="stu-header" style={{background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-        <div>
-          <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px'}}>Students</h1>
-          <p style={{fontSize: '12px', color: '#94a3c8'}}>{students.length} students enrolled</p>
+      <div className="stu-header" style={{background: '#0a1f4e', padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px'}}>
+        <div style={{flexShrink: 0}}>
+          <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px', margin: 0}}>Students</h1>
+          <p style={{fontSize: '12px', color: '#94a3c8', margin: '4px 0 0'}}>{students.length} enrolled</p>
         </div>
-        <div className="stu-header-actions" style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' as const}}>
+        <div className="stu-header-actions" style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' as const, justifyContent: 'flex-end'}}>
           <button onClick={openAddModal} style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '8px 14px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'}}>
             + Add student
           </button>
           <button onClick={openBulkModal} style={{background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)', padding: '8px 14px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap'}}>
-            Bulk fee update
+            Bulk update fees
           </button>
-          <Link href="/dashboard" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none', whiteSpace: 'nowrap'}}>
+          <button onClick={downloadReport} disabled={downloading} style={{background: 'none', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '8px 14px', borderRadius: '5px', fontSize: '12px', cursor: downloading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: downloading ? 0.6 : 1}}>
+            {downloading ? 'Downloading…' : 'Download report'}
+          </button>
+          <Link href="/dashboard" style={{border: '1px solid rgba(255,255,255,0.15)', color: '#94a3c8', padding: '8px 14px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none', whiteSpace: 'nowrap'}}>
             ← Dashboard
           </Link>
         </div>
@@ -544,12 +593,17 @@ export default function Students() {
               {students.length === 0 ? 'No students yet. Import a CSV to get started.' : 'No students match your search.'}
             </div>
           ) : (
-            <div className="stu-table-wrap" style={{overflowX: 'auto', overflowY: 'auto', maxHeight: '660px', WebkitOverflowScrolling: 'touch' as any}}>
-              <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '860px'}}>
+            <div className="stu-table-wrap" style={{overflowX: 'auto', overflowY: 'auto', maxHeight: '640px', WebkitOverflowScrolling: 'touch' as any, width: '100%'}}>
+              <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '900px', tableLayout: 'fixed' as const}}>
                 <thead style={{position: 'sticky', top: 0, zIndex: 1}}>
                   <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9', background: '#fff'}}>
-                    {['Name', 'Adm No', 'Class', 'Fee Required', '', 'Paid', 'Balance', 'Status', 'Parent Email', ''].map((h, i) => (
-                      <th key={i} style={{padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap', background: '#fff'}}>{h}</th>
+                    {[
+                      {h: 'Name', w: '160px'}, {h: 'Adm No', w: '80px'}, {h: 'Class', w: '80px'},
+                      {h: 'Fee Required', w: '100px'}, {h: '', w: '36px'},
+                      {h: 'Paid', w: '90px'}, {h: 'Balance', w: '90px'}, {h: 'Status', w: '72px'},
+                      {h: 'Parent Email', w: '160px'}, {h: '', w: '140px'},
+                    ].map(({h, w}, i) => (
+                      <th key={i} style={{padding: '10px 10px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap', background: '#fff', width: w}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -565,51 +619,42 @@ export default function Students() {
                     return (
                       <>
                         <tr key={student.id} style={{borderBottom: isFeeEdit ? 'none' : '1px solid #f8fafc', cursor: 'pointer', background: isFeeEdit ? '#fffdf5' : undefined}} onClick={() => router.push('/students/' + student.id)}>
-                          <td style={{padding: '10px 14px', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap'}}>{student.name}</td>
-                          <td style={{padding: '10px 14px', color: '#64748b'}}>{student.admNo || '—'}</td>
-                          <td style={{padding: '10px 14px', color: '#64748b', whiteSpace: 'nowrap'}}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>
-                          <td style={{padding: '10px 14px', whiteSpace: 'nowrap'}}>KES {student.feeRequired.toLocaleString()}</td>
+                          <td style={{padding: '9px 10px', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{student.name}</td>
+                          <td style={{padding: '9px 10px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis'}}>{student.admNo || '—'}</td>
+                          <td style={{padding: '9px 10px', color: '#64748b', whiteSpace: 'nowrap'}}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>
+                          <td style={{padding: '9px 10px', whiteSpace: 'nowrap'}}>KES {student.feeRequired.toLocaleString()}</td>
                           {/* Pencil edit button */}
-                          <td style={{padding: '6px 4px'}} onClick={e => e.stopPropagation()}>
-                            <button
-                              onClick={() => isFeeEdit ? closeFeeEditor() : openFeeEditor(student)}
-                              title="Edit fee categories"
-                              style={{
-                                background: isFeeEdit ? '#c8a84b' : 'none',
-                                border: isFeeEdit ? 'none' : '1px solid #e2e8f0',
-                                borderRadius: '4px', padding: '3px 7px', cursor: 'pointer',
-                                fontSize: '12px', color: isFeeEdit ? '#0a1f4e' : '#94a3b8',
-                                fontWeight: isFeeEdit ? 700 : 400,
-                              }}
-                            >
+                          <td style={{padding: '4px 4px', textAlign: 'center'}} onClick={e => e.stopPropagation()}>
+                            <button onClick={() => isFeeEdit ? closeFeeEditor() : openFeeEditor(student)} title="Edit fee categories"
+                              style={{background: isFeeEdit ? '#c8a84b' : 'none', border: isFeeEdit ? 'none' : '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', cursor: 'pointer', fontSize: '12px', color: isFeeEdit ? '#0a1f4e' : '#94a3b8', fontWeight: isFeeEdit ? 700 : 400, lineHeight: 1}}>
                               ✏
                             </button>
                           </td>
-                          <td style={{padding: '10px 14px', color: '#0a1f4e', fontWeight: 600, whiteSpace: 'nowrap'}}>KES {paid.toLocaleString()}</td>
-                          <td style={{padding: '10px 14px', color: balance > 0 ? '#e24b4a' : '#64748b', fontWeight: balance > 0 ? 600 : 400, whiteSpace: 'nowrap'}}>KES {balance.toLocaleString()}</td>
-                          <td style={{padding: '10px 14px'}}>
-                            <span style={{background: cleared ? '#e1f5ee' : paid > 0 ? '#fef9ec' : '#fcebeb', color: cleared ? '#166534' : paid > 0 ? '#92681a' : '#a32d2d', fontSize: '10px', padding: '3px 8px', borderRadius: '999px', fontWeight: 600, whiteSpace: 'nowrap'}}>
+                          <td style={{padding: '9px 10px', color: '#0a1f4e', fontWeight: 600, whiteSpace: 'nowrap'}}>KES {paid.toLocaleString()}</td>
+                          <td style={{padding: '9px 10px', color: balance > 0 ? '#e24b4a' : '#64748b', fontWeight: balance > 0 ? 600 : 400, whiteSpace: 'nowrap'}}>KES {balance.toLocaleString()}</td>
+                          <td style={{padding: '9px 10px'}}>
+                            <span style={{background: cleared ? '#e1f5ee' : paid > 0 ? '#fef9ec' : '#fcebeb', color: cleared ? '#166534' : paid > 0 ? '#92681a' : '#a32d2d', fontSize: '10px', padding: '2px 7px', borderRadius: '999px', fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block'}}>
                               {cleared ? 'Cleared' : paid > 0 ? 'Partial' : 'Unpaid'}
                             </span>
                           </td>
-                          <td style={{padding: '10px 14px', minWidth: '160px'}} onClick={e => e.stopPropagation()}>
+                          <td style={{padding: '9px 10px'}} onClick={e => e.stopPropagation()}>
                             {isEditingEmail ? (
                               <input type="email" value={editingEmail!.value}
                                 onChange={e => setEditingEmail({ id: student.id, value: e.target.value })}
                                 onBlur={() => saveEmail(student.id, editingEmail!.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') saveEmail(student.id, editingEmail!.value); if (e.key === 'Escape') setEditingEmail(null) }}
                                 autoFocus
-                                style={{border: '1px solid #c8a84b', borderRadius: '4px', padding: '3px 6px', fontSize: '12px', outline: 'none', width: '160px'}}
+                                style={{border: '1px solid #c8a84b', borderRadius: '4px', padding: '3px 6px', fontSize: '12px', outline: 'none', width: '100%', boxSizing: 'border-box' as const}}
                               />
                             ) : (
                               <span onClick={() => setEditingEmail({ id: student.id, value: student.parentEmail || '' })}
                                 title={student.parentEmail ? 'Click to edit' : 'Click to add email'}
-                                style={{cursor: 'text', color: student.parentEmail ? '#0a1f4e' : '#94a3b8', fontSize: '12px', display: 'block'}}>
+                                style={{cursor: 'text', color: student.parentEmail ? '#0a1f4e' : '#94a3b8', fontSize: '12px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
                                 {student.parentEmail ? maskEmail(student.parentEmail) : '+ add email'}
                               </span>
                             )}
                           </td>
-                          <td style={{padding: '10px 14px'}} onClick={e => e.stopPropagation()}>
+                          <td style={{padding: '9px 10px'}} onClick={e => e.stopPropagation()}>
                             {cleared && (
                               <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap' as const}}>
                                 <button onClick={() => downloadCertificate(student.id, student.name)}
@@ -628,7 +673,7 @@ export default function Students() {
                         {/* Inline fee editor accordion */}
                         {isFeeEdit && (
                           <tr key={student.id + '-feeedit'}>
-                            <td colSpan={10} style={{padding: 0, background: '#fdf8ee', borderBottom: '2px solid #c8a84b'}}>
+                            <td colSpan={10} style={{padding: 0, background: '#fdf8ee', borderBottom: '2px solid #c8a84b', overflow: 'hidden'}}>
                               <div style={{padding: '16px 20px'}}>
                                 <p style={{fontSize: '12px', fontWeight: 700, color: '#92681a', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>
                                   Edit fee categories — {student.name}
@@ -807,9 +852,7 @@ export default function Students() {
                 <select value={bulkClass} onChange={e => setBulkClass(e.target.value)}
                   style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}>
                   <option value="All">All classes</option>
-                  {[...new Set(students.map(s => s.class))].sort().map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
+                  {uniqueClasses.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>

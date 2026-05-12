@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 function clearanceCertEmailHtml({
   schoolName, parentName, studentName, studentClass, term, feeRequired, totalPaid,
@@ -205,9 +205,15 @@ function EmailModal({ title, subtitle, emailValue, onEmailChange, onSend, onClos
 
 export default function StudentDetail() {
   const { id } = useParams()
+  const router = useRouter()
   const [student, setStudent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+
+  const [deleteModal, setDeleteModal] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const [feeCategories, setFeeCategories] = useState<any[]>([])
   const [editingFees, setEditingFees] = useState(false)
@@ -241,6 +247,24 @@ export default function StudentDetail() {
       : [{ name: 'Tuition Fee', amount: 0 }]
     setFeeEdits(cats)
     setEditingFees(true)
+  }
+
+  async function handleDeleteStudent() {
+    if (deleteConfirm !== student.admNo || deleting) return
+    setDeleting(true); setDeleteError('')
+    try {
+      const res = await fetch('/api/students/' + id, { method: 'DELETE' })
+      if (res.ok) {
+        router.push('/students')
+      } else {
+        const d = await res.json()
+        setDeleteError(d.error || 'Something went wrong')
+        setDeleting(false)
+      }
+    } catch {
+      setDeleteError('Something went wrong')
+      setDeleting(false)
+    }
   }
 
   async function saveFees() {
@@ -640,7 +664,52 @@ export default function StudentDetail() {
           </div>
         </div>
 
+        {/* Danger zone */}
+        <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #fecaca', padding: '20px', marginBottom: '16px'}}>
+          <h2 style={{fontSize: '14px', fontWeight: 700, color: '#dc2626', marginBottom: '4px'}}>Danger zone</h2>
+          <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '14px'}}>Permanently remove this student and all their records from the system.</p>
+          <button
+            onClick={() => { setDeleteModal(true); setDeleteConfirm(''); setDeleteError('') }}
+            style={{background: 'none', border: '1px solid #fca5a5', color: '#dc2626', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer'}}
+          >
+            Remove student
+          </button>
+        </div>
+
       </div>
+
+      {/* Delete confirmation modal */}
+      {deleteModal && (
+        <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
+          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', maxWidth: '440px', width: '100%'}}>
+            <h3 style={{fontSize: '16px', fontWeight: 700, color: '#dc2626', marginBottom: '12px'}}>Remove student</h3>
+            <p style={{fontSize: '13px', color: '#475569', lineHeight: 1.6, marginBottom: '16px'}}>
+              Are you sure you want to remove <strong>{student.name}</strong> from the system? This will also delete all their payment records. <strong>This cannot be undone.</strong>
+            </p>
+            <p style={{fontSize: '13px', color: '#0f172a', marginBottom: '8px', fontWeight: 600}}>
+              Type the admission number <strong>{student.admNo}</strong> to confirm
+            </p>
+            <input
+              type="text"
+              value={deleteConfirm}
+              onChange={e => setDeleteConfirm(e.target.value)}
+              placeholder={student.admNo}
+              style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box' as const}}
+            />
+            {deleteError && <p style={{fontSize: '12px', color: '#dc2626', marginBottom: '12px'}}>{deleteError}</p>}
+            <div style={{display: 'flex', gap: '10px'}}>
+              <button onClick={() => setDeleteModal(false)} disabled={deleting}
+                style={{flex: 1, background: '#f1f5f9', color: '#64748b', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer'}}>
+                Cancel
+              </button>
+              <button onClick={handleDeleteStudent} disabled={deleteConfirm !== student.admNo || deleting}
+                style={{flex: 2, background: deleteConfirm !== student.admNo || deleting ? '#94a3b8' : '#dc2626', color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: deleteConfirm !== student.admNo || deleting ? 'not-allowed' : 'pointer'}}>
+                {deleting ? 'Removing…' : 'Remove student permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {certModal && (
         <EmailModal

@@ -72,7 +72,9 @@ export default function Unmatched() {
       <style>{`
         @media (max-width: 640px) {
           .unm-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
-          .unm-content { padding: 16px !important; }
+          .unm-content { padding: 12px !important; }
+          .unm-ref { font-size: 16px !important; }
+          .unm-amount { font-size: 22px !important; }
         }
       `}</style>
 
@@ -93,7 +95,7 @@ export default function Unmatched() {
         </div>
       </div>
 
-      <div className="unm-content" style={{ padding: '24px 32px', maxWidth: '720px' }}>
+      <div className="unm-content" style={{ padding: '24px 32px', maxWidth: '720px', width: '100%', boxSizing: 'border-box' as const }}>
         {loading && <div style={{ textAlign: 'center', color: '#94a3b8', padding: '48px' }}>Loading...</div>}
 
         {!loading && payments.length === 0 && (
@@ -132,20 +134,19 @@ export default function Unmatched() {
             return (
               <div key={payment.id} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                 {/* Payment header */}
-                <div style={{ background: '#0a1f4e', padding: '16px 20px' }}>
+                <div style={{ background: '#0a1f4e', padding: '14px 18px' }}>
                   {payment.mpesaRef && (
-                    <p style={{ fontSize: '22px', fontWeight: 800, color: '#c8a84b', margin: '0 0 4px', fontFamily: 'monospace', letterSpacing: '1px' }}>
+                    <p className="unm-ref" style={{ fontSize: '18px', fontWeight: 800, color: '#c8a84b', margin: '0 0 4px', fontFamily: 'monospace', letterSpacing: '1px', wordBreak: 'break-all' as const }}>
                       {payment.mpesaRef}
                     </p>
                   )}
-                  <p style={{ fontSize: '28px', fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>
+                  <p className="unm-amount" style={{ fontSize: '26px', fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>
                     KES {payment.amount.toLocaleString()}
                   </p>
-                  <p style={{ fontSize: '12px', color: '#94a3c8', margin: 0 }}>
-                    From: <strong style={{ color: '#fff' }}>{payment.senderName || 'Unknown'}</strong>
-                    {payment.senderPhone && <> · {payment.senderPhone}</>}
-                    {' · '}
-                    {new Date(payment.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  <p style={{ fontSize: '12px', color: '#94a3c8', margin: 0, lineHeight: 1.5 }}>
+                    <strong style={{ color: '#fff' }}>{payment.senderName || 'Unknown sender'}</strong>
+                    {payment.senderPhone && <span> · {payment.senderPhone}</span>}
+                    <span> · {new Date(payment.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   </p>
                   {!payment.mpesaRef && (
                     <span style={{ background: '#fcebeb', color: '#a32d2d', fontSize: '10px', padding: '3px 10px', borderRadius: '999px', fontWeight: 600, marginTop: '8px', display: 'inline-block' }}>
@@ -173,7 +174,7 @@ export default function Unmatched() {
                         if (sel) setSelected(prev => { const n = { ...prev }; delete n[payment.id]; return n })
                       }}
                       onFocus={() => setSearchOpen(prev => ({ ...prev, [payment.id]: true }))}
-                      style={{ width: '100%', border: '2px solid #0a1f4e', borderRadius: '8px', padding: '10px 14px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                      style={{ width: '100%', border: '2px solid #0a1f4e', borderRadius: '8px', padding: '10px 14px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' as const }}
                     />
                     {/* Dropdown */}
                     {isOpen && results.length > 0 && (
