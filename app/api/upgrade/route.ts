@@ -5,6 +5,7 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
 import { logAudit } from '@/lib/audit'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 
 export async function POST(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -22,6 +23,9 @@ export async function POST(req: Request) {
       include: { school: true }
     })
     if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+
+    const role = await getUserRole(user.id, user.school)
+    if (!hasPermission(role, 'upgrade', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const body = await req.json()
     const requestedPlan = sanitize(body.requestedPlan || '', 50)

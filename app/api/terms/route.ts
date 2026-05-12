@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -19,6 +20,11 @@ export async function GET(req: Request) {
       where: { email: session.user.email },
       include: { school: { include: { terms: { orderBy: { createdAt: 'desc' } } } } }
     })
+
+    if (user?.school) {
+      const role = await getUserRole(user.id, user.school)
+      if (!hasPermission(role, 'terms', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    }
 
     return NextResponse.json(user?.school?.terms || [])
   } catch (err) {
@@ -53,6 +59,9 @@ export async function POST(req: Request) {
     if (!user?.school) {
       return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
+
+    const rolePost = await getUserRole(user.id, user.school)
+    if (!hasPermission(rolePost, 'terms', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     await prisma.school.update({
       where: { id: user.school.id },

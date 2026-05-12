@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -23,6 +24,9 @@ export async function GET(req: Request) {
     if (!user?.school) {
       return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
+
+    const role = await getUserRole(user.id, user.school)
+    if (!hasPermission(role, 'report', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const students = await prisma.student.findMany({
       where: { schoolId: user.school.id },

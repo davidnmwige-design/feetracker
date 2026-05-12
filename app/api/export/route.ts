@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -22,6 +23,9 @@ export async function GET(req: Request) {
       include: { school: true },
     })
     if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+
+    const role = await getUserRole(user.id, user.school)
+    if (!hasPermission(role, 'export', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const schoolId = user.school.id
 

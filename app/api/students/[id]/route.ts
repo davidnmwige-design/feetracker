@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { encrypt, decrypt } from '@/lib/encrypt'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 
 export async function GET(
   req: Request,
@@ -28,6 +29,9 @@ export async function GET(
       include: { school: true }
     })
     if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+
+    const role = await getUserRole(user.id, user.school)
+    if (!hasPermission(role, 'students', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const student = await prisma.student.findFirst({
       where: { id: studentId, schoolId: user.school.id },
@@ -72,6 +76,9 @@ export async function PATCH(
       include: { school: true }
     })
     if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+
+    const rolePatch = await getUserRole(user.id, user.school)
+    if (!hasPermission(rolePatch, 'students', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const student = await prisma.student.findFirst({
       where: { id: studentId, schoolId: user.school.id }

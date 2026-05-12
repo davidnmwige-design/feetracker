@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { logAudit } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 
 export async function DELETE(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -19,6 +20,11 @@ export async function DELETE(req: Request) {
       include: { school: true },
     })
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+    if (user.school) {
+      const role = await getUserRole(user.id, user.school)
+      if (!hasPermission(role, 'account', 'DELETE')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    }
 
     // Log before deletion so we have a record
     await logAudit({

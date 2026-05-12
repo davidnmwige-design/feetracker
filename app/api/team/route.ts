@@ -4,12 +4,14 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 
 const VALID_ROLES = ['admin', 'accountant', 'principal', 'viewer']
 
 async function requireSchoolAdmin(req: Request) {
+  if (!checkRateLimit(getIp(req))) return null
   const session = await auth()
   if (!session?.user?.email) return null
   const user = await prisma.user.findUnique({ where: { email: session.user.email }, include: { school: true } })
@@ -17,9 +19,10 @@ async function requireSchoolAdmin(req: Request) {
 }
 
 export async function GET(req: Request) {
-  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   const user = await requireSchoolAdmin(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const role = await getUserRole(user.id, user.school!)
+  if (!hasPermission(role, 'team', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   const members = await prisma.schoolUser.findMany({
     where: { schoolId: user.school!.id },
@@ -30,9 +33,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   const owner = await requireSchoolAdmin(req)
   if (!owner) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const rolePost = await getUserRole(owner.id, owner.school!)
+  if (!hasPermission(rolePost, 'team', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   const body = await req.json()
   const name = sanitize(body.name || '', 100)
@@ -86,9 +90,10 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   const owner = await requireSchoolAdmin(req)
   if (!owner) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const roleDel = await getUserRole(owner.id, owner.school!)
+  if (!hasPermission(roleDel, 'team', 'DELETE')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   const { memberId } = await req.json()
   await prisma.schoolUser.deleteMany({ where: { id: Number(memberId), schoolId: owner.school!.id } })

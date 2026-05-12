@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 // ── PDF builder ───────────────────────────────────────────────────────────────
 
-async function buildInvoicePdf(school: any, student: any, totalPaid: number) {
+async function buildInvoicePdf(school: any, student: any, totalPaid: number, feeCategories?: { name: string; amount: number }[]) {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const W = 210
@@ -70,10 +70,14 @@ async function buildInvoicePdf(school: any, student: any, totalPaid: number) {
   y += 8
 
   const feeRows: [string, number][] = []
-  if (student.tuitionFee > 0) feeRows.push(['Tuition Fee', student.tuitionFee])
-  if (student.sportsFee > 0) feeRows.push(['Sports Fee', student.sportsFee])
-  if (student.clubsFee > 0) feeRows.push(['Clubs Fee', student.clubsFee])
-  if (student.otherFee > 0) feeRows.push(['Other Fee', student.otherFee])
+  if (feeCategories && feeCategories.length > 0) {
+    feeCategories.forEach(c => { if (c.amount > 0) feeRows.push([c.name, c.amount]) })
+  } else {
+    if (student.tuitionFee > 0) feeRows.push(['Tuition Fee', student.tuitionFee])
+    if (student.sportsFee > 0) feeRows.push(['Sports Fee', student.sportsFee])
+    if (student.clubsFee > 0) feeRows.push(['Clubs Fee', student.clubsFee])
+    if (student.otherFee > 0) feeRows.push(['Other Fee', student.otherFee])
+  }
   if (feeRows.length === 0) feeRows.push(['School Fees', student.feeRequired])
 
   feeRows.forEach(([desc, amt], i) => {
@@ -262,6 +266,15 @@ export default function Invoices() {
   }
 
   function buildBreakdown(student: any, totalPaid: number) {
+    const cats = student.feeCategories as { name: string; amount: number }[] | undefined
+    if (cats && cats.length > 0) {
+      return {
+        categories: cats,
+        totalFee: student.feeRequired,
+        totalPaid,
+        totalDue: Math.max(0, student.feeRequired - totalPaid),
+      }
+    }
     return {
       tuitionFee: student.tuitionFee,
       sportsFee: student.sportsFee,
@@ -298,7 +311,8 @@ export default function Invoices() {
       const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       const dueDateStr = dueDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
 
-      const doc = await buildInvoicePdf(school, student, totalPaid)
+      const cats = (student.feeCategories as { name: string; amount: number }[] | undefined) || []
+      const doc = await buildInvoicePdf(school, student, totalPaid, cats.length > 0 ? cats : undefined)
       const pdfBase64 = doc.output('datauristring').split(',')[1]
       const term = school.currentTerm || ''
 
@@ -338,10 +352,15 @@ export default function Invoices() {
     const cls = `${student.class}${student.stream ? ' ' + student.stream : ''}`
 
     const lines = [`Dear ${student.parentName || 'Parent'}, here is the fee invoice for ${student.name} (${cls}) for ${term}:`]
-    if (student.tuitionFee > 0) lines.push(`• Tuition: KES ${student.tuitionFee.toLocaleString()}`)
-    if (student.sportsFee > 0) lines.push(`• Sports: KES ${student.sportsFee.toLocaleString()}`)
-    if (student.clubsFee > 0) lines.push(`• Clubs: KES ${student.clubsFee.toLocaleString()}`)
-    if (student.otherFee > 0) lines.push(`• Other: KES ${student.otherFee.toLocaleString()}`)
+    const cats = student.feeCategories as { name: string; amount: number }[] | undefined
+    if (cats && cats.length > 0) {
+      cats.forEach(c => { if (c.amount > 0) lines.push(`• ${c.name}: KES ${c.amount.toLocaleString()}`) })
+    } else {
+      if (student.tuitionFee > 0) lines.push(`• Tuition: KES ${student.tuitionFee.toLocaleString()}`)
+      if (student.sportsFee > 0) lines.push(`• Sports: KES ${student.sportsFee.toLocaleString()}`)
+      if (student.clubsFee > 0) lines.push(`• Clubs: KES ${student.clubsFee.toLocaleString()}`)
+      if (student.otherFee > 0) lines.push(`• Other: KES ${student.otherFee.toLocaleString()}`)
+    }
     lines.push(`• Amount paid: KES ${totalPaid.toLocaleString()}`)
     lines.push(`• *TOTAL DUE: KES ${totalDue.toLocaleString()}*`)
     if (school.paybill) {
@@ -511,16 +530,23 @@ export default function Invoices() {
                         </td>
                         <td style={{ padding: '10px 14px', color: '#64748b', whiteSpace: 'nowrap' }}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>
                         <td style={{ padding: '10px 14px' }}>
-                          {hasFeeBreakdown ? (
-                            <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.6 }}>
-                              {student.tuitionFee > 0 && <div>Tuition: KES {student.tuitionFee.toLocaleString()}</div>}
-                              {student.sportsFee > 0 && <div>Sports: KES {student.sportsFee.toLocaleString()}</div>}
-                              {student.clubsFee > 0 && <div>Clubs: KES {student.clubsFee.toLocaleString()}</div>}
-                              {student.otherFee > 0 && <div>Other: KES {student.otherFee.toLocaleString()}</div>}
-                            </div>
-                          ) : (
-                            <span style={{ fontSize: '11px', color: '#94a3b8' }}>KES {student.feeRequired.toLocaleString()}</span>
-                          )}
+                          {(() => {
+                            const cats = student.feeCategories as { name: string; amount: number }[] | undefined
+                            if (cats && cats.length > 0) {
+                              return <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.6 }}>
+                                {cats.filter(c => c.amount > 0).map((c, i) => <div key={i}>{c.name}: KES {c.amount.toLocaleString()}</div>)}
+                              </div>
+                            }
+                            if (hasFeeBreakdown) {
+                              return <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.6 }}>
+                                {student.tuitionFee > 0 && <div>Tuition: KES {student.tuitionFee.toLocaleString()}</div>}
+                                {student.sportsFee > 0 && <div>Sports: KES {student.sportsFee.toLocaleString()}</div>}
+                                {student.clubsFee > 0 && <div>Clubs: KES {student.clubsFee.toLocaleString()}</div>}
+                                {student.otherFee > 0 && <div>Other: KES {student.otherFee.toLocaleString()}</div>}
+                              </div>
+                            }
+                            return <span style={{ fontSize: '11px', color: '#94a3b8' }}>KES {student.feeRequired.toLocaleString()}</span>
+                          })()}
                         </td>
                         <td style={{ padding: '10px 14px', color: '#166534', fontWeight: 600, whiteSpace: 'nowrap' }}>KES {totalPaid.toLocaleString()}</td>
                         <td style={{ padding: '10px 14px', color: totalDue > 0 ? '#dc2626' : '#166534', fontWeight: 600, whiteSpace: 'nowrap' }}>KES {totalDue.toLocaleString()}</td>

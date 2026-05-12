@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -19,6 +20,11 @@ export async function GET(req: Request) {
       where: { email: session.user.email },
       include: { school: true }
     })
+
+    if (user?.school) {
+      const role = await getUserRole(user.id, user.school)
+      if (!hasPermission(role, 'school', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    }
 
     return NextResponse.json(user?.school || null)
   } catch (err) {
@@ -46,6 +52,9 @@ export async function PATCH(req: Request) {
     if (!user?.school) {
       return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
+
+    const rolePatch = await getUserRole(user.id, user.school)
+    if (!hasPermission(rolePatch, 'school', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const body = await req.json()
     const data: Record<string, unknown> = {}

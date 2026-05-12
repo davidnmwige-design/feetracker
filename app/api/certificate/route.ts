@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { logAudit } from '@/lib/audit'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -23,6 +24,9 @@ export async function GET(req: Request) {
     if (!user?.school) {
       return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
+
+    const role = await getUserRole(user.id, user.school)
+    if (!hasPermission(role, 'certificate', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const { searchParams } = new URL(req.url)
     const studentId = Number(searchParams.get('studentId'))

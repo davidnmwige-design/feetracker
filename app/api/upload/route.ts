@@ -5,6 +5,7 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sendEmail, paymentConfirmationHtml } from '@/lib/email'
 import { decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 import * as XLSX from 'xlsx'
 
 function parseRow(row: any, bankType: string): {
@@ -79,6 +80,9 @@ export async function POST(req: Request) {
   if (!user?.school) {
     return NextResponse.json({ error: 'No school found' }, { status: 400 })
   }
+
+  const role = await getUserRole(user.id, user.school)
+  if (!hasPermission(role, 'upload', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   const schoolId = user.school.id
   const formData = await req.formData()

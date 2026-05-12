@@ -5,6 +5,7 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { encrypt, decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
+import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -25,9 +26,12 @@ export async function GET(req: Request) {
 
     if (!user?.school) return NextResponse.json([])
 
+    const role = await getUserRole(user.id, user.school)
+    if (!hasPermission(role, 'students', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+
     const students = await prisma.student.findMany({
       where: { schoolId: user.school.id },
-      include: { payments: true },
+      include: { payments: true, feeCategories: true },
       orderBy: { name: 'asc' }
     })
 
@@ -83,6 +87,9 @@ export async function POST(req: Request) {
     const workbook = XLSX.read(buffer, { type: 'array' })
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
     const rows = XLSX.utils.sheet_to_json(sheet) as any[]
+
+    const rolePost = await getUserRole(user.id, user.school)
+    if (!hasPermission(rolePost, 'students', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     if (currentCount + rows.length > planCap) {
       return NextResponse.json({
@@ -161,6 +168,9 @@ export async function PATCH(req: Request) {
       include: { school: true }
     })
     if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+
+    const rolePatch = await getUserRole(user.id, user.school)
+    if (!hasPermission(rolePatch, 'students', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const body = await req.json()
     const studentId = Number(body.studentId)
