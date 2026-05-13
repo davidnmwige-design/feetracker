@@ -1,91 +1,128 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 
 export default function Unmatched() {
   const [payments, setPayments] = useState<any[]>([])
   const [students, setStudents] = useState<any[]>([])
+  const [searchTerms, setSearchTerms] = useState<Record<number, string>>({})
+  const [selectedStudents, setSelectedStudents] = useState<Record<number, any>>({})
   const [loading, setLoading] = useState(true)
-  const [assigning, setAssigning] = useState<number | null>(null)
-  const [search, setSearch] = useState<Record<number, string>>({})
-  const [searchOpen, setSearchOpen] = useState<Record<number, boolean>>({})
-  const [selected, setSelected] = useState<Record<number, any>>({})
-  const searchRefs = useRef<Record<number, HTMLInputElement | null>>({})
+  const [matching, setMatching] = useState<Record<number, boolean>>({})
+  const [autoMatching, setAutoMatching] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null)
+  const dropdownRef = useRef<Record<number, HTMLDivElement | null>>({})
 
-  useEffect(() => { fetchData() }, [])
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     const [pr, sr] = await Promise.all([fetch('/api/unmatched'), fetch('/api/students')])
     const [pd, sd] = await Promise.all([pr.json(), sr.json()])
     setPayments(Array.isArray(pd) ? pd : [])
     setStudents(Array.isArray(sd) ? sd : [])
     setLoading(false)
-  }
+    setSearchTerms({})
+    setSelectedStudents({})
+    setMatching({})
+    setOpenDropdown(null)
+  }, [])
 
-  async function assignPayment(paymentId: number) {
-    const student = selected[paymentId]
-    if (!student) return
-    setAssigning(paymentId)
-    await fetch('/api/unmatched', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentId, studentId: student.id })
-    })
-    setPayments(prev => prev.filter(p => p.id !== paymentId))
-    setSelected(prev => { const n = { ...prev }; delete n[paymentId]; return n })
-    setSearch(prev => { const n = { ...prev }; delete n[paymentId]; return n })
-    setAssigning(null)
-  }
+  useEffect(() => { fetchData() }, [fetchData])
 
-  async function autoMatchAll(pairs: { paymentId: number; studentId: number }[]) {
-    for (const { paymentId, studentId } of pairs) {
-      await fetch('/api/unmatched', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentId, studentId })
-      })
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (openDropdown === null) return
+      const el = dropdownRef.current[openDropdown]
+      if (el && !el.contains(e.target as Node)) {
+        setOpenDropdown(null)
+      }
     }
-    await fetchData()
-  }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [openDropdown])
 
-  function getSearchResults(paymentId: number) {
-    const q = (search[paymentId] || '').toLowerCase().trim()
-    if (!q) return []
+  // Client-side search: match against name, admNo, parentName, parentPhone
+  function getResults(paymentId: number): any[] {
+    const q = (searchTerms[paymentId] || '').toLowerCase().trim()
+    if (!q || q.length < 1) return []
     return students.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.admNo.toLowerCase().includes(q) ||
-      (s.class || '').toLowerCase().includes(q)
+      s.name?.toLowerCase().includes(q) ||
+      (s.admNo || '').toLowerCase().includes(q) ||
+      (s.parentName || '').toLowerCase().includes(q) ||
+      (s.parentPhone || '').toLowerCase().includes(q)
     ).slice(0, 8)
   }
 
-  // Auto-match candidates: mpesaRef exactly matches an admNo
+  // Auto-match candidates: payment mpesaRef exactly matches a student admNo (case-insensitive)
   const autoMatchPairs = payments.flatMap(p => {
     if (!p.mpesaRef) return []
     const ref = p.mpesaRef.trim().toLowerCase()
-    const match = students.find(s => s.admNo.trim().toLowerCase() === ref)
+    const match = students.find(s => (s.admNo || '').trim().toLowerCase() === ref)
     return match ? [{ paymentId: p.id, studentId: match.id, paymentRef: p.mpesaRef, studentName: match.name }] : []
   })
+
+  async function autoMatchAll() {
+    setAutoMatching(true)
+    for (const { paymentId, studentId } of autoMatchPairs) {
+      await fetch('/api/unmatched', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId, studentId }),
+      })
+    }
+    await fetchData()
+    setAutoMatching(false)
+  }
+
+  async function confirmMatch(paymentId: number) {
+    const student = selectedStudents[paymentId]
+    if (!student || matching[paymentId]) return
+    setMatching(prev => ({ ...prev, [paymentId]: true }))
+    await fetch('/api/unmatched', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentId, studentId: student.id }),
+    })
+    setPayments(prev => prev.filter(p => p.id !== paymentId))
+    setSelectedStudents(prev => { const n = { ...prev }; delete n[paymentId]; return n })
+    setSearchTerms(prev => { const n = { ...prev }; delete n[paymentId]; return n })
+    setMatching(prev => { const n = { ...prev }; delete n[paymentId]; return n })
+  }
+
+  function selectStudent(paymentId: number, student: any) {
+    setSelectedStudents(prev => ({ ...prev, [paymentId]: student }))
+    setSearchTerms(prev => ({ ...prev, [paymentId]: student.name }))
+    setOpenDropdown(null)
+  }
+
+  function clearSelection(paymentId: number) {
+    setSelectedStudents(prev => { const n = { ...prev }; delete n[paymentId]; return n })
+    setSearchTerms(prev => ({ ...prev, [paymentId]: '' }))
+  }
 
   return (
     <div style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
       <style>{`
         @media (max-width: 640px) {
           .unm-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
-          .unm-content { padding: 12px !important; }
-          .unm-ref { font-size: 16px !important; }
-          .unm-amount { font-size: 22px !important; }
+          .unm-body { padding: 16px !important; }
         }
+        .unm-result-row:hover { background: #f0f4f9 !important; }
+        .unm-confirm-btn:hover:not(:disabled) { opacity: 0.92; }
       `}</style>
 
-      <div className="unm-header" style={{ background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px' }}>Unmatched Payments</h1>
-          <p style={{ fontSize: '12px', color: '#94a3c8' }}>Manually assign payments that could not be matched automatically</p>
-        </div>
+      {/* Header */}
+      <div className="unm-header" style={{ background: '#0a1f4e', padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', margin: 0 }}>
+          Unmatched Payments
+        </h1>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          {!loading && payments.length > 0 && (
-            <span style={{ background: '#e24b4a', color: '#fff', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700 }}>
+          {!loading && (
+            <span style={{
+              background: payments.length > 0 ? '#e24b4a' : '#0a7c3e',
+              color: '#fff', fontSize: '11px', fontWeight: 700,
+              padding: '4px 12px', borderRadius: '999px',
+            }}>
               {payments.length} pending
             </span>
           )}
@@ -95,146 +132,218 @@ export default function Unmatched() {
         </div>
       </div>
 
-      <div className="unm-content" style={{ padding: '24px 32px', maxWidth: '720px', width: '100%', boxSizing: 'border-box' as const }}>
-        {loading && <div style={{ textAlign: 'center', color: '#94a3b8', padding: '48px' }}>Loading...</div>}
+      {/* Body */}
+      <div className="unm-body" style={{ padding: '24px 32px', maxWidth: '860px', margin: '0 auto', boxSizing: 'border-box' as const }}>
+
+        {loading && (
+          <div style={{ textAlign: 'center', color: '#94a3b8', padding: '64px', fontSize: '14px' }}>Loading…</div>
+        )}
 
         {!loading && payments.length === 0 && (
-          <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '48px', textAlign: 'center' }}>
-            <p style={{ fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>No unmatched payments</p>
-            <p style={{ fontSize: '13px', color: '#94a3b8' }}>All payments have been matched to students.</p>
+          <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '56px', textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>✓</div>
+            <p style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>All clear</p>
+            <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>All payments have been matched to students.</p>
           </div>
         )}
 
         {/* Auto-match banner */}
         {!loading && autoMatchPairs.length > 0 && (
-          <div style={{ background: '#e1f5ee', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '16px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{
+            background: '#c8a84b', borderRadius: '10px', padding: '16px 20px',
+            marginBottom: '20px', display: 'flex', justifyContent: 'space-between',
+            alignItems: 'center', gap: '16px', flexWrap: 'wrap' as const,
+          }}>
             <div>
-              <p style={{ fontSize: '13px', fontWeight: 700, color: '#166534', margin: '0 0 2px' }}>
-                {autoMatchPairs.length} payment{autoMatchPairs.length > 1 ? 's' : ''} can be auto-matched by admission number
+              <p style={{ fontSize: '14px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 3px' }}>
+                {autoMatchPairs.length} payment{autoMatchPairs.length !== 1 ? 's' : ''} can be matched by admission number
               </p>
-              <p style={{ fontSize: '12px', color: '#15803d', margin: 0 }}>
-                {autoMatchPairs.map(p => `${p.paymentRef} → ${p.studentName}`).join(', ')}
+              <p style={{ fontSize: '12px', color: '#3d2a00', margin: 0, opacity: 0.8 }}>
+                {autoMatchPairs.slice(0, 3).map(p => `${p.paymentRef} → ${p.studentName}`).join(' · ')}
+                {autoMatchPairs.length > 3 ? ` · +${autoMatchPairs.length - 3} more` : ''}
               </p>
             </div>
             <button
-              onClick={() => autoMatchAll(autoMatchPairs)}
-              style={{ background: '#166534', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              onClick={autoMatchAll}
+              disabled={autoMatching}
+              style={{
+                background: '#0a1f4e', color: '#fff', border: 'none',
+                padding: '10px 20px', borderRadius: '7px', fontSize: '13px',
+                fontWeight: 700, cursor: autoMatching ? 'not-allowed' : 'pointer',
+                whiteSpace: 'nowrap' as const, opacity: autoMatching ? 0.7 : 1,
+              }}
             >
-              Match all now
+              {autoMatching ? 'Matching…' : 'Auto-match all'}
             </button>
           </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {payments.map(payment => {
-            const sel = selected[payment.id]
-            const results = getSearchResults(payment.id)
-            const isOpen = searchOpen[payment.id]
+        {/* Payment cards */}
+        {!loading && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {payments.map(payment => {
+              const sel = selectedStudents[payment.id]
+              const term = searchTerms[payment.id] || ''
+              const results = getResults(payment.id)
+              const isMatching = matching[payment.id] || false
+              const isDropdownOpen = openDropdown === payment.id && !sel && results.length > 0
 
-            return (
-              <div key={payment.id} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                {/* Payment header */}
-                <div style={{ background: '#0a1f4e', padding: '14px 18px' }}>
-                  {payment.mpesaRef && (
-                    <p className="unm-ref" style={{ fontSize: '18px', fontWeight: 800, color: '#c8a84b', margin: '0 0 4px', fontFamily: 'monospace', letterSpacing: '1px', wordBreak: 'break-all' as const }}>
-                      {payment.mpesaRef}
+              return (
+                <div key={payment.id} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+
+                  {/* Payment info */}
+                  <div style={{ background: '#0a1f4e', padding: '16px 20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' as const }}>
+                      <div>
+                        {payment.mpesaRef && (
+                          <p style={{ fontSize: '17px', fontWeight: 800, color: '#c8a84b', margin: '0 0 6px', fontFamily: 'monospace', letterSpacing: '1px', wordBreak: 'break-all' as const }}>
+                            {payment.mpesaRef}
+                          </p>
+                        )}
+                        {!payment.mpesaRef && (
+                          <span style={{ background: '#fcebeb', color: '#a32d2d', fontSize: '10px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', marginBottom: '6px', display: 'inline-block' }}>
+                            No reference
+                          </span>
+                        )}
+                        <p style={{ fontSize: '12px', color: '#94a3c8', margin: 0, lineHeight: 1.6 }}>
+                          <strong style={{ color: '#e2e8f0' }}>{payment.senderName || 'Unknown sender'}</strong>
+                          {payment.senderPhone && <span> · {payment.senderPhone}</span>}
+                          <span> · {new Date(payment.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </p>
+                      </div>
+                      <p style={{ fontSize: '28px', fontWeight: 900, color: '#fff', margin: 0, whiteSpace: 'nowrap' as const }}>
+                        KES {payment.amount.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Match section */}
+                  <div style={{ padding: '16px 20px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' as const, letterSpacing: '0.5px', marginBottom: '10px' }}>
+                      Match to student
                     </p>
-                  )}
-                  <p className="unm-amount" style={{ fontSize: '26px', fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>
-                    KES {payment.amount.toLocaleString()}
-                  </p>
-                  <p style={{ fontSize: '12px', color: '#94a3c8', margin: 0, lineHeight: 1.5 }}>
-                    <strong style={{ color: '#fff' }}>{payment.senderName || 'Unknown sender'}</strong>
-                    {payment.senderPhone && <span> · {payment.senderPhone}</span>}
-                    <span> · {new Date(payment.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  </p>
-                  {!payment.mpesaRef && (
-                    <span style={{ background: '#fcebeb', color: '#a32d2d', fontSize: '10px', padding: '3px 10px', borderRadius: '999px', fontWeight: 600, marginTop: '8px', display: 'inline-block' }}>
-                      No reference
-                    </span>
-                  )}
-                </div>
 
-                {/* Match section */}
-                <div style={{ padding: '16px 20px' }}>
-                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Match to student
-                  </p>
+                    {/* Search input + dropdown */}
+                    <div
+                      ref={el => { dropdownRef.current[payment.id] = el }}
+                      style={{ position: 'relative' as const }}
+                    >
+                      <input
+                        type="text"
+                        placeholder="Search by name, admission no, parent name or phone…"
+                        value={term}
+                        onChange={e => {
+                          const val = e.target.value
+                          setSearchTerms(prev => ({ ...prev, [payment.id]: val }))
+                          setOpenDropdown(payment.id)
+                          if (sel) clearSelection(payment.id)
+                        }}
+                        onFocus={() => {
+                          if (!sel) setOpenDropdown(payment.id)
+                        }}
+                        style={{
+                          width: '100%', border: `2px solid ${sel ? '#c8a84b' : '#0a1f4e'}`,
+                          borderRadius: '8px', padding: '10px 14px', fontSize: '14px',
+                          outline: 'none', boxSizing: 'border-box' as const,
+                          background: sel ? '#fffdf5' : '#fff',
+                        }}
+                      />
 
-                  {/* Search box */}
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      ref={el => { searchRefs.current[payment.id] = el }}
-                      type="text"
-                      placeholder="Search by name, admission no, or class…"
-                      value={search[payment.id] || ''}
-                      onChange={e => {
-                        setSearch(prev => ({ ...prev, [payment.id]: e.target.value }))
-                        setSearchOpen(prev => ({ ...prev, [payment.id]: true }))
-                        if (sel) setSelected(prev => { const n = { ...prev }; delete n[payment.id]; return n })
-                      }}
-                      onFocus={() => setSearchOpen(prev => ({ ...prev, [payment.id]: true }))}
-                      style={{ width: '100%', border: '2px solid #0a1f4e', borderRadius: '8px', padding: '10px 14px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' as const }}
-                    />
-                    {/* Dropdown */}
-                    {isOpen && results.length > 0 && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 20, overflow: 'hidden', marginTop: '4px' }}>
-                        {results.map(s => {
-                          const paid = s.payments?.reduce((sum: number, p: any) => sum + p.amount, 0) || 0
-                          const balance = s.feeRequired - paid
-                          return (
-                            <button
-                              key={s.id}
-                              onClick={() => {
-                                setSelected(prev => ({ ...prev, [payment.id]: s }))
-                                setSearch(prev => ({ ...prev, [payment.id]: s.name }))
-                                setSearchOpen(prev => ({ ...prev, [payment.id]: false }))
-                              }}
-                              style={{ display: 'block', width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
-                              onMouseEnter={e => (e.currentTarget.style.background = '#f8f9fc')}
-                              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                            >
-                              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>{s.name}</div>
-                              <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                                Adm: {s.admNo} · {s.class}{s.stream ? ' ' + s.stream : ''} · Balance: KES {balance.toLocaleString()}
-                              </div>
-                            </button>
-                          )
-                        })}
+                      {/* Dropdown results */}
+                      {isDropdownOpen && (
+                        <div style={{
+                          position: 'absolute' as const, top: 'calc(100% + 4px)', left: 0, right: 0,
+                          background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50,
+                          overflow: 'hidden', maxHeight: '300px', overflowY: 'auto' as const,
+                        }}>
+                          {results.map((s, i) => {
+                            const paid = (s.payments || []).reduce((sum: number, p: any) => sum + p.amount, 0)
+                            const balance = s.feeRequired - paid
+                            return (
+                              <button
+                                key={s.id}
+                                className="unm-result-row"
+                                onMouseDown={e => { e.preventDefault(); selectStudent(payment.id, s) }}
+                                style={{
+                                  display: 'block', width: '100%', padding: '11px 16px',
+                                  textAlign: 'left' as const, background: '#fff', border: 'none',
+                                  cursor: 'pointer', borderBottom: i < results.length - 1 ? '1px solid #f1f5f9' : 'none',
+                                }}
+                              >
+                                <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>{s.name}</div>
+                                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                                  {s.admNo} · {s.class}{s.stream ? ' ' + s.stream : ''}
+                                  {s.parentName && ` · ${s.parentName}`}
+                                  <span style={{ color: balance > 0 ? '#e24b4a' : '#0a7c3e', fontWeight: 600 }}>
+                                    {' · '}Balance: KES {balance.toLocaleString()}
+                                  </span>
+                                </div>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Selected student + confirm */}
+                    {sel && (
+                      <div style={{ marginTop: '12px', background: '#f0f7ff', border: '2px solid #0a1f4e', borderRadius: '8px', padding: '14px 16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <p style={{ fontSize: '11px', fontWeight: 700, color: '#0a1f4e', textTransform: 'uppercase' as const, letterSpacing: '0.5px', margin: '0 0 4px' }}>
+                              Matched to
+                            </p>
+                            <p style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: '0 0 2px' }}>{sel.name}</p>
+                            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
+                              {sel.admNo} · {sel.class}{sel.stream ? ' ' + sel.stream : ''}
+                              {' · '}
+                              <span style={{ color: (sel.feeRequired - ((sel.payments || []).reduce((s: number, p: any) => s + p.amount, 0))) > 0 ? '#e24b4a' : '#0a7c3e', fontWeight: 600 }}>
+                                Balance: KES {(sel.feeRequired - ((sel.payments || []).reduce((s: number, p: any) => s + p.amount, 0))).toLocaleString()}
+                              </span>
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => clearSelection(payment.id)}
+                            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '16px', padding: '2px', lineHeight: 1 }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <button
+                          className="unm-confirm-btn"
+                          onClick={() => confirmMatch(payment.id)}
+                          disabled={isMatching}
+                          style={{
+                            marginTop: '12px', width: '100%',
+                            background: isMatching ? '#94a3b8' : '#c8a84b',
+                            color: isMatching ? '#fff' : '#0a1f4e',
+                            border: 'none', padding: '12px',
+                            borderRadius: '8px', fontSize: '14px', fontWeight: 800,
+                            cursor: isMatching ? 'not-allowed' : 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                          }}
+                        >
+                          {isMatching ? (
+                            <>
+                              <span style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'unm-spin 0.7s linear infinite' }} />
+                              Saving…
+                            </>
+                          ) : (
+                            `✓ Confirm — assign KES ${payment.amount.toLocaleString()} to ${sel.name}`
+                          )}
+                        </button>
                       </div>
                     )}
                   </div>
-
-                  {/* Selected student confirmation */}
-                  {sel && (
-                    <div style={{ marginTop: '12px', background: '#f0f7ff', border: '2px solid #0a1f4e', borderRadius: '8px', padding: '14px 16px' }}>
-                      <p style={{ fontSize: '11px', fontWeight: 700, color: '#0a1f4e', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 6px' }}>Matched to</p>
-                      <p style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: '0 0 2px' }}>{sel.name}</p>
-                      <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
-                        Adm: {sel.admNo} · {sel.class}{sel.stream ? ' ' + sel.stream : ''}
-                        {' · '}
-                        Balance: KES {(sel.feeRequired - (sel.payments?.reduce((s: number, p: any) => s + p.amount, 0) || 0)).toLocaleString()}
-                      </p>
-                      <button
-                        onClick={() => assignPayment(payment.id)}
-                        disabled={assigning === payment.id}
-                        style={{
-                          marginTop: '12px', width: '100%', background: assigning === payment.id ? '#94a3b8' : '#c8a84b',
-                          color: assigning === payment.id ? '#fff' : '#0a1f4e', border: 'none', padding: '12px',
-                          borderRadius: '8px', fontSize: '14px', fontWeight: 800, cursor: assigning === payment.id ? 'not-allowed' : 'pointer',
-                          letterSpacing: '0.3px'
-                        }}
-                      >
-                        {assigning === payment.id ? 'Saving…' : `✓ Confirm — assign KES ${payment.amount.toLocaleString()} to ${sel.name}`}
-                      </button>
-                    </div>
-                  )}
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
+
+      <style>{`@keyframes unm-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
