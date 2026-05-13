@@ -28,7 +28,7 @@ export default async function Dashboard() {
       redirect('/trial-expired')
     }
     if (msUntilEnd <= 2 * 24 * 60 * 60 * 1000 && !school.trialExpiryNotified) {
-      const settings = await prisma.platformSettings.findUnique({ where: { id: 1 } })
+      const settings = await prisma.platformSettings.findUnique({ where: { id: 1 } }).catch(() => null)
       if (settings?.notifyTrialExpiry !== false) {
         const trialEnd = school.trialEndsAt.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
         sendEmail({
