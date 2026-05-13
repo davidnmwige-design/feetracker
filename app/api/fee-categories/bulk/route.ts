@@ -30,12 +30,15 @@ export async function PATCH(req: Request) {
 
   try {
     const body = await req.json()
-    console.log('[bulk-fees] request body:', JSON.stringify(body))
 
-    // Accept both className (spec) and classFilter (legacy) for backwards compat
+    // mode: 'update' = update amount where category exists (skip students without it)
+    // mode: 'add'    = create category for students who don't have it yet
+    const mode: 'update' | 'add' = body.mode === 'add' ? 'add' : 'update'
+
+    // Accept both className (spec) and classFilter (legacy)
     const className = body.className ?? body.classFilter ?? 'All'
     const categoryName = body.categoryName
-    const newAmount = body.newAmount
+    const newAmount = body.newAmount ?? body.amount
 
     if (!categoryName || typeof categoryName !== 'string' || categoryName.trim() === '') {
       return NextResponse.json({ error: 'categoryName is required' }, { status: 400 })
@@ -48,58 +51,55 @@ export async function PATCH(req: Request) {
     const name = sanitize(categoryName.trim(), 100)
     const schoolId = user.school.id
 
-    // Build student query — scope to school, optionally filter by class
     const studentWhere: Record<string, unknown> = { schoolId }
     if (className && className !== 'All' && className.trim() !== '') {
       studentWhere.class = sanitize(className.trim(), 50)
     }
-
-    console.log('[bulk-fees] finding students with where:', JSON.stringify(studentWhere))
 
     const students = await prisma.student.findMany({
       where: studentWhere,
       include: { feeCategories: true },
     })
 
-    console.log(`[bulk-fees] found ${students.length} students, category="${name}", amount=${amount}`)
-
     let updated = 0
     for (const student of students) {
-      // Case-insensitive match on existing categories
       const existing = student.feeCategories.find(
         c => c.name.toLowerCase() === name.toLowerCase()
       )
 
-      if (existing) {
-        // Update existing category
+      if (mode === 'update') {
+        if (!existing) continue
         await prisma.feeCategory.update({
           where: { id: existing.id },
           data: { amount },
         })
-        console.log(`[bulk-fees] updated category id=${existing.id} for student "${student.name}"`)
       } else {
-        // Create new category for this student
+        // mode === 'add': only add to students who don't have it yet
+        if (existing) continue
         await prisma.feeCategory.create({
           data: { studentId: student.id, name, amount },
         })
-        console.log(`[bulk-fees] created new category "${name}" for student "${student.name}"`)
       }
 
-      // Recalculate feeRequired = sum of ALL fee categories for this student
+      // Recalculate feeRequired = sum of all categories for this student
       const allCats = await prisma.feeCategory.findMany({ where: { studentId: student.id } })
       const newTotal = allCats.reduce((sum, c) => sum + c.amount, 0)
       await prisma.student.update({
         where: { id: student.id },
         data: { feeRequired: newTotal },
       })
-
       updated++
     }
 
-    const message = `Updated ${updated} student${updated !== 1 ? 's' : ''} — set "${name}" to KES ${amount.toLocaleString()}`
-    console.log('[bulk-fees] done:', message)
+    let message: string
+    if (mode === 'add') {
+      const classDesc = className && className !== 'All' ? ` in ${className}` : ''
+      message = `Added "${name}" (KES ${amount.toLocaleString()}) to ${updated} student${updated !== 1 ? 's' : ''}${classDesc}`
+    } else {
+      message = `Updated ${updated} student${updated !== 1 ? 's' : ''} — set "${name}" to KES ${amount.toLocaleString()}`
+    }
 
-    return NextResponse.json({ updated, message, categoryName: name, newAmount: amount, className })
+    return NextResponse.json({ updated, message, categoryName: name, newAmount: amount, className, mode })
   } catch (err) {
     console.error('[bulk-fees] error:', err)
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })

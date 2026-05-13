@@ -89,15 +89,41 @@ export async function PATCH(
     const body = await req.json()
     const data: Record<string, string | null> = {}
 
-    if ('parentEmail' in body) {
-      const raw = sanitize(body.parentEmail || '', 200).toLowerCase() || null
-      data.parentEmail = raw ? encrypt(raw) : null
+    if ('name' in body) {
+      const nameVal = sanitize(body.name || '', 200).trim()
+      if (!nameVal) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+      data.name = nameVal
+    }
+    if ('admNo' in body) {
+      const admNoVal = sanitize(body.admNo || '', 100).trim()
+      if (!admNoVal) return NextResponse.json({ error: 'Admission number is required' }, { status: 400 })
+      data.admNo = admNoVal
+    }
+    if ('class' in body) {
+      data['class'] = sanitize(body['class'] || '', 100).trim() || null
+    }
+    if ('stream' in body) {
+      data.stream = sanitize(body.stream || '', 100).trim() || null
     }
     if ('parentName' in body) {
-      data.parentName = sanitize(body.parentName || '', 200) || null
+      data.parentName = sanitize(body.parentName || '', 200).trim() || null
     }
     if ('parentPhone' in body) {
-      data.parentPhone = sanitize(body.parentPhone || '', 50) || null
+      data.parentPhone = sanitize(body.parentPhone || '', 50).trim() || null
+    }
+    if ('parentEmail' in body) {
+      const raw = sanitize(body.parentEmail || '', 200).toLowerCase().trim() || null
+      data.parentEmail = raw ? encrypt(raw) : null
+    }
+    if ('parent2Name' in body) {
+      data.parent2Name = sanitize(body.parent2Name || '', 200).trim() || null
+    }
+    if ('parent2Phone' in body) {
+      data.parent2Phone = sanitize(body.parent2Phone || '', 50).trim() || null
+    }
+    if ('parent2Email' in body) {
+      const raw2 = sanitize(body.parent2Email || '', 200).toLowerCase().trim() || null
+      data.parent2Email = raw2 ? encrypt(raw2) : null
     }
 
     const updated = await prisma.student.update({
@@ -107,6 +133,7 @@ export async function PATCH(
     return NextResponse.json({
       ...updated,
       parentEmail: updated.parentEmail ? decrypt(updated.parentEmail) : updated.parentEmail,
+      parent2Email: updated.parent2Email ? decrypt(updated.parent2Email) : updated.parent2Email,
     })
   } catch (err) {
     console.error('students/[id] PATCH error:', err)

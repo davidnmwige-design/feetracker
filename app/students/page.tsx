@@ -236,8 +236,10 @@ export default function Students() {
 
   // Bulk fee update modal
   const [bulkModal, setBulkModal] = useState(false)
+  const [bulkMode, setBulkMode] = useState<'update' | 'add'>('update')
   const [bulkClass, setBulkClass] = useState('All')
   const [bulkCategory, setBulkCategory] = useState('')
+  const [bulkNewCategory, setBulkNewCategory] = useState('')
   const [bulkAmount, setBulkAmount] = useState(0)
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkResult, setBulkResult] = useState<string | null>(null)
@@ -444,7 +446,9 @@ export default function Students() {
       return l
     })
     const names = [...new Set([...fromCats, ...fromLegacy])] as string[]
+    setBulkMode('update')
     setBulkCategory(names[0] || '')
+    setBulkNewCategory('')
     setBulkClass('All')
     setBulkAmount(0)
     setBulkResult(null)
@@ -454,8 +458,14 @@ export default function Students() {
 
   async function runBulkUpdate() {
     if (bulkSaving) return
-    if (!bulkCategory.trim()) {
-      setBulkResult('Please select a fee category')
+    const categoryName = bulkMode === 'update' ? bulkCategory.trim() : bulkNewCategory.trim()
+    if (!categoryName) {
+      setBulkResult(bulkMode === 'update' ? 'Please select a fee category' : 'Please enter a category name')
+      setBulkSuccess(false)
+      return
+    }
+    if (bulkAmount <= 0) {
+      setBulkResult('Please enter an amount greater than 0')
       setBulkSuccess(false)
       return
     }
@@ -464,33 +474,31 @@ export default function Students() {
     setBulkSuccess(false)
     try {
       const payload = {
+        mode: bulkMode,
         className: bulkClass,
-        categoryName: bulkCategory.trim(),
+        categoryName,
         newAmount: bulkAmount,
       }
-      console.log('[bulk-update] sending:', JSON.stringify(payload))
       const res = await fetch('/api/fee-categories/bulk', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       const data = await res.json()
-      console.log('[bulk-update] response:', JSON.stringify(data))
       if (res.ok) {
-        setBulkResult(data.message || `Updated ${data.updated} students successfully`)
+        setBulkResult(data.message || `Done — ${data.updated} student${data.updated !== 1 ? 's' : ''} updated`)
         setBulkSuccess(true)
         await fetchStudents()
         setTimeout(() => {
           setBulkModal(false)
           setBulkResult(null)
           setBulkSuccess(false)
-        }, 2200)
+        }, 2400)
       } else {
-        setBulkResult(data.error || 'Update failed — check the server logs')
+        setBulkResult(data.error || 'Update failed — please try again')
         setBulkSuccess(false)
       }
-    } catch (err) {
-      console.error('[bulk-update] fetch error:', err)
+    } catch {
       setBulkResult('Network error — please try again')
       setBulkSuccess(false)
     }
@@ -860,16 +868,35 @@ export default function Students() {
       {bulkModal && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px'}}
           onClick={e => { if (e.target === e.currentTarget && !bulkSaving) { setBulkModal(false); setBulkResult(null); setBulkSuccess(false) } }}>
-          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', width: '460px', maxWidth: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
-            <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Bulk fee update</h3>
-            <p style={{fontSize: '12px', color: '#64748b', marginBottom: '20px'}}>
-              Set a fee category amount for all students in a class at once. Creates the category if it doesn't exist yet.
-            </p>
+          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', width: '480px', maxWidth: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px'}}>
+              <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0}}>Bulk fee update</h3>
+              {!bulkSaving && (
+                <button onClick={() => { setBulkModal(false); setBulkResult(null); setBulkSuccess(false) }}
+                  style={{background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '2px'}}>✕</button>
+              )}
+            </div>
+
+            {/* Mode tabs */}
+            <div style={{display: 'flex', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '3px', marginBottom: '20px', background: '#f8f9fc'}}>
+              {(['update', 'add'] as const).map(m => (
+                <button key={m} onClick={() => { if (!bulkSaving) { setBulkMode(m); setBulkResult(null); setBulkSuccess(false) } }}
+                  style={{flex: 1, padding: '8px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: bulkSaving ? 'not-allowed' : 'pointer', transition: 'all 0.15s',
+                    background: bulkMode === m ? '#fff' : 'transparent',
+                    color: bulkMode === m ? '#0a1f4e' : '#64748b',
+                    boxShadow: bulkMode === m ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  }}>
+                  {m === 'update' ? 'Update existing' : 'Add new category'}
+                </button>
+              ))}
+            </div>
 
             <div style={{display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px'}}>
               {/* Class selector */}
               <div>
-                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Class to update</label>
+                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>
+                  {bulkMode === 'update' ? 'Class to update' : 'Class to add to'}
+                </label>
                 <select value={bulkClass} onChange={e => setBulkClass(e.target.value)}
                   style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '9px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}>
                   <option value="All">All classes ({students.length} students)</option>
@@ -880,27 +907,35 @@ export default function Students() {
                 </select>
               </div>
 
-              {/* Category name — allow typing a new name or picking from existing */}
-              <div>
-                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Fee category name</label>
-                <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 6px'}}>
-                  {allCategoryNames.length > 0 ? 'Select existing or type a new category name' : 'Type the fee category name (e.g. "Tuition Fee")'}
-                </p>
-                {allCategoryNames.length > 0 ? (
-                  <select value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}
-                    style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '9px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}>
-                    {allCategoryNames.map(n => <option key={n} value={n}>{n}</option>)}
-                  </select>
-                ) : (
-                  <input type="text" value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}
-                    placeholder="e.g. Tuition Fee"
+              {/* Mode 1: pick from existing categories */}
+              {bulkMode === 'update' && (
+                <div>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Fee category</label>
+                  {allCategoryNames.length > 0 ? (
+                    <select value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}
+                      style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '9px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}>
+                      {allCategoryNames.map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  ) : (
+                    <p style={{fontSize: '12px', color: '#94a3b8', margin: 0}}>No fee categories found. Use "Add new category" to create one.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Mode 2: type a new category name */}
+              {bulkMode === 'add' && (
+                <div>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>New category name</label>
+                  <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 6px'}}>e.g. Swimming, Music, Transport, Boarding</p>
+                  <input type="text" value={bulkNewCategory} onChange={e => setBulkNewCategory(e.target.value)}
+                    placeholder="Category name"
                     style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '9px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}} />
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Amount */}
               <div>
-                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>New amount (KES)</label>
+                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Amount (KES)</label>
                 <input type="number" value={bulkAmount === 0 ? '' : bulkAmount} min="0"
                   onChange={e => setBulkAmount(e.target.value === '' ? 0 : Number(e.target.value))}
                   placeholder="e.g. 45000"
@@ -909,19 +944,28 @@ export default function Students() {
             </div>
 
             {/* Preview */}
-            {bulkCategory && bulkAmount > 0 && !bulkResult && !bulkSaving && (
-              <div style={{background: '#f0f7ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#1e40af'}}>
-                Will set <strong>{bulkCategory}</strong> to <strong>KES {bulkAmount.toLocaleString()}</strong> for{' '}
-                <strong>{bulkClass === 'All' ? `all ${students.length}` : students.filter(s => s.class === bulkClass).length} student{(bulkClass === 'All' ? students.length : students.filter(s => s.class === bulkClass).length) !== 1 ? 's' : ''}</strong>
-                {bulkClass !== 'All' ? ` in ${bulkClass}` : ''}.
-              </div>
-            )}
+            {!bulkResult && !bulkSaving && bulkAmount > 0 && (bulkMode === 'update' ? bulkCategory.trim() : bulkNewCategory.trim()) && (() => {
+              const catName = bulkMode === 'update' ? bulkCategory : bulkNewCategory
+              const classCount = bulkClass === 'All' ? students.length : students.filter(s => s.class === bulkClass).length
+              const classDesc = bulkClass === 'All' ? `all ${classCount}` : `${classCount}`
+              const classLabel = bulkClass === 'All' ? '' : ` in ${bulkClass}`
+              return (
+                <div style={{background: '#f0f7ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#1e40af'}}>
+                  {bulkMode === 'update'
+                    ? <>Will set <strong>{catName}</strong> to <strong>KES {bulkAmount.toLocaleString()}</strong> for up to <strong>{classDesc} student{classCount !== 1 ? 's' : ''}</strong>{classLabel} who already have this category.</>
+                    : <>Will add <strong>{catName}</strong> (KES {bulkAmount.toLocaleString()}) to <strong>{classDesc} student{classCount !== 1 ? 's' : ''}</strong>{classLabel} who don&apos;t have it yet.</>
+                  }
+                </div>
+              )
+            })()}
 
             {/* Loading */}
             {bulkSaving && (
               <div style={{background: '#f0f7ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px'}}>
                 <div style={{width: '18px', height: '18px', border: '2px solid #bfdbfe', borderTopColor: '#1d4ed8', borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0}} />
-                <span style={{fontSize: '13px', color: '#1e40af', fontWeight: 600}}>Updating students…</span>
+                <span style={{fontSize: '13px', color: '#1e40af', fontWeight: 600}}>
+                  {bulkMode === 'update' ? 'Updating students…' : 'Adding category to students…'}
+                </span>
               </div>
             )}
 
@@ -940,12 +984,15 @@ export default function Students() {
                 style={{padding: '9px 20px', borderRadius: '6px', fontSize: '13px', background: 'none', border: '1px solid #e2e8f0', cursor: bulkSaving ? 'not-allowed' : 'pointer', color: '#64748b', opacity: bulkSaving ? 0.5 : 1}}>
                 {bulkSuccess ? 'Close' : 'Cancel'}
               </button>
-              {/* Show "Update all" unless currently saving or succeeded */}
               {!bulkSuccess && (
                 <button onClick={runBulkUpdate}
-                  disabled={bulkSaving || !bulkCategory.trim() || bulkAmount <= 0}
-                  style={{padding: '9px 24px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, background: (bulkSaving || !bulkCategory.trim() || bulkAmount <= 0) ? '#94a3b8' : '#c8a84b', color: (bulkSaving || !bulkCategory.trim() || bulkAmount <= 0) ? '#fff' : '#0a1f4e', border: 'none', cursor: (bulkSaving || !bulkCategory.trim() || bulkAmount <= 0) ? 'not-allowed' : 'pointer'}}>
-                  {bulkSaving ? 'Updating…' : bulkResult ? 'Try again' : 'Update all'}
+                  disabled={bulkSaving || (bulkMode === 'update' ? !bulkCategory.trim() : !bulkNewCategory.trim()) || bulkAmount <= 0}
+                  style={{padding: '9px 24px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
+                    background: (bulkSaving || (bulkMode === 'update' ? !bulkCategory.trim() : !bulkNewCategory.trim()) || bulkAmount <= 0) ? '#94a3b8' : '#c8a84b',
+                    color: (bulkSaving || (bulkMode === 'update' ? !bulkCategory.trim() : !bulkNewCategory.trim()) || bulkAmount <= 0) ? '#fff' : '#0a1f4e',
+                    border: 'none', cursor: (bulkSaving || (bulkMode === 'update' ? !bulkCategory.trim() : !bulkNewCategory.trim()) || bulkAmount <= 0) ? 'not-allowed' : 'pointer',
+                  }}>
+                  {bulkSaving ? (bulkMode === 'update' ? 'Updating…' : 'Adding…') : bulkResult ? 'Try again' : (bulkMode === 'update' ? 'Update all' : 'Add to all students')}
                 </button>
               )}
             </div>

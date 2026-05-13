@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 
+const CLASSES = ['PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Form 1', 'Form 2', 'Form 3', 'Form 4']
+
 function clearanceCertEmailHtml({
   schoolName, parentName, studentName, studentClass, term, feeRequired, totalPaid,
 }: { schoolName: string; parentName: string; studentName: string; studentClass: string; term: string; feeRequired: number; totalPaid: number }) {
@@ -70,52 +72,31 @@ async function buildCertificateDoc(data: any) {
   const term = data.school?.currentTerm || data.school?.term || ''
   const schoolName = data.school?.name || ''
 
-  // Double border (drawn first so everything sits on top)
   doc.setDrawColor(10, 31, 78); doc.setLineWidth(1.5); doc.rect(8, 8, W - 16, 281)
   doc.setLineWidth(0.4); doc.rect(11, 11, W - 22, 275)
-
-  // Navy header block
   doc.setFillColor(10, 31, 78); doc.rect(0, 0, W, 44, 'F')
-  // Gold rule
   doc.setFillColor(200, 168, 75); doc.rect(0, 44, W, 2.5, 'F')
-
-  // Watermark — drawn before body content so text renders on top
   doc.setFont('helvetica', 'bold'); doc.setFontSize(88); doc.setTextColor(215, 222, 237)
   doc.text('CLEARED', W / 2, 178, { align: 'center', angle: 45 })
-
-  // School name — large, gold
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(200, 168, 75)
   doc.text(schoolName.toUpperCase(), W / 2, 17, { align: 'center' })
-  // "OFFICIAL DOCUMENT" in small gold, letter-spaced
   doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(200, 168, 75)
   doc.setCharSpace(2.5); doc.text('OFFICIAL DOCUMENT', W / 2, 27, { align: 'center' }); doc.setCharSpace(0)
-  // Term
   doc.setFontSize(10); doc.setTextColor(170, 195, 225)
   doc.text(term, W / 2, 37, { align: 'center' })
-
-  // Certificate title
   doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(10, 31, 78)
   doc.text('FEE CLEARANCE CERTIFICATE', W / 2, 64, { align: 'center' })
   doc.setFillColor(200, 168, 75); doc.rect(38, 68, 134, 1, 'F')
-
-  // "This is to certify that:"
   doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(100, 116, 139)
   doc.text('This is to certify that:', W / 2, 82, { align: 'center' })
-
-  // Student name
   doc.setFont('helvetica', 'bold'); doc.setFontSize(23); doc.setTextColor(10, 31, 78)
   doc.text(data.student.name.toUpperCase(), W / 2, 95, { align: 'center' })
-  // Adm No | Class
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 116, 139)
   const classStr = `${data.student.class}${data.student.stream ? ' ' + data.student.stream : ''}`
   doc.text(`Admission No: ${data.student.admNo}   |   Class: ${classStr}`, W / 2, 104, { align: 'center' })
-
-  // "has fully settled..."
   doc.setFontSize(11); doc.text('has fully settled all fee obligations for', W / 2, 117, { align: 'center' })
   doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(10, 31, 78)
   doc.text(term, W / 2, 126, { align: 'center' })
-
-  // Fee detail box
   doc.setFillColor(248, 249, 252); doc.setDrawColor(220, 228, 240); doc.setLineWidth(0.3)
   doc.rect(36, 134, 138, 46, 'FD')
   const feeRows: [string, string, number, number, number][] = [
@@ -128,13 +109,9 @@ async function buildCertificateDoc(data: any) {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 116, 139); doc.text(label, 44, y)
     doc.setFont('helvetica', 'bold'); doc.setTextColor(r, g, b); doc.text(value, W - 44, y, { align: 'right' })
   })
-
-  // CLEARED stamp
   doc.setDrawColor(10, 124, 78); doc.setLineWidth(1); doc.rect(74, 188, 62, 21)
   doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(10, 124, 78)
   doc.text('CLEARED', W / 2, 202, { align: 'center' })
-
-  // Signature lines
   doc.setDrawColor(180, 192, 215); doc.setLineWidth(0.4)
   doc.line(24, 228, 90, 228); doc.line(120, 228, 186, 228)
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(10, 31, 78)
@@ -143,20 +120,13 @@ async function buildCertificateDoc(data: any) {
   doc.text('Authorised Signatory', 57, 240, { align: 'center' })
   doc.text('Authorised Signatory', 153, 240, { align: 'center' })
   doc.text(schoolName, 57, 246, { align: 'center' }); doc.text(schoolName, 153, 246, { align: 'center' })
-
-  // Date issued
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 116, 139)
   doc.text('Date issued: ' + today, W / 2, 258, { align: 'center' })
-
-  // Validity notice
   doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(150, 162, 178)
   doc.text('This certificate is valid for ' + term + ' only.', W / 2, 265, { align: 'center' })
-
-  // Navy footer
   doc.setFillColor(10, 31, 78); doc.rect(0, 272, W, 25, 'F')
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(200, 168, 75)
   doc.text('Generated by FeeTracker · support@feetracker.co.ke', W / 2, 282, { align: 'center' })
-
   return doc
 }
 
@@ -203,6 +173,15 @@ function EmailModal({ title, subtitle, emailValue, onEmailChange, onSend, onClos
   )
 }
 
+const inputStyle: React.CSSProperties = {
+  width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px',
+  padding: '8px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
+}
+const labelStyle: React.CSSProperties = {
+  fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase',
+  letterSpacing: '0.5px', display: 'block', marginBottom: '5px',
+}
+
 export default function StudentDetail() {
   const { id } = useParams()
   const router = useRouter()
@@ -232,6 +211,16 @@ export default function StudentDetail() {
   const [reminderResult, setReminderResult] = useState<'sent' | 'error' | null>(null)
   const reminderInputRef = useRef<HTMLInputElement>(null)
 
+  // Edit student details
+  const [editMode, setEditMode] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: '', admNo: '', studentClass: '', stream: '',
+    parentName: '', parentPhone: '', parentEmail: '',
+    parent2Name: '', parent2Phone: '', parent2Email: '',
+  })
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState('')
+
   useEffect(() => {
     fetch('/api/students/' + id)
       .then(r => { if (!r.ok) { setNotFound(true); setLoading(false); return null } return r.json() })
@@ -240,6 +229,62 @@ export default function StudentDetail() {
     fetch('/api/fee-categories?studentId=' + id)
       .then(r => r.json()).then(d => setFeeCategories(Array.isArray(d) ? d : []))
   }, [id])
+
+  function openEditMode() {
+    setEditForm({
+      name: student.name || '',
+      admNo: student.admNo || '',
+      studentClass: student.class || 'Form 1',
+      stream: student.stream || '',
+      parentName: student.parentName || '',
+      parentPhone: student.parentPhone || '',
+      parentEmail: student.parentEmail || '',
+      parent2Name: student.parent2Name || '',
+      parent2Phone: student.parent2Phone || '',
+      parent2Email: student.parent2Email || '',
+    })
+    setEditError('')
+    setEditMode(true)
+    setEditingFees(false)
+  }
+
+  async function saveEdit() {
+    if (editSaving) return
+    if (!editForm.name.trim() || !editForm.admNo.trim()) {
+      setEditError('Name and admission number are required')
+      return
+    }
+    setEditSaving(true)
+    setEditError('')
+    try {
+      const res = await fetch('/api/students/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editForm.name.trim(),
+          admNo: editForm.admNo.trim(),
+          class: editForm.studentClass,
+          stream: editForm.stream.trim() || null,
+          parentName: editForm.parentName.trim() || null,
+          parentPhone: editForm.parentPhone.trim() || null,
+          parentEmail: editForm.parentEmail.trim() || null,
+          parent2Name: editForm.parent2Name.trim() || null,
+          parent2Phone: editForm.parent2Phone.trim() || null,
+          parent2Email: editForm.parent2Email.trim() || null,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setStudent((prev: any) => ({ ...prev, ...data }))
+        setEditMode(false)
+      } else {
+        setEditError(data.error || 'Failed to save changes')
+      }
+    } catch {
+      setEditError('Network error — please try again')
+    }
+    setEditSaving(false)
+  }
 
   function startEditFees() {
     const cats = feeCategories.length > 0
@@ -368,7 +413,6 @@ export default function StudentDetail() {
   const balance = student.feeRequired - paid
   const cleared = balance <= 0
 
-  // Penalty calculation
   const school = student.school
   const penaltyEnabled = school?.penaltyEnabled && balance > 0
   const today = new Date()
@@ -389,9 +433,9 @@ export default function StudentDetail() {
   const whatsappPhone = rawPhone.replace(/^0/, '254').replace(/\D/g, '')
   const whatsappMsg = `Dear ${student.parentName || 'Parent'}, this is a reminder that ${student.name} has an outstanding fee balance of KES ${balance.toLocaleString()} for ${student.school?.currentTerm || 'the current term'}. Please make payment at your earliest convenience. Thank you — ${student.school?.name || 'School'}.`
 
-  const sectionStyle = { background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '16px' }
-  const sectionTitle = { fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }
-  const sectionSubtitle = { fontSize: '12px', color: '#94a3b8', marginBottom: '14px', margin: '0 0 14px' }
+  const sectionStyle: React.CSSProperties = { background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '16px' }
+  const sectionTitle: React.CSSProperties = { fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }
+  const sectionSubtitle: React.CSSProperties = { fontSize: '12px', color: '#94a3b8', marginBottom: '14px', margin: '0 0 14px' }
 
   return (
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
@@ -401,9 +445,11 @@ export default function StudentDetail() {
           .det-content { padding: 16px !important; }
           .det-metric-row { flex-direction: column !important; }
           .det-action-row { flex-wrap: wrap !important; }
+          .det-edit-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
+      {/* Header */}
       <div className="det-header" style={{background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
         <div>
           <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '4px'}}>{student.name}</h1>
@@ -411,75 +457,174 @@ export default function StudentDetail() {
             {student.admNo} &middot; {student.class}{student.stream ? ' ' + student.stream : ''}
           </p>
         </div>
-        <Link href="/students" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none', whiteSpace: 'nowrap'}}>
-          ← Students
-        </Link>
+        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+          {!editMode && (
+            <button
+              onClick={openEditMode}
+              style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'}}
+            >
+              Edit student
+            </button>
+          )}
+          <Link href="/students" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none', whiteSpace: 'nowrap'}}>
+            ← Students
+          </Link>
+        </div>
       </div>
 
       <div className="det-content" style={{padding: '24px 32px', maxWidth: '800px'}}>
 
-        {/* Student Profile */}
-        <div style={sectionStyle}>
-          <h2 style={sectionTitle}>Student profile</h2>
-          <p style={sectionSubtitle}>Enrolment details</p>
-          <InfoRow label="Admission No" value={student.admNo} />
-          <InfoRow label="Class" value={`${student.class}${student.stream ? ' ' + student.stream : ''}`} />
-          <InfoRow label="School" value={student.school?.name} />
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0'}}>
-            <span style={{fontSize: '13px', color: '#64748b'}}>Current term</span>
-            <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.school?.currentTerm || '—'}</span>
-          </div>
-        </div>
+        {/* ── EDIT FORM ── */}
+        {editMode && (
+          <div style={{background: '#fff', borderRadius: '8px', border: '2px solid #c8a84b', padding: '24px', marginBottom: '16px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+              <h2 style={{fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0}}>Edit student details</h2>
+              <button onClick={() => setEditMode(false)} style={{background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '2px'}}>✕</button>
+            </div>
 
-        {/* Parent / Guardian */}
-        <div style={sectionStyle}>
-          <h2 style={sectionTitle}>Parent / Guardian</h2>
-          <p style={sectionSubtitle}>Contact information</p>
-          <InfoRow label="Parent 1 name" value={student.parentName} />
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9'}}>
-            <span style={{fontSize: '13px', color: '#64748b'}}>Parent 1 phone</span>
-            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-              <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.parentPhone || '—'}</span>
-              {student.parentPhone && (
-                <a href={`https://wa.me/${whatsappPhone}`} target="_blank" rel="noopener noreferrer"
-                  style={{background: '#25D366', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', textDecoration: 'none'}}>
-                  WhatsApp
-                </a>
-              )}
+            {editError && (
+              <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '13px', padding: '10px 14px', borderRadius: '6px', marginBottom: '16px'}}>
+                {editError}
+              </div>
+            )}
+
+            {/* Student info */}
+            <p style={{fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Student info</p>
+            <div className="det-edit-grid" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px'}}>
+              <div>
+                <label style={labelStyle}>Name *</label>
+                <input style={inputStyle} value={editForm.name} onChange={e => setEditForm(p => ({...p, name: e.target.value}))} placeholder="e.g. John Kamau" />
+              </div>
+              <div>
+                <label style={labelStyle}>Admission No. *</label>
+                <input style={inputStyle} value={editForm.admNo} onChange={e => setEditForm(p => ({...p, admNo: e.target.value}))} placeholder="e.g. ADM001" />
+              </div>
+              <div>
+                <label style={labelStyle}>Class *</label>
+                <select style={{...inputStyle, background: '#fff'}} value={editForm.studentClass} onChange={e => setEditForm(p => ({...p, studentClass: e.target.value}))}>
+                  {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Stream</label>
+                <input style={inputStyle} value={editForm.stream} onChange={e => setEditForm(p => ({...p, stream: e.target.value}))} placeholder="e.g. North" />
+              </div>
+            </div>
+
+            {/* Parent 1 */}
+            <p style={{fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Parent 1</p>
+            <div className="det-edit-grid" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px'}}>
+              <div>
+                <label style={labelStyle}>Name</label>
+                <input style={inputStyle} value={editForm.parentName} onChange={e => setEditForm(p => ({...p, parentName: e.target.value}))} placeholder="e.g. Jane Kamau" />
+              </div>
+              <div>
+                <label style={labelStyle}>Phone</label>
+                <input style={inputStyle} value={editForm.parentPhone} onChange={e => setEditForm(p => ({...p, parentPhone: e.target.value}))} placeholder="e.g. 0712345678" />
+              </div>
+              <div style={{gridColumn: '1 / -1'}}>
+                <label style={labelStyle}>Email</label>
+                <input type="email" style={inputStyle} value={editForm.parentEmail} onChange={e => setEditForm(p => ({...p, parentEmail: e.target.value}))} placeholder="parent@email.com" />
+              </div>
+            </div>
+
+            {/* Parent 2 */}
+            <p style={{fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Parent 2 (optional)</p>
+            <div className="det-edit-grid" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px'}}>
+              <div>
+                <label style={labelStyle}>Name</label>
+                <input style={inputStyle} value={editForm.parent2Name} onChange={e => setEditForm(p => ({...p, parent2Name: e.target.value}))} placeholder="" />
+              </div>
+              <div>
+                <label style={labelStyle}>Phone</label>
+                <input style={inputStyle} value={editForm.parent2Phone} onChange={e => setEditForm(p => ({...p, parent2Phone: e.target.value}))} placeholder="" />
+              </div>
+              <div style={{gridColumn: '1 / -1'}}>
+                <label style={labelStyle}>Email</label>
+                <input type="email" style={inputStyle} value={editForm.parent2Email} onChange={e => setEditForm(p => ({...p, parent2Email: e.target.value}))} placeholder="" />
+              </div>
+            </div>
+
+            <div style={{display: 'flex', gap: '10px', justifyContent: 'flex-end'}}>
+              <button onClick={() => setEditMode(false)} disabled={editSaving}
+                style={{padding: '9px 20px', borderRadius: '6px', fontSize: '13px', background: 'none', border: '1px solid #e2e8f0', cursor: 'pointer', color: '#64748b', opacity: editSaving ? 0.5 : 1}}>
+                Cancel
+              </button>
+              <button onClick={saveEdit} disabled={editSaving}
+                style={{padding: '9px 28px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, background: editSaving ? '#94a3b8' : '#c8a84b', color: '#0a1f4e', border: 'none', cursor: editSaving ? 'not-allowed' : 'pointer'}}>
+                {editSaving ? 'Saving…' : 'Save changes'}
+              </button>
             </div>
           </div>
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: student.parent2Name ? '1px solid #f1f5f9' : 'none'}}>
-            <span style={{fontSize: '13px', color: '#64748b'}}>Parent 1 email</span>
-            {student.parentEmail ? (
-              <a href={`mailto:${student.parentEmail}`} style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', textDecoration: 'none'}}>{student.parentEmail}</a>
-            ) : <span style={{fontSize: '13px', color: '#94a3b8'}}>—</span>}
-          </div>
-          {student.parent2Name && (
-            <>
-              <InfoRow label="Parent 2 name" value={student.parent2Name} />
+        )}
+
+        {/* ── VIEW MODE: Student Profile + Parent sections ── */}
+        {!editMode && (
+          <>
+            {/* Student Profile */}
+            <div style={sectionStyle}>
+              <h2 style={sectionTitle}>Student profile</h2>
+              <p style={sectionSubtitle}>Enrolment details</p>
+              <InfoRow label="Admission No" value={student.admNo} />
+              <InfoRow label="Class" value={`${student.class}${student.stream ? ' ' + student.stream : ''}`} />
+              <InfoRow label="School" value={student.school?.name} />
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0'}}>
+                <span style={{fontSize: '13px', color: '#64748b'}}>Current term</span>
+                <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.school?.currentTerm || '—'}</span>
+              </div>
+            </div>
+
+            {/* Parent / Guardian */}
+            <div style={sectionStyle}>
+              <h2 style={sectionTitle}>Parent / Guardian</h2>
+              <p style={sectionSubtitle}>Contact information</p>
+              <InfoRow label="Parent 1 name" value={student.parentName} />
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9'}}>
-                <span style={{fontSize: '13px', color: '#64748b'}}>Parent 2 phone</span>
+                <span style={{fontSize: '13px', color: '#64748b'}}>Parent 1 phone</span>
                 <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                  <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.parent2Phone || '—'}</span>
-                  {student.parent2Phone && (
-                    <a href={`https://wa.me/254${student.parent2Phone.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" rel="noopener noreferrer"
+                  <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.parentPhone || '—'}</span>
+                  {student.parentPhone && (
+                    <a href={`https://wa.me/${whatsappPhone}`} target="_blank" rel="noopener noreferrer"
                       style={{background: '#25D366', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', textDecoration: 'none'}}>
                       WhatsApp
                     </a>
                   )}
                 </div>
               </div>
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0'}}>
-                <span style={{fontSize: '13px', color: '#64748b'}}>Parent 2 email</span>
-                {student.parent2Email ? (
-                  <a href={`mailto:${student.parent2Email}`} style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', textDecoration: 'none'}}>{student.parent2Email}</a>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: student.parent2Name ? '1px solid #f1f5f9' : 'none'}}>
+                <span style={{fontSize: '13px', color: '#64748b'}}>Parent 1 email</span>
+                {student.parentEmail ? (
+                  <a href={`mailto:${student.parentEmail}`} style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', textDecoration: 'none'}}>{student.parentEmail}</a>
                 ) : <span style={{fontSize: '13px', color: '#94a3b8'}}>—</span>}
               </div>
-            </>
-          )}
-        </div>
+              {student.parent2Name && (
+                <>
+                  <InfoRow label="Parent 2 name" value={student.parent2Name} />
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9'}}>
+                    <span style={{fontSize: '13px', color: '#64748b'}}>Parent 2 phone</span>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                      <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.parent2Phone || '—'}</span>
+                      {student.parent2Phone && (
+                        <a href={`https://wa.me/254${student.parent2Phone.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" rel="noopener noreferrer"
+                          style={{background: '#25D366', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', textDecoration: 'none'}}>
+                          WhatsApp
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0'}}>
+                    <span style={{fontSize: '13px', color: '#64748b'}}>Parent 2 email</span>
+                    {student.parent2Email ? (
+                      <a href={`mailto:${student.parent2Email}`} style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', textDecoration: 'none'}}>{student.parent2Email}</a>
+                    ) : <span style={{fontSize: '13px', color: '#94a3b8'}}>—</span>}
+                  </div>
+                </>
+              )}
+            </div>
+          </>
+        )}
 
-        {/* Financial Records */}
+        {/* Financial Records — always visible */}
         <div style={sectionStyle}>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
             <h2 style={sectionTitle}>Financial records</h2>
@@ -490,7 +635,6 @@ export default function StudentDetail() {
           </div>
           <p style={sectionSubtitle}>Fee summary for {student.school?.currentTerm}</p>
 
-          {/* Fee categories — always visible when not editing */}
           {!editingFees && feeCategories.length > 0 && (
             <div style={{background: '#fdf8ee', border: '1px solid #e2d9b8', borderRadius: '8px', padding: '14px 16px', marginBottom: '14px'}}>
               <p style={{fontSize: '11px', fontWeight: 700, color: '#92681a', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px'}}>Fee breakdown</p>
@@ -509,35 +653,31 @@ export default function StudentDetail() {
             </div>
           )}
 
-          {/* Edit fees form */}
           {editingFees && (
             <div style={{background: '#fdf8ee', border: '2px solid #c8a84b', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
               <p style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '12px'}}>Fee categories</p>
               <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px'}}>
                 {feeEdits.map((cat, i) => (
                   <div key={i} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                    <input
-                      value={cat.name}
-                      onChange={e => setFeeEdits(prev => prev.map((c, j) => j === i ? { ...c, name: e.target.value } : c))}
+                    <input value={cat.name} onChange={e => setFeeEdits(prev => prev.map((c, j) => j === i ? { ...c, name: e.target.value } : c))}
                       placeholder="Category name"
-                      style={{flex: 2, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none'}}
-                    />
-                    <input
-                      type="number"
-                      value={cat.amount}
+                      style={{flex: 2, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none'}} />
+                    <input type="number" value={cat.amount}
                       onChange={e => setFeeEdits(prev => prev.map((c, j) => j === i ? { ...c, amount: Number(e.target.value) } : c))}
                       placeholder="Amount"
-                      style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none'}}
-                    />
-                    <button onClick={() => setFeeEdits(prev => prev.filter((_, j) => j !== i))} style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '16px', padding: '0 4px'}}>✕</button>
+                      style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none'}} />
+                    <button onClick={() => setFeeEdits(prev => prev.filter((_, j) => j !== i))}
+                      style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '16px', padding: '0 4px'}}>✕</button>
                   </div>
                 ))}
               </div>
               <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap' as const}}>
-                <button onClick={() => setFeeEdits(prev => [...prev, { name: '', amount: 0 }])} style={{fontSize: '12px', background: 'none', border: '1px dashed #c8a84b', color: '#92681a', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer'}}>
+                <button onClick={() => setFeeEdits(prev => [...prev, { name: '', amount: 0 }])}
+                  style={{fontSize: '12px', background: 'none', border: '1px dashed #c8a84b', color: '#92681a', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer'}}>
                   + Add category
                 </button>
-                <button onClick={saveFees} disabled={savingFees} style={{fontSize: '13px', background: savingFees ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '7px 18px', borderRadius: '6px', cursor: savingFees ? 'not-allowed' : 'pointer', fontWeight: 700}}>
+                <button onClick={saveFees} disabled={savingFees}
+                  style={{fontSize: '13px', background: savingFees ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '7px 18px', borderRadius: '6px', cursor: savingFees ? 'not-allowed' : 'pointer', fontWeight: 700}}>
                   {savingFees ? 'Saving…' : 'Save fees'}
                 </button>
               </div>
@@ -547,7 +687,6 @@ export default function StudentDetail() {
             </div>
           )}
 
-          {/* Penalty badge */}
           {penaltyAmt > 0 && (
             <div style={{background: '#fcebeb', border: '1px solid #fecaca', borderRadius: '6px', padding: '10px 14px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <div>
@@ -573,21 +712,14 @@ export default function StudentDetail() {
 
           <div style={{display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px'}}>
             <div style={{flex: 1, background: '#f1f5f9', borderRadius: '4px', height: '8px', overflow: 'hidden'}}>
-              <div style={{
-                background: cleared ? '#0a7c3e' : partial ? '#c8a84b' : '#e2e8f0',
-                width: progressPct + '%', height: '100%', borderRadius: '4px', transition: 'width 0.3s ease'
-              }} />
+              <div style={{background: cleared ? '#0a7c3e' : partial ? '#c8a84b' : '#e2e8f0', width: progressPct + '%', height: '100%', borderRadius: '4px', transition: 'width 0.3s ease'}} />
             </div>
             <span style={{fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap'}}>{Math.round(progressPct)}%</span>
-            <span style={{
-              background: statusBg, color: statusColor,
-              fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', whiteSpace: 'nowrap'
-            }}>
+            <span style={{background: statusBg, color: statusColor, fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', whiteSpace: 'nowrap'}}>
               {statusLabel}
             </span>
           </div>
 
-          {/* Payments table */}
           <h3 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '10px', marginTop: '20px'}}>Payment history</h3>
           {student.payments.length === 0 ? (
             <p style={{fontSize: '13px', color: '#94a3b8', padding: '12px 0'}}>No payments recorded yet.</p>
@@ -624,16 +756,12 @@ export default function StudentDetail() {
           <div className="det-action-row" style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
             {cleared && (
               <>
-                <button
-                  onClick={downloadCert}
-                  style={{background: '#0a1f4e', color: '#fff', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer'}}
-                >
+                <button onClick={downloadCert}
+                  style={{background: '#0a1f4e', color: '#fff', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer'}}>
                   Download certificate
                 </button>
-                <button
-                  onClick={() => { setCertEmail(student.parentEmail || ''); setCertResult(null); setCertModal(true) }}
-                  style={{background: '#fff', color: '#0a1f4e', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: '1px solid #0a1f4e', cursor: 'pointer'}}
-                >
+                <button onClick={() => { setCertEmail(student.parentEmail || ''); setCertResult(null); setCertModal(true) }}
+                  style={{background: '#fff', color: '#0a1f4e', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: '1px solid #0a1f4e', cursor: 'pointer'}}>
                   Send certificate via email
                 </button>
               </>
@@ -641,25 +769,16 @@ export default function StudentDetail() {
             {balance > 0 && (
               <>
                 {whatsappPhone && (
-                  <a
-                    href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMsg)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{background: '#25D366', color: '#fff', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none', display: 'inline-block'}}
-                  >
+                  <a href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMsg)}`} target="_blank" rel="noopener noreferrer"
+                    style={{background: '#25D366', color: '#fff', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none', display: 'inline-block'}}>
                     Send WhatsApp reminder
                   </a>
                 )}
-                <button
-                  onClick={() => { setReminderEmail(student.parentEmail || ''); setReminderResult(null); setReminderModal(true) }}
-                  style={{background: '#fff', color: '#64748b', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: '1px solid #e2e8f0', cursor: 'pointer'}}
-                >
+                <button onClick={() => { setReminderEmail(student.parentEmail || ''); setReminderResult(null); setReminderModal(true) }}
+                  style={{background: '#fff', color: '#64748b', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: '1px solid #e2e8f0', cursor: 'pointer'}}>
                   Send reminder via email
                 </button>
               </>
-            )}
-            {!cleared && balance <= 0 && !student.payments.length && (
-              <p style={{fontSize: '13px', color: '#94a3b8'}}>No actions available yet.</p>
             )}
           </div>
         </div>
@@ -668,14 +787,11 @@ export default function StudentDetail() {
         <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #fecaca', padding: '20px', marginBottom: '16px'}}>
           <h2 style={{fontSize: '14px', fontWeight: 700, color: '#dc2626', marginBottom: '4px'}}>Danger zone</h2>
           <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '14px'}}>Permanently remove this student and all their records from the system.</p>
-          <button
-            onClick={() => { setDeleteModal(true); setDeleteConfirm(''); setDeleteError('') }}
-            style={{background: 'none', border: '1px solid #fca5a5', color: '#dc2626', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer'}}
-          >
+          <button onClick={() => { setDeleteModal(true); setDeleteConfirm(''); setDeleteError('') }}
+            style={{background: 'none', border: '1px solid #fca5a5', color: '#dc2626', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer'}}>
             Remove student
           </button>
         </div>
-
       </div>
 
       {/* Delete confirmation modal */}
@@ -689,13 +805,8 @@ export default function StudentDetail() {
             <p style={{fontSize: '13px', color: '#0f172a', marginBottom: '8px', fontWeight: 600}}>
               Type the admission number <strong>{student.admNo}</strong> to confirm
             </p>
-            <input
-              type="text"
-              value={deleteConfirm}
-              onChange={e => setDeleteConfirm(e.target.value)}
-              placeholder={student.admNo}
-              style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box' as const}}
-            />
+            <input type="text" value={deleteConfirm} onChange={e => setDeleteConfirm(e.target.value)} placeholder={student.admNo}
+              style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box' as const}} />
             {deleteError && <p style={{fontSize: '12px', color: '#dc2626', marginBottom: '12px'}}>{deleteError}</p>}
             <div style={{display: 'flex', gap: '10px'}}>
               <button onClick={() => setDeleteModal(false)} disabled={deleting}
