@@ -189,7 +189,7 @@ export default function Unmatched() {
               const isDropdownOpen = openDropdown === payment.id && !sel && results.length > 0
 
               return (
-                <div key={payment.id} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                <div key={payment.id} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', position: 'relative', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
 
                   {/* Payment info */}
                   <div style={{ background: '#0a1f4e', padding: '16px 20px' }}>
@@ -252,10 +252,11 @@ export default function Unmatched() {
                       {/* Dropdown results */}
                       {isDropdownOpen && (
                         <div style={{
-                          position: 'absolute' as const, top: 'calc(100% + 4px)', left: 0, right: 0,
-                          background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50,
-                          overflow: 'hidden', maxHeight: '300px', overflowY: 'auto' as const,
+                          position: 'absolute' as const, top: '100%', left: 0, right: 0,
+                          background: '#ffffff', border: '1px solid #e2e8f0',
+                          borderRadius: '0 0 6px 6px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 9999,
+                          maxHeight: '220px', overflowY: 'auto' as const, width: '100%',
                         }}>
                           {results.map((s, i) => {
                             const paid = (s.payments || []).reduce((sum: number, p: any) => sum + p.amount, 0)
@@ -266,9 +267,9 @@ export default function Unmatched() {
                                 className="unm-result-row"
                                 onMouseDown={e => { e.preventDefault(); selectStudent(payment.id, s) }}
                                 style={{
-                                  display: 'block', width: '100%', padding: '11px 16px',
+                                  display: 'block', width: '100%', padding: '10px 12px',
                                   textAlign: 'left' as const, background: '#fff', border: 'none',
-                                  cursor: 'pointer', borderBottom: i < results.length - 1 ? '1px solid #f1f5f9' : 'none',
+                                  cursor: 'pointer', borderBottom: '1px solid #f1f5f9',
                                 }}
                               >
                                 <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>{s.name}</div>
