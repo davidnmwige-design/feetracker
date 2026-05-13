@@ -28,8 +28,13 @@ export async function GET(req: Request) {
     const role = await getUserRole(user.id, user.school)
     if (!hasPermission(role, 'report', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
+    const { searchParams } = new URL(req.url)
+    const classFilter = searchParams.get('class')
+    const where: Record<string, unknown> = { schoolId: user.school.id }
+    if (classFilter) where['class'] = classFilter
+
     const students = await prisma.student.findMany({
-      where: { schoolId: user.school.id },
+      where,
       include: { payments: true },
       orderBy: { name: 'asc' }
     })
