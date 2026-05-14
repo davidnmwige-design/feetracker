@@ -7,59 +7,7 @@ import { decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
 import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 import * as XLSX from 'xlsx'
-
-function parseRow(row: any, bankType: string): {
-  amount: number
-  senderPhone: string
-  senderName: string
-  mpesaRef: string
-} {
-  switch (bankType) {
-    case 'equity':
-      return {
-        amount: Number(row['Credit'] || row['CR Amount'] || row['Cr Amount'] || row['credit'] || 0),
-        senderPhone: '',
-        senderName: String(row['Description'] || row['Narration'] || row['description'] || ''),
-        mpesaRef: String(row['Reference'] || row['Ref No'] || row['reference'] || row['Transaction ID'] || ''),
-      }
-    case 'kcb':
-      return {
-        amount: Number(row['Credit'] || row['CR'] || row['credit'] || 0),
-        senderPhone: '',
-        senderName: String(row['Description'] || row['Narration'] || row['description'] || ''),
-        mpesaRef: String(row['Reference No'] || row['Ref'] || row['Transaction Ref'] || row['reference'] || ''),
-      }
-    case 'coop':
-      return {
-        amount: Number(row['Credit'] || row['CR'] || row['credit'] || row['Amount'] || 0),
-        senderPhone: '',
-        senderName: String(row['Particulars'] || row['Description'] || row['particulars'] || ''),
-        mpesaRef: String(row['Reference'] || row['Cheque No'] || row['reference'] || ''),
-      }
-    case 'ncba':
-      return {
-        amount: Number(row['Credit'] || row['CR Amount'] || row['credit'] || 0),
-        senderPhone: '',
-        senderName: String(row['Narration'] || row['Description'] || row['narration'] || ''),
-        mpesaRef: String(row['Transaction Reference'] || row['Ref No'] || row['reference'] || ''),
-      }
-    case 'mpesa':
-      return {
-        amount: Number(row['Amount'] || row['amount'] || row['Paid In'] || row['Credit'] || 0),
-        senderPhone: String(row['Phone'] || row['phone'] || row['MSISDN'] || ''),
-        senderName: String(row['Name'] || row['name'] || row['Sender'] || ''),
-        mpesaRef: String(row['Receipt No'] || row['mpesaRef'] || row['Transaction ID'] || row['Reference'] || ''),
-      }
-    default:
-      // Generic fallback for all other Kenyan banks
-      return {
-        amount: Number(row['Credit'] || row['CR Amount'] || row['Cr Amount'] || row['Amount'] || row['credit'] || row['amount'] || 0),
-        senderPhone: '',
-        senderName: String(row['Description'] || row['Narration'] || row['Particulars'] || row['Sender'] || row['description'] || ''),
-        mpesaRef: String(row['Reference'] || row['Ref No'] || row['Transaction ID'] || row['Transaction Reference'] || row['Cheque No'] || row['reference'] || ''),
-      }
-  }
-}
+import { parseJsonRows, parseTextStatement, matchTransactions } from '@/lib/statementParser'
 
 export async function POST(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -72,125 +20,161 @@ export async function POST(req: Request) {
   }
 
   try {
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    include: { school: true }
-  })
-
-  if (!user?.school) {
-    return NextResponse.json({ error: 'No school found' }, { status: 400 })
-  }
-
-  const role = await getUserRole(user.id, user.school)
-  if (!hasPermission(role, 'upload', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
-
-  const schoolId = user.school.id
-  const formData = await req.formData()
-  const file = formData.get('file') as File
-  const bankType = String(formData.get('bankType') || 'mpesa')
-
-  if (!file || !/\.(xlsx|xls|csv)$/i.test(file.name)) {
-    return NextResponse.json({ error: 'Only .xlsx, .xls, and .csv files are accepted' }, { status: 400 })
-  }
-  if (file.size > 10 * 1024 * 1024) {
-    return NextResponse.json({ error: 'File size must be under 10MB' }, { status: 400 })
-  }
-
-  const buffer = await file.arrayBuffer()
-  const workbook = XLSX.read(buffer, { type: 'array' })
-  const sheet = workbook.Sheets[workbook.SheetNames[0]]
-  const rows = XLSX.utils.sheet_to_json(sheet) as any[]
-
-  const students = await prisma.student.findMany({ where: { schoolId } })
-
-  const results = {
-    matched: 0,
-    unmatched: 0,
-    total: 0,
-    notifications: [] as { msg: string; phone: string }[]
-  }
-
-  for (const row of rows) {
-    const { amount, senderPhone, senderName, mpesaRef } = parseRow(row, bankType)
-
-    if (amount <= 0) continue
-    results.total++
-
-    if (mpesaRef) {
-      const existing = await prisma.payment.findFirst({ where: { mpesaRef } })
-      if (existing) continue
-    }
-
-    const cleanPhone = senderPhone.replace(/\s/g, '').replace(/^254/, '0')
-    const matched = students.find(s =>
-      s.parentPhone &&
-      s.parentPhone.replace(/\s/g, '').replace(/^254/, '0') === cleanPhone
-    )
-
-    await prisma.payment.create({
-      data: {
-        mpesaRef: mpesaRef || null,
-        amount,
-        senderName,
-        senderPhone,
-        matched: !!matched,
-        studentId: matched ? matched.id : null,
-        schoolId,
-      }
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { school: true },
     })
 
-    if (matched) {
-      results.matched++
-      const totalPaid = await prisma.payment.aggregate({
-        where: { studentId: matched.id },
-        _sum: { amount: true }
-      })
-      const paid = totalPaid._sum.amount || 0
-      const balance = matched.feeRequired - paid
-      let msg = `Dear ${matched.parentName || 'Parent'}, we have received KES ${amount.toLocaleString()} for ${matched.name}, ${matched.class}. Outstanding balance: KES ${balance.toLocaleString()}. Thank you. - ${user.school!.name}`
-      if (balance > 0 && user.school!.paybill) {
-        const acctFmt = user.school!.accountNumberFormat ? ` Account ${user.school!.accountNumberFormat}` : ''
-        msg += `\nIf you have an outstanding balance of KES ${balance.toLocaleString()}, please pay to Paybill ${user.school!.paybill}${acctFmt}`
-      }
-      const phone = matched.parentPhone
-        ? '254' + matched.parentPhone.replace(/\s/g, '').replace(/^0/, '')
-        : ''
-      results.notifications.push({ msg, phone })
+    if (!user?.school) {
+      return NextResponse.json({ error: 'No school found' }, { status: 400 })
+    }
 
-      if (matched.parentEmail) {
-        const plainEmail = decrypt(matched.parentEmail)
-        const hasFeeBreakdown = matched.tuitionFee > 0 || matched.sportsFee > 0 || matched.clubsFee > 0 || matched.otherFee > 0
-        sendEmail({
-          to: plainEmail,
-          subject: `Payment received for ${matched.name} — ${user.school!.name}`,
-          fromName: `${user.school!.name} via Elimu Pay`,
-          replyTo: (user.school as any).replyToEmail || undefined,
-          html: paymentConfirmationHtml({
-            schoolName: user.school!.name,
-            parentName: matched.parentName || 'Parent',
-            studentName: matched.name,
-            studentClass: `${matched.class} ${matched.stream || ''}`.trim(),
-            amount,
-            balance,
-            breakdown: hasFeeBreakdown ? {
-              tuitionFee: matched.tuitionFee,
-              sportsFee: matched.sportsFee,
-              clubsFee: matched.clubsFee,
-              otherFee: matched.otherFee,
-              totalFee: matched.feeRequired,
-            } : undefined,
-            paybill: user.school!.paybill,
-            accountNumberFormat: user.school!.accountNumberFormat,
-          }),
-        }).catch(err => console.error('Payment email failed:', err))
+    const role = await getUserRole(user.id, user.school)
+    if (!hasPermission(role, 'upload', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
+
+    const schoolId = user.school.id
+    const formData = await req.formData()
+    const file = formData.get('file') as File
+
+    if (!file || !/\.(xlsx|xls|csv|pdf)$/i.test(file.name)) {
+      return NextResponse.json({ error: 'Only .xlsx, .xls, .csv, and .pdf files are accepted' }, { status: 400 })
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size must be under 20MB' }, { status: 400 })
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const students = await prisma.student.findMany({
+      where: { schoolId },
+      select: { id: true, name: true, admNo: true, parentName: true, parent2Name: true, parentPhone: true },
+    })
+
+    // ── Parse the file ────────────────────────────────────────────────────
+    let parseResult
+
+    if (/\.pdf$/i.test(file.name)) {
+      // Dynamic import to avoid edge-runtime issues
+      const pdfModule = await import('pdf-parse')
+      const pdfParse = (pdfModule as any).default ?? pdfModule
+      const pdfData = await pdfParse(buffer)
+      parseResult = parseTextStatement(pdfData.text)
+      if (!parseResult.formatDetected.includes('Bank')) {
+        parseResult.formatDetected = 'Bank Statement (PDF)'
       }
     } else {
-      results.unmatched++
+      const workbook = XLSX.read(buffer, { type: 'buffer' })
+      const sheet = workbook.Sheets[workbook.SheetNames[0]]
+      const rows = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[]
+      parseResult = parseJsonRows(rows)
     }
-  }
 
-  await logAudit({ userId: user.id, schoolId, action: 'MPESA_UPLOAD', details: `${results.matched} matched, ${results.unmatched} unmatched of ${results.total} rows`, ipAddress: getIp(req) })
-  return NextResponse.json(results)
+    // ── Match transactions to students ────────────────────────────────────
+    const matched = matchTransactions(parseResult.transactions, students)
+
+    // ── Persist payments ──────────────────────────────────────────────────
+    const confidenceCounts = { high: 0, medium: 0, low: 0 }
+    let unmatchedCount = 0
+    const notifications: { msg: string; phone: string }[] = []
+
+    for (const tx of matched) {
+      // Dedup by reference
+      if (tx.reference) {
+        const existing = await prisma.payment.findFirst({ where: { mpesaRef: tx.reference, schoolId } })
+        if (existing) continue
+      }
+
+      const isAutoMatched = tx.confidence === 'high' || tx.confidence === 'medium'
+      const studentId = isAutoMatched ? tx.matchedStudentId : undefined
+
+      await prisma.payment.create({
+        data: {
+          mpesaRef: tx.reference || null,
+          amount: tx.amount,
+          senderName: tx.senderName || tx.rawDescription || '',
+          senderPhone: '',
+          matched: isAutoMatched && !!studentId,
+          studentId: studentId ?? null,
+          schoolId,
+          source: 'upload',
+        },
+      })
+
+      if (tx.confidence === 'high') confidenceCounts.high++
+      else if (tx.confidence === 'medium') confidenceCounts.medium++
+      else if (tx.confidence === 'low') confidenceCounts.low++
+      else unmatchedCount++
+
+      // Send email/WhatsApp notification for auto-matched payments
+      if (isAutoMatched && studentId) {
+        const student = students.find(s => s.id === studentId)
+        if (student) {
+          const totalPaid = await prisma.payment.aggregate({
+            where: { studentId },
+            _sum: { amount: true },
+          })
+          const paid = (totalPaid._sum.amount || 0) + tx.amount
+          const fullStudent = await prisma.student.findUnique({ where: { id: studentId } })
+          const balance = (fullStudent?.feeRequired || 0) - paid
+
+          const msg = `Dear ${student.parentName || 'Parent'}, we have received KES ${tx.amount.toLocaleString()} for ${fullStudent?.name || ''}, ${fullStudent?.class || ''}. Outstanding balance: KES ${Math.max(0, balance).toLocaleString()}. Thank you. - ${user.school!.name}`
+          const phone = student.parentPhone
+            ? '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '')
+            : ''
+          notifications.push({ msg, phone })
+
+          if (fullStudent) {
+            const parentEmail = fullStudent.parentEmail ? decrypt(fullStudent.parentEmail) : null
+            if (parentEmail) {
+              const hasFeeBreakdown = fullStudent.tuitionFee > 0 || fullStudent.sportsFee > 0 || fullStudent.clubsFee > 0 || fullStudent.otherFee > 0
+              sendEmail({
+                to: parentEmail,
+                subject: `Payment received for ${fullStudent.name} — ${user.school!.name}`,
+                fromName: `${user.school!.name} via Elimu Pay`,
+                replyTo: (user.school as any).replyToEmail || undefined,
+                html: paymentConfirmationHtml({
+                  schoolName: user.school!.name,
+                  parentName: student.parentName || 'Parent',
+                  studentName: fullStudent.name,
+                  studentClass: `${fullStudent.class} ${fullStudent.stream || ''}`.trim(),
+                  amount: tx.amount,
+                  balance: Math.max(0, balance),
+                  breakdown: hasFeeBreakdown ? {
+                    tuitionFee: fullStudent.tuitionFee,
+                    sportsFee: fullStudent.sportsFee,
+                    clubsFee: fullStudent.clubsFee,
+                    otherFee: fullStudent.otherFee,
+                    totalFee: fullStudent.feeRequired,
+                  } : undefined,
+                  paybill: user.school!.paybill,
+                  accountNumberFormat: user.school!.accountNumberFormat,
+                }),
+              }).catch(err => console.error('Payment email failed:', err))
+            }
+          }
+        }
+      }
+    }
+
+    // Also count low confidence as unmatched for review purposes
+    const needsReview = confidenceCounts.low + unmatchedCount
+
+    await logAudit({
+      userId: user.id, schoolId, action: 'MPESA_UPLOAD',
+      details: `${parseResult.formatDetected} | ${confidenceCounts.high} high, ${confidenceCounts.medium} medium confidence matched, ${needsReview} need review`,
+      ipAddress: getIp(req),
+    })
+
+    return NextResponse.json({
+      formatDetected: parseResult.formatDetected,
+      totalRows: parseResult.totalRows,
+      skippedRows: parseResult.skippedRows,
+      processedRows: parseResult.processedRows,
+      matched: confidenceCounts.high + confidenceCounts.medium,
+      unmatched: needsReview,
+      confidence: confidenceCounts,
+      total: parseResult.processedRows,
+      notifications,
+    })
   } catch (err) {
     console.error('upload error:', err)
     return NextResponse.json({ error: 'Something went wrong processing your file.' }, { status: 500 })

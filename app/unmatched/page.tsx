@@ -44,6 +44,18 @@ export default function Unmatched() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [openDropdown])
 
+  // Suggest closest student based on sender name words
+  function getSuggestion(payment: any): any | null {
+    const name = (payment.senderName || '').toLowerCase().trim()
+    if (!name || name.length < 4) return null
+    const words = name.split(/\s+/).filter((w: string) => w.length > 2)
+    if (words.length < 1) return null
+    return students.find(s => {
+      const target = `${(s.name || '')} ${(s.parentName || '')} ${(s.parent2Name || '')}`.toLowerCase()
+      return words.filter((w: string) => target.includes(w)).length >= Math.min(2, words.length)
+    }) || null
+  }
+
   // Client-side search: match against name, admNo, parentName, parentPhone
   function getResults(paymentId: number): any[] {
     const q = (searchTerms[paymentId] || '').toLowerCase().trim()
@@ -195,30 +207,53 @@ export default function Unmatched() {
                 <div key={payment.id} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', position: 'relative', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
 
                   {/* Payment info */}
-                  <div style={{ background: '#0a1f4e', padding: '16px 20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' as const }}>
-                      <div>
-                        {payment.mpesaRef && (
-                          <p style={{ fontSize: '17px', fontWeight: 800, color: '#c8a84b', margin: '0 0 6px', fontFamily: 'monospace', letterSpacing: '1px', wordBreak: 'break-all' as const }}>
-                            {payment.mpesaRef}
+                  {(() => {
+                    const suggestion = getSuggestion(payment)
+                    return (
+                      <div style={{ background: '#0a1f4e', padding: '16px 20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' as const }}>
+                          <div style={{ flex: 1 }}>
+                            {payment.senderName && (
+                              <p style={{ fontSize: '18px', fontWeight: 800, color: '#fff', margin: '0 0 4px', lineHeight: 1.2 }}>
+                                {payment.senderName}
+                              </p>
+                            )}
+                            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
+                              {payment.mpesaRef ? (
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#c8a84b', fontFamily: 'monospace', background: 'rgba(200,168,75,0.15)', padding: '2px 8px', borderRadius: '4px' }}>
+                                  {payment.mpesaRef}
+                                </span>
+                              ) : (
+                                <span style={{ background: 'rgba(255,255,255,0.1)', color: '#94a3c8', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
+                                  No reference
+                                </span>
+                              )}
+                              {payment.senderPhone && (
+                                <span style={{ fontSize: '11px', color: '#94a3c8' }}>{payment.senderPhone}</span>
+                              )}
+                              <span style={{ fontSize: '11px', color: '#94a3c8' }}>
+                                {new Date(payment.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                            </div>
+                            {suggestion && (
+                              <div style={{ marginTop: '6px', background: 'rgba(200,168,75,0.18)', borderRadius: '5px', padding: '5px 10px', fontSize: '11px', color: '#fef3c7', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <span>💡</span>
+                                <span>Could this be <strong>{suggestion.name}</strong> ({suggestion.class})?</span>
+                                <button
+                                  onMouseDown={e => { e.preventDefault(); selectStudent(payment.id, suggestion) }}
+                                  style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '3px', cursor: 'pointer' }}>
+                                  Select
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <p style={{ fontSize: '28px', fontWeight: 900, color: '#fff', margin: 0, whiteSpace: 'nowrap' as const }}>
+                            KES {payment.amount.toLocaleString()}
                           </p>
-                        )}
-                        {!payment.mpesaRef && (
-                          <span style={{ background: '#fcebeb', color: '#a32d2d', fontSize: '10px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', marginBottom: '6px', display: 'inline-block' }}>
-                            No reference
-                          </span>
-                        )}
-                        <p style={{ fontSize: '12px', color: '#94a3c8', margin: 0, lineHeight: 1.6 }}>
-                          <strong style={{ color: '#e2e8f0' }}>{payment.senderName || 'Unknown sender'}</strong>
-                          {payment.senderPhone && <span> · {payment.senderPhone}</span>}
-                          <span> · {new Date(payment.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                        </p>
+                        </div>
                       </div>
-                      <p style={{ fontSize: '28px', fontWeight: 900, color: '#fff', margin: 0, whiteSpace: 'nowrap' as const }}>
-                        KES {payment.amount.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
+                    )
+                  })()}
 
                   {/* Match section */}
                   <div style={{ padding: '16px 20px' }}>
