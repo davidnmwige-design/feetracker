@@ -446,8 +446,10 @@ export default function Settings() {
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(22)
+    doc.setTextColor(255, 255, 255)
+    doc.text('Elimu', 20, 18)
     doc.setTextColor(200, 168, 75)
-    doc.text('FeeTracker', 20, 18)
+    doc.text('Pay', 20 + doc.getTextWidth('Elimu') + 2, 18)
 
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9)
@@ -565,10 +567,10 @@ export default function Settings() {
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(8)
     doc.setTextColor(148, 163, 184)
-    doc.text('FeeTracker · Nairobi, Kenya · support@feetracker.co.ke', w / 2, 284, { align: 'center' })
-    doc.text('Thank you for choosing FeeTracker to manage your school fees.', w / 2, 290, { align: 'center' })
+    doc.text('Elimu Pay · Nairobi, Kenya · support@feetracker.co.ke', w / 2, 284, { align: 'center' })
+    doc.text('Thank you for choosing Elimu Pay to manage your school fees.', w / 2, 290, { align: 'center' })
 
-    doc.save('FeeTracker_Invoice_' + invoiceNum + '.pdf')
+    doc.save('EllimuPay_Invoice_' + invoiceNum + '.pdf')
     return { invoiceNum, plan, total, isFirstInvoice, today, dueDate }
   }
 
@@ -583,7 +585,7 @@ export default function Settings() {
     const total = plan.monthly + (isFirstInvoice ? plan.setup : 0)
 
     const planCapDesc = plan.maxStudents !== null ? `up to ${plan.maxStudents} students` : 'unlimited students'
-    const msg = `*FeeTracker Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${plan.name} (${planCapDesc})\n\n*Breakdown:*\n• ${plan.name} monthly subscription: KES ${plan.monthly.toLocaleString()}${isFirstInvoice ? `\n• One-time setup fee: KES ${plan.setup.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@feetracker.co.ke`
+    const msg = `*Elimu Pay Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${plan.name} (${planCapDesc})\n\n*Breakdown:*\n• ${plan.name} monthly subscription: KES ${plan.monthly.toLocaleString()}${isFirstInvoice ? `\n• One-time setup fee: KES ${plan.setup.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@feetracker.co.ke`
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank')
   }
 
@@ -843,7 +845,7 @@ export default function Settings() {
               <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Email Settings</h2>
               <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>Control how emails appear to parents</p>
               <div style={{background: '#f0f4f9', border: '1px solid #d4ddf0', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#475569'}}>
-                <strong>From:</strong> {school?.name || 'Your school'} via FeeTracker
+                <strong>From:</strong> {school?.name || 'Your school'} via Elimu Pay
                 {replyToEmail && <><br /><strong>Reply-To:</strong> {replyToEmail}</>}
               </div>
               <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
@@ -976,7 +978,7 @@ export default function Settings() {
             <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
               <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Subscription invoice</h2>
               <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
-                Generate your FeeTracker subscription invoice for {new Date().toLocaleString('en-KE', { month: 'long', year: 'numeric' })}.
+                Generate your Elimu Pay subscription invoice for {new Date().toLocaleString('en-KE', { month: 'long', year: 'numeric' })}.
                 Plan: <strong>{planDetails.name}</strong> — KES {planDetails.monthly.toLocaleString()}/month.
               </p>
               <div className="set-invoice-row" style={{display: 'flex', gap: '10px'}}>
@@ -1100,7 +1102,7 @@ export default function Settings() {
                 </div>
               ) : !process.env.NEXT_PUBLIC_DARAJA_ENABLED && typeof window !== 'undefined' ? (
                 <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '14px', fontSize: '13px', color: '#64748b'}}>
-                  Contact FeeTracker support to enable real-time MPESA notifications. When enabled, payments will be recorded automatically the moment a parent pays.
+                  Contact Elimu Pay support to enable real-time MPESA notifications. When enabled, payments will be recorded automatically the moment a parent pays.
                 </div>
               ) : (
                 <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>

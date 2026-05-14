@@ -67,7 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         transition: 'transform 0.2s',
       }}>
         <div style={{ padding: '22px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          <p style={{ color: '#c8a84b', fontSize: '16px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0 }}>FeeTracker</p>
+          <p style={{ fontSize: '16px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0 }}><span style={{ color: '#fff' }}>Elimu</span><span style={{ color: '#c8a84b' }}> Pay</span></p>
           <p style={{ color: '#3a5280', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1.5px', margin: '4px 0 0' }}>Admin Panel</p>
         </div>
 
@@ -110,7 +110,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '18px', padding: 0 }}>
               ☰
             </button>
-            <span style={{ fontSize: '14px', fontWeight: 700, color: '#050f2c' }}>FeeTracker Admin</span>
+            <span style={{ fontSize: '14px', fontWeight: 700, color: '#050f2c' }}>Elimu Pay Admin</span>
           </div>
           {adminName && (
             <span style={{ fontSize: '12px', color: '#64748b' }}>

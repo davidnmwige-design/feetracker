@@ -104,7 +104,7 @@ export async function POST(req: Request) {
             sendEmail({
               to: email,
               subject: `Payment received — ${matchedStudent.name} — ${school.name}`,
-              fromName: `${school.name} via FeeTracker`,
+              fromName: `${school.name} via Elimu Pay`,
               replyTo: (school as any).replyToEmail || undefined,
               html: paymentConfirmationHtml({
                 schoolName: school.name,

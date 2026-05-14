@@ -59,11 +59,11 @@ export async function POST(req: Request) {
         subject: `New school signup: ${schoolName}`,
         html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
           <div style="background:#050f2c;padding:20px 24px">
-            <h1 style="color:#c8a84b;font-size:16px;margin:0;font-weight:700;letter-spacing:1px">FEETRACKER</h1>
+            <h1 style="font-size:16px;margin:0;font-weight:700;letter-spacing:1px"><span style="color:#fff">ELIMU</span><span style="color:#c8a84b"> PAY</span></h1>
             <p style="color:#94a3b8;font-size:11px;margin:4px 0 0;letter-spacing:1px;text-transform:uppercase">New school signup</p>
           </div>
           <div style="padding:24px;background:#fff;border:1px solid #e2e8f0">
-            <p style="color:#0f172a;font-size:15px;font-weight:700;margin:0 0 16px">A new school has joined FeeTracker.</p>
+            <p style="color:#0f172a;font-size:15px;font-weight:700;margin:0 0 16px">A new school has joined Elimu Pay.</p>
             <table style="width:100%;border-collapse:collapse;font-size:13px">
               <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">School</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${schoolName}</td></tr>
               <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">Admin name</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${name}</td></tr>
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
             </table>
           </div>
           <div style="padding:14px 24px;background:#f8f9fc;text-align:center">
-            <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker Platform &middot; Admin notification</p>
+            <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay Platform &middot; Admin notification</p>
           </div>
         </div>`
       }).catch(err => console.error('signup notification email error:', err))

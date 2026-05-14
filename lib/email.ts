@@ -28,7 +28,7 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
     return
   }
   const transporter = createTransporter()
-  const fromName = opts.fromName || 'FeeTracker'
+  const fromName = opts.fromName || 'Elimu Pay'
   const mailOptions: nodemailer.SendMailOptions = {
     from: `"${fromName}" <${process.env.EMAIL_USER}>`,
     to: opts.to,
@@ -92,7 +92,7 @@ export function paymentConfirmationHtml({
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
       <div style="background:#0a1f4e;padding:24px;text-align:center">
         <h1 style="color:#fff;margin:0;font-family:Georgia,serif;font-size:20px">${schoolName}</h1>
-        <p style="color:#c8a84b;margin:6px 0 0;font-size:11px;letter-spacing:1.5px">POWERED BY FEETRACKER</p>
+        <p style="color:#c8a84b;margin:6px 0 0;font-size:11px;letter-spacing:1.5px">POWERED BY ELIMU PAY</p>
       </div>
       <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
         <h2 style="color:#0f172a;font-size:18px;margin-bottom:8px">Payment Received</h2>
@@ -136,7 +136,7 @@ export function paymentConfirmationHtml({
         </div>` : ''}
       </div>
       <div style="padding:16px;background:#f8f9fc;text-align:center">
-        <p style="color:#94a3b8;font-size:11px;margin:0">${schoolName} &middot; Powered by FeeTracker &middot; support@feetracker.co.ke</p>
+        <p style="color:#94a3b8;font-size:11px;margin:0">${schoolName} &middot; Powered by Elimu Pay &middot; support@feetracker.co.ke</p>
       </div>
     </div>
   `

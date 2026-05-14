@@ -22,7 +22,7 @@ function reminderEmailHtml({
   return `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
       <div style="background:#0a1f4e;padding:24px;text-align:center">
-        <h1 style="color:#c8a84b;margin:0;font-family:Georgia,serif;font-size:22px">FeeTracker</h1>
+        <h1 style="margin:0;font-family:Georgia,serif;font-size:22px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
         <p style="color:#94a3c8;margin:6px 0 0;font-size:12px">${schoolName}</p>
       </div>
       <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
@@ -66,7 +66,7 @@ function reminderEmailHtml({
         </div>` : ''}
       </div>
       <div style="padding:16px;background:#f8f9fc;text-align:center">
-        <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker &middot; support@feetracker.co.ke</p>
+        <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@feetracker.co.ke</p>
       </div>
     </div>
   `
@@ -154,7 +154,7 @@ export default function Reminders() {
     const balance = getBalance(student)
     const name = student.parentName || 'Parent'
     const cls = student.class + ' ' + student.stream
-    let msg = 'Dear ' + name + ', this is a reminder that ' + student.name + ' (' + cls + ') has an outstanding fee balance of KES ' + balance.toLocaleString() + ' for this term. Please make payment at your earliest convenience. Thank you. - ' + (school?.name || 'FeeTracker')
+    let msg = 'Dear ' + name + ', this is a reminder that ' + student.name + ' (' + cls + ') has an outstanding fee balance of KES ' + balance.toLocaleString() + ' for this term. Please make payment at your earliest convenience. Thank you. - ' + (school?.name || 'Elimu Pay')
     if (school?.paybill) {
       const acctFmt = school.accountNumberFormat ? ' | Account No: ' + school.accountNumberFormat : ''
       msg += '\nTo pay: MPESA Paybill ' + school.paybill + acctFmt + ' | Balance: KES ' + balance.toLocaleString()

@@ -4,20 +4,20 @@ import type { Metadata } from 'next'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker.co.ke'
 
 export const metadata: Metadata = {
-  title: 'FeeTracker — School Fee Management for Nairobi Schools',
-  description: 'Upload your MPESA statement and every payment is matched automatically. Parents get instant confirmations. Built for private schools in Nairobi, Kenya.',
+  title: 'Elimu Pay - School Fee Management',
+  description: 'Elimu Pay - Smart school fee management for Kenyan schools. Automate MPESA payments, send instant parent notifications, and track fee collection in real time.',
   openGraph: {
-    title: 'FeeTracker — School Fee Management for Nairobi Schools',
-    description: 'Upload your MPESA statement and every payment is matched automatically. Parents get instant confirmations. Built for private schools in Nairobi, Kenya.',
+    title: 'Elimu Pay - School Fee Management',
+    description: 'Elimu Pay - Smart school fee management for Kenyan schools. Automate MPESA payments, send instant parent notifications, and track fee collection in real time.',
     url: APP_URL,
-    siteName: 'FeeTracker',
-    images: [{ url: `${APP_URL}/og-image.png`, width: 1200, height: 630, alt: 'FeeTracker' }],
+    siteName: 'Elimu Pay',
+    images: [{ url: `${APP_URL}/og-image.png`, width: 1200, height: 630, alt: 'Elimu Pay' }],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FeeTracker — School Fee Management for Nairobi Schools',
-    description: 'Upload your MPESA statement and every payment is matched automatically. Parents get instant confirmations.',
+    title: 'Elimu Pay - School Fee Management',
+    description: 'Elimu Pay - Smart school fee management for Kenyan schools. Automate MPESA payments, send instant parent notifications, and track fee collection in real time.',
     images: [`${APP_URL}/og-image.png`],
   },
 }
@@ -46,8 +46,8 @@ export default function Home() {
       `}</style>
 
       <nav className="land-nav" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', borderBottom: '1px solid #e2e8f0'}}>
-        <span style={{fontSize: '18px', fontWeight: 700, color: '#0f2d6e', fontFamily: 'Georgia, serif'}}>
-          Fee<span style={{color: '#c8a84b'}}>Tracker</span>
+        <span style={{fontSize: '18px', fontWeight: 700, fontFamily: 'Georgia, serif'}}>
+          <span style={{color: '#0a1f4e'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span>
         </span>
         <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
           <Link href="/demo" style={{color: '#0a1f4e', fontSize: '13px', fontWeight: 600, textDecoration: 'none', padding: '8px 14px', borderRadius: '6px', border: '1px solid #e2e8f0'}}>
@@ -61,11 +61,11 @@ export default function Home() {
 
       <div className="land-hero" style={{background: '#0a1f4e', color: '#fff', padding: '56px 32px', textAlign: 'center'}}>
         <div style={{display: 'inline-block', background: 'rgba(200,168,75,0.15)', color: '#c8a84b', border: '1px solid rgba(200,168,75,0.3)', fontSize: '10px', padding: '5px 14px', borderRadius: '4px', marginBottom: '20px', letterSpacing: '1px', textTransform: 'uppercase' as const}}>
-          Built for Nairobi schools
+          Smart fee management for Kenyan schools
         </div>
         <h1 style={{fontSize: '36px', fontWeight: 700, lineHeight: 1.15, marginBottom: '16px', letterSpacing: '-1px', fontFamily: 'Georgia, serif', color: '#fff', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto'}}>
           Stop chasing fee payments.<br />
-          <span style={{color: '#c8a84b'}}>Let FeeTracker do it.</span>
+          <span style={{color: '#c8a84b'}}>Let Elimu Pay do it.</span>
         </h1>
         <p style={{fontSize: '13px', color: '#94a3c8', maxWidth: '480px', margin: '0 auto 28px', lineHeight: 1.7}}>
           Upload your MPESA statement. Every payment is matched automatically. Parents get notified instantly. Your school saves time and money every term.
@@ -202,11 +202,11 @@ export default function Home() {
             {[
               {
                 q: 'Do I need to install anything?',
-                a: 'No. FeeTracker is entirely web-based. You open it in any browser — desktop or phone — and everything works instantly. There is nothing to download or install.',
+                a: 'No. Elimu Pay is entirely web-based. You open it in any browser — desktop or phone — and everything works instantly. There is nothing to download or install.',
               },
               {
                 q: 'How does the MPESA matching work?',
-                a: 'You download your MPESA statement (a CSV or Excel file) from your Safaricom portal and upload it to FeeTracker. The system reads each transaction, looks up the sender\'s phone number or reference, and posts the payment to the matching student record automatically.',
+                a: 'You download your MPESA statement (a CSV or Excel file) from your Safaricom portal and upload it to Elimu Pay. The system reads each transaction, looks up the sender\'s phone number or reference, and posts the payment to the matching student record automatically.',
               },
               {
                 q: 'Can parents see their own payment history?',
@@ -250,7 +250,7 @@ export default function Home() {
           <Link href="/privacy" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>Privacy Policy</Link>
         </div>
         <p style={{fontSize: '11px', color: '#334155', margin: 0}}>
-          © 2026 FeeTracker. All rights reserved.
+          © 2026 Elimu Pay. All rights reserved.
         </p>
       </div>
 

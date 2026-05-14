@@ -57,7 +57,7 @@ export async function GET(req: Request) {
     return new Response(buffer, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="feetracker-platform-export-${new Date().toISOString().slice(0,10)}.xlsx"`,
+        'Content-Disposition': `attachment; filename="elimupay-platform-export-${new Date().toISOString().slice(0,10)}.xlsx"`,
       },
     })
   } catch (err) {

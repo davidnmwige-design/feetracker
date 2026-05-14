@@ -6,7 +6,7 @@ export default function TrialExpired() {
       <div style={{maxWidth: '520px', width: '100%'}}>
         <div style={{background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden'}}>
           <div style={{background: '#0a1f4e', padding: '28px 32px', textAlign: 'center'}}>
-            <h1 style={{color: '#c8a84b', fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0}}>FeeTracker</h1>
+            <h1 style={{fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0}}><span style={{color: '#fff'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span></h1>
             <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '6px'}}>Your free trial has ended</p>
           </div>
 
@@ -20,7 +20,7 @@ export default function TrialExpired() {
             </h2>
 
             <p style={{fontSize: '14px', color: '#64748b', lineHeight: '1.7', marginBottom: '24px'}}>
-              Thank you for trying FeeTracker. Your school's data is safe and has not been deleted — you just need to subscribe to continue using the platform.
+              Thank you for trying Elimu Pay. Your school's data is safe and has not been deleted — you just need to subscribe to continue using the platform.
             </p>
 
             <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '20px', marginBottom: '28px', textAlign: 'left'}}>
@@ -46,7 +46,7 @@ export default function TrialExpired() {
 
             <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
               <a
-                href="https://wa.me/254746353411?text=Hi%2C%20I%27d%20like%20to%20subscribe%20to%20FeeTracker%20for%20my%20school."
+                href="https://wa.me/254746353411?text=Hi%2C%20I%27d%20like%20to%20subscribe%20to%20Elimu%20Pay%20for%20my%20school."
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{display: 'block', background: '#25D366', color: '#fff', padding: '12px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none', textAlign: 'center'}}
@@ -54,7 +54,7 @@ export default function TrialExpired() {
                 WhatsApp us to subscribe
               </a>
               <a
-                href="mailto:support@feetracker.co.ke?subject=FeeTracker%20Subscription"
+                href="mailto:support@feetracker.co.ke?subject=Elimu%20Pay%20Subscription"
                 style={{display: 'block', background: '#0a1f4e', color: '#fff', padding: '12px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none', textAlign: 'center'}}
               >
                 Email us at support@feetracker.co.ke

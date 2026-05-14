@@ -52,7 +52,7 @@ export default async function Dashboard() {
               </table>
             </div>
             <div style="padding:14px 24px;background:#f8f9fc;text-align:center">
-              <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker Platform &middot; Admin notification</p>
+              <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay Platform &middot; Admin notification</p>
             </div>
           </div>`
         }).catch(err => console.error('trial expiry notification error:', err))

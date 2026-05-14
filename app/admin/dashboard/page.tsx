@@ -28,7 +28,7 @@ export default function AdminDashboard() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Admin Panel</h1>
-            <p className="text-gray-500 text-sm mt-0.5">FeeTracker platform overview</p>
+            <p className="text-gray-500 text-sm mt-0.5">Elimu Pay platform overview</p>
           </div>
           <div className="flex gap-3">
             <Link

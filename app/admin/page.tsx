@@ -42,7 +42,7 @@ export default function AdminSetup() {
       <div className="bg-white rounded-xl border border-gray-200 p-8 w-full max-w-sm">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin setup</h1>
-          <p className="text-gray-500 text-sm">Create your FeeTracker admin account</p>
+          <p className="text-gray-500 text-sm">Create your Elimu Pay admin account</p>
         </div>
 
         {success && (

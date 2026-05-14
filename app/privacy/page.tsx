@@ -4,7 +4,7 @@ export default function Privacy() {
   return (
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif'}}>
       <div style={{background: '#0a1f4e', padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
-        <span style={{fontSize: '18px', fontWeight: 700, color: '#c8a84b', fontFamily: 'Georgia, serif'}}>FeeTracker</span>
+        <span style={{fontSize: '18px', fontWeight: 700, fontFamily: 'Georgia, serif'}}><span style={{color: '#fff'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span></span>
         <Link href="/signup" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '7px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
           Get started
         </Link>
@@ -21,14 +21,14 @@ export default function Privacy() {
           <section>
             <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>1. Who We Are</h2>
             <p style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
-              FeeTracker is a school fee management platform built for private schools in Kenya. We help school administrators upload MPESA statements, automatically match fee payments to students, and communicate with parents via WhatsApp. Our platform is operated by FeeTracker Kenya. For any questions about this policy, contact us at <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>.
+              Elimu Pay is a school fee management platform built for private schools in Kenya. We help school administrators upload MPESA statements, automatically match fee payments to students, and communicate with parents via WhatsApp. Our platform is operated by Elimu Pay Kenya. For any questions about this policy, contact us at <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>.
             </p>
           </section>
 
           <section>
             <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>2. Data We Collect</h2>
             <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
-              <p style={{marginBottom: '12px'}}>We collect the following categories of data when you use FeeTracker:</p>
+              <p style={{marginBottom: '12px'}}>We collect the following categories of data when you use Elimu Pay:</p>
               <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px'}}>
                 <li><strong>Account information:</strong> Your name, email address, and password (stored as a one-way hash). This identifies you as an authorised user of your school's account.</li>
                 <li><strong>School information:</strong> School name, MPESA paybill or till number, and current academic term. This is required to configure your fee collection setup.</li>
@@ -49,7 +49,7 @@ export default function Privacy() {
                 <li>Transaction date and time</li>
               </ul>
               <p style={{marginTop: '12px'}}>
-                This data is extracted for the sole purpose of matching transactions to student records. It is stored securely in your school's database partition and is not shared with any third party. You remain the data controller of all student and payment data you upload. FeeTracker acts as a data processor on your behalf.
+                This data is extracted for the sole purpose of matching transactions to student records. It is stored securely in your school's database partition and is not shared with any third party. You remain the data controller of all student and payment data you upload. Elimu Pay acts as a data processor on your behalf.
               </p>
             </div>
           </section>
@@ -58,7 +58,7 @@ export default function Privacy() {
             <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>4. WhatsApp Notifications</h2>
             <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
               <p style={{marginBottom: '12px'}}>
-                FeeTracker generates WhatsApp message links addressed to parents when payments are matched or when fee reminders are triggered. These messages are sent <strong>by you, the school administrator</strong>, through your own WhatsApp account. FeeTracker does not have access to your WhatsApp account, does not store message delivery receipts, and does not contact parents on its own initiative.
+                Elimu Pay generates WhatsApp message links addressed to parents when payments are matched or when fee reminders are triggered. These messages are sent <strong>by you, the school administrator</strong>, through your own WhatsApp account. Elimu Pay does not have access to your WhatsApp account, does not store message delivery receipts, and does not contact parents on its own initiative.
               </p>
               <p>
                 Parent phone numbers stored in the system are used only to generate these WhatsApp links. They are not sold, rented, or shared with any party outside of your school's use of the platform.
@@ -87,7 +87,7 @@ export default function Privacy() {
           <section>
             <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>6. Audit Logging</h2>
             <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
-              <p style={{marginBottom: '12px'}}>FeeTracker records an audit log of sensitive actions performed within your account. Logged events include:</p>
+              <p style={{marginBottom: '12px'}}>Elimu Pay records an audit log of sensitive actions performed within your account. Logged events include:</p>
               <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
                 <li>Login successes and failures</li>
                 <li>Student imports and M-Pesa statement uploads</li>
@@ -95,7 +95,7 @@ export default function Privacy() {
                 <li>Plan upgrade requests and data exports</li>
                 <li>Account deletion</li>
               </ul>
-              <p style={{marginTop: '12px'}}>Audit logs are visible to FeeTracker platform administrators and may be used to investigate security incidents or support requests.</p>
+              <p style={{marginTop: '12px'}}>Audit logs are visible to Elimu Pay platform administrators and may be used to investigate security incidents or support requests.</p>
             </div>
           </section>
 
@@ -110,7 +110,7 @@ export default function Privacy() {
           <section>
             <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>8. Your Rights</h2>
             <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
-              <p style={{marginBottom: '12px'}}>As a user of FeeTracker, you have the right to:</p>
+              <p style={{marginBottom: '12px'}}>As a user of Elimu Pay, you have the right to:</p>
               <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
                 <li>Access the personal data we hold about your school and account</li>
                 <li>Request correction of inaccurate data</li>
@@ -127,7 +127,7 @@ export default function Privacy() {
             <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
               <p>If you have any questions about this Privacy Policy or how your data is handled, please reach us at:</p>
               <div style={{marginTop: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px'}}>
-                <p style={{margin: 0, fontWeight: 600, color: '#0f172a'}}>FeeTracker Kenya</p>
+                <p style={{margin: 0, fontWeight: 600, color: '#0f172a'}}>Elimu Pay Kenya</p>
                 <p style={{margin: '4px 0 0'}}>Email: <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a></p>
                 <p style={{margin: '4px 0 0'}}>WhatsApp: <a href="https://wa.me/254746353411" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}} target="_blank" rel="noopener noreferrer">+254 746 353 411</a></p>
                 <p style={{margin: '4px 0 0'}}>Location: Nairobi, Kenya</p>
@@ -138,7 +138,7 @@ export default function Privacy() {
       </div>
 
       <div style={{background: '#0a1f4e', padding: '16px 32px', textAlign: 'center', marginTop: '48px'}}>
-        <p style={{fontSize: '11px', color: '#475569', margin: 0}}>FeeTracker · Built for private schools in Nairobi, Kenya</p>
+        <p style={{fontSize: '11px', color: '#475569', margin: 0}}>Elimu Pay · Smart fee management for Kenyan schools</p>
       </div>
     </div>
   )

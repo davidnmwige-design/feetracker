@@ -93,7 +93,7 @@ export async function POST(req: Request) {
 
     if (currentCount + rows.length > planCap) {
       return NextResponse.json({
-        error: `Your ${planName} plan supports up to ${planCap} students. You currently have ${currentCount} students and this upload contains ${rows.length} rows, which would exceed your limit. Contact FeeTracker to upgrade your plan.`
+        error: `Your ${planName} plan supports up to ${planCap} students. You currently have ${currentCount} students and this upload contains ${rows.length} rows, which would exceed your limit. Contact Elimu Pay to upgrade your plan.`
       }, { status: 400 })
     }
 

@@ -45,7 +45,7 @@ function reminderHtml({
       </div>` : ''}
     </div>
     <div style="padding:12px;background:#f8f9fc;text-align:center">
-      <p style="color:#94a3b8;font-size:11px;margin:0">${schoolName} &middot; Powered by FeeTracker</p>
+      <p style="color:#94a3b8;font-size:11px;margin:0">${schoolName} &middot; Powered by Elimu Pay</p>
     </div>
   </div>`
 }
@@ -167,7 +167,7 @@ export async function GET(req: Request) {
         </div>
       </div>
       <div style="padding:14px 24px;background:#f8f9fc;text-align:center">
-        <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker &middot; ${school.name}</p>
+        <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; ${school.name}</p>
       </div>
     </div>`
 
@@ -177,7 +177,7 @@ export async function GET(req: Request) {
         to: adminEmail,
         subject: `Scheduled reminder time — ${rows.length} students need reminders · ${school.name}`,
         html: adminHtml,
-        fromName: 'FeeTracker',
+        fromName: 'Elimu Pay',
       })
       adminEmailSent = true
     } catch (err) {
@@ -192,7 +192,7 @@ export async function GET(req: Request) {
         await sendEmail({
           to: r.email!,
           subject: `Fee payment reminder — ${r.name} — ${school.name}`,
-          fromName: `${school.name} via FeeTracker`,
+          fromName: `${school.name} via Elimu Pay`,
           replyTo: (school as any).replyToEmail || undefined,
           html: reminderHtml({
             schoolName: school.name,

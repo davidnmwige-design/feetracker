@@ -6,8 +6,8 @@ import AppNav from '@/components/AppNav'
 const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'FeeTracker',
-  description: 'School fee management for Nairobi schools',
+  title: 'Elimu Pay - School Fee Management',
+  description: 'Elimu Pay - Smart school fee management for Kenyan schools. Automate MPESA payments, send instant parent notifications, and track fee collection in real time.',
 }
 
 export default function RootLayout({

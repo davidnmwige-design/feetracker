@@ -64,16 +64,16 @@ export async function POST(req: Request) {
   const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker.co.ke'}/login`
   sendEmail({
     to: email,
-    subject: `You've been invited to join ${owner.school!.name} on FeeTracker`,
+    subject: `You've been invited to join ${owner.school!.name} on Elimu Pay`,
     html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
       <div style="background:#0a1f4e;padding:24px;text-align:center">
-        <h1 style="color:#c8a84b;margin:0;font-family:Georgia,serif;font-size:22px">FeeTracker</h1>
+        <h1 style="margin:0;font-family:Georgia,serif;font-size:22px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
         <p style="color:#94a3c8;margin:6px 0 0;font-size:12px">${owner.school!.name}</p>
       </div>
       <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
         <h2 style="color:#0f172a;font-size:18px;margin-bottom:8px">You've been invited</h2>
         <p style="color:#64748b;font-size:14px;line-height:1.6;margin-bottom:20px">
-          Dear ${name},<br>you have been invited to join <strong>${owner.school!.name}</strong> on FeeTracker as a <strong>${role}</strong>.
+          Dear ${name},<br>you have been invited to join <strong>${owner.school!.name}</strong> on Elimu Pay as a <strong>${role}</strong>.
         </p>
         <div style="background:#f8f9fc;border-radius:8px;padding:20px;margin-bottom:20px">
           <p style="margin:0 0 8px;color:#64748b;font-size:13px">Your login details:</p>
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
           <p style="margin:0;font-size:13px"><strong>Temporary password:</strong> <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">${tempPassword}</code></p>
         </div>
         <p style="color:#64748b;font-size:13px;margin-bottom:20px">Please sign in and change your password immediately.</p>
-        <a href="${loginUrl}" style="display:block;text-align:center;background:#0a1f4e;color:#fff;padding:12px;border-radius:6px;font-size:14px;font-weight:700;text-decoration:none">Sign in to FeeTracker</a>
+        <a href="${loginUrl}" style="display:block;text-align:center;background:#0a1f4e;color:#fff;padding:12px;border-radius:6px;font-size:14px;font-weight:700;text-decoration:none">Sign in to Elimu Pay</a>
       </div>
     </div>`,
   }).catch(err => console.error('team invite email error:', err))

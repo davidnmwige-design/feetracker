@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const pdfFilename = sanitize(body.pdfFilename || 'certificate.pdf', 200)
     const schoolName = sanitize(body.schoolName || '', 200)
     const replyTo = sanitize(body.replyTo || '', 200)
-    const fromName = schoolName ? `${schoolName} via FeeTracker` : undefined
+    const fromName = schoolName ? `${schoolName} via Elimu Pay` : undefined
 
     if (!to || !subject || !html) {
       return NextResponse.json({ error: 'Missing required fields: to, subject, html' }, { status: 400 })

@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     const adminHtml = `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
         <div style="background:#0a1f4e;padding:24px;text-align:center">
-          <h1 style="color:#c8a84b;margin:0;font-family:Georgia,serif;font-size:22px">FeeTracker</h1>
+          <h1 style="margin:0;font-family:Georgia,serif;font-size:22px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
           <p style="color:#94a3c8;margin:6px 0 0;font-size:12px">Plan Upgrade Request</p>
         </div>
         <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
           <p style="color:#64748b;font-size:13px">Log in to the admin panel to approve or reject this request.</p>
         </div>
         <div style="padding:16px;background:#f8f9fc;text-align:center">
-          <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker &middot; support@feetracker.co.ke</p>
+          <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@feetracker.co.ke</p>
         </div>
       </div>
     `

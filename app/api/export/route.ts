@@ -80,7 +80,7 @@ export async function GET(req: Request) {
     return new NextResponse(buf, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="feetracker-export-${new Date().toISOString().slice(0, 10)}.xlsx"`,
+        'Content-Disposition': `attachment; filename="elimupay-export-${new Date().toISOString().slice(0, 10)}.xlsx"`,
       },
     })
   } catch (err) {

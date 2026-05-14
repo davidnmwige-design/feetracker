@@ -201,7 +201,7 @@ export default function SchoolDetail() {
               Send email
             </button>
             <button
-              onClick={() => window.open('https://wa.me/?text=' + encodeURIComponent('Hi ' + school.user?.name + ', this is FeeTracker support.'), '_blank')}
+              onClick={() => window.open('https://wa.me/?text=' + encodeURIComponent('Hi ' + school.user?.name + ', this is Elimu Pay support.'), '_blank')}
               className="text-white px-4 py-2 rounded-lg text-sm"
               style={{backgroundColor: '#0a1f4e'}}
             >

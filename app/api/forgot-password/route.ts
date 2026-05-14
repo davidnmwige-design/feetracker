@@ -50,13 +50,13 @@ export async function POST(req: Request) {
         try {
           const transporter = createTransporter()
           await transporter.sendMail({
-            from: `"FeeTracker" <${process.env.EMAIL_USER}>`,
+            from: `"Elimu Pay" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: 'Reset your FeeTracker password',
+            subject: 'Reset your Elimu Pay password',
             html: `
               <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
                 <div style="background:#0a1f4e;padding:24px;text-align:center">
-                  <h1 style="color:#c8a84b;margin:0;font-family:Georgia,serif;font-size:22px">FeeTracker</h1>
+                  <h1 style="margin:0;font-family:Georgia,serif;font-size:22px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
                 </div>
                 <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
                   <h2 style="color:#0f172a;font-size:18px;margin-bottom:12px">Reset your password</h2>
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
                   </p>
                 </div>
                 <div style="padding:16px;background:#f8f9fc;text-align:center">
-                  <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker &middot; support@feetracker.co.ke</p>
+                  <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@feetracker.co.ke</p>
                 </div>
               </div>
             `,

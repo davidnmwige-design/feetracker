@@ -163,7 +163,7 @@ export async function POST(req: Request) {
         sendEmail({
           to: plainEmail,
           subject: `Payment received for ${matched.name} — ${user.school!.name}`,
-          fromName: `${user.school!.name} via FeeTracker`,
+          fromName: `${user.school!.name} via Elimu Pay`,
           replyTo: (user.school as any).replyToEmail || undefined,
           html: paymentConfirmationHtml({
             schoolName: user.school!.name,

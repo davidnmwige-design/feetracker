@@ -75,7 +75,7 @@ export default function Signup() {
     <div style={{background: '#f8f9fc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', fontFamily: 'Arial, sans-serif'}}>
       <div style={{background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', width: '100%', maxWidth: '440px', overflow: 'hidden'}}>
         <div style={{background: '#0a1f4e', padding: '28px 32px', textAlign: 'center'}}>
-          <h1 style={{color: '#c8a84b', fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0}}>FeeTracker</h1>
+          <h1 style={{fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0}}><span style={{color: '#fff'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span></h1>
           <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '6px'}}>Create your account — 30 days free</p>
         </div>
 

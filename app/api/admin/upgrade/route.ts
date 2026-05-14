@@ -81,13 +81,13 @@ export async function PATCH(req: Request) {
       const approvalHtml = `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
           <div style="background:#0a1f4e;padding:24px;text-align:center">
-            <h1 style="color:#c8a84b;margin:0;font-family:Georgia,serif;font-size:22px">FeeTracker</h1>
+            <h1 style="margin:0;font-family:Georgia,serif;font-size:22px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
             <p style="color:#94a3c8;margin:6px 0 0;font-size:12px">${upgradeRequest.school.name}</p>
           </div>
           <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
             <h2 style="color:#0a7c3e;font-size:18px;margin-bottom:8px">Plan Upgraded!</h2>
             <p style="color:#64748b;font-size:14px;line-height:1.6">
-              Your FeeTracker plan has been upgraded to <strong>${upgradeRequest.requestedPlan}</strong>.
+              Your Elimu Pay plan has been upgraded to <strong>${upgradeRequest.requestedPlan}</strong>.
             </p>
             <div style="background:#f8f9fc;border-radius:8px;padding:20px;margin:20px 0">
               <table style="width:100%;border-collapse:collapse">
@@ -105,17 +105,17 @@ export async function PATCH(req: Request) {
                 </tr>
               </table>
             </div>
-            <p style="color:#64748b;font-size:13px">Log in to your FeeTracker dashboard to continue managing your school fees.</p>
+            <p style="color:#64748b;font-size:13px">Log in to your Elimu Pay dashboard to continue managing your school fees.</p>
           </div>
           <div style="padding:16px;background:#f8f9fc;text-align:center">
-            <p style="color:#94a3b8;font-size:11px;margin:0">FeeTracker &middot; support@feetracker.co.ke</p>
+            <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@feetracker.co.ke</p>
           </div>
         </div>
       `
 
       sendEmail({
         to: upgradeRequest.school.user.email,
-        subject: `Your plan has been upgraded to ${upgradeRequest.requestedPlan} — FeeTracker`,
+        subject: `Your plan has been upgraded to ${upgradeRequest.requestedPlan} — Elimu Pay`,
         html: approvalHtml,
       }).catch(err => console.error('Approval email error:', err))
     }
