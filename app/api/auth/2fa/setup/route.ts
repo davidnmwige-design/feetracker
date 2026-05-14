@@ -1,27 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { generateSecret, generateURI, verify as verifyTotp } from 'otplib'
-import qrcode from 'qrcode'
 import bcrypt from 'bcryptjs'
-import { encrypt } from '@/lib/encrypt'
-
-export async function GET() {
-  const session = await auth()
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const secret = await generateSecret()
-  const otpAuthUrl = await generateURI({
-    label: session.user.email,
-    issuer: 'FeeTracker',
-    secret,
-  } as any)
-  const qrCode = await qrcode.toDataURL(otpAuthUrl)
-
-  return NextResponse.json({ secret, qrCode })
-}
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -29,22 +9,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { secret, code } = await req.json()
-  if (!secret || !code) {
-    return NextResponse.json({ error: 'Secret and code are required' }, { status: 400 })
+  const { code } = await req.json()
+  if (!code) {
+    return NextResponse.json({ error: 'Code is required' }, { status: 400 })
   }
 
-  const result = await verifyTotp({ token: String(code), secret } as any)
-  const isValid = typeof result === 'object' ? result.valid : !!result
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
+  })
+  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-  if (!isValid) {
+  const otpRecord = await prisma.oTPCode.findFirst({
+    where: { userId: user.id, used: false, expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  if (!otpRecord) {
+    return NextResponse.json({ error: 'Invalid or expired code. Please request a new one.' }, { status: 400 })
+  }
+
+  if (otpRecord.code !== String(code)) {
     return NextResponse.json({ error: 'Invalid code. Please try again.' }, { status: 400 })
   }
 
-  await prisma.user.update({
-    where: { email: session.user.email },
-    data: { twoFactorEnabled: true, twoFactorSecret: encrypt(secret) },
-  })
+  await prisma.oTPCode.update({ where: { id: otpRecord.id }, data: { used: true } })
+  await prisma.user.update({ where: { id: user.id }, data: { twoFactorEnabled: true } })
 
   return NextResponse.json({ success: true })
 }
@@ -70,7 +60,7 @@ export async function DELETE(req: Request) {
 
   await prisma.user.update({
     where: { email: session.user.email },
-    data: { twoFactorEnabled: false, twoFactorSecret: null },
+    data: { twoFactorEnabled: false },
   })
 
   return NextResponse.json({ success: true })

@@ -16,7 +16,26 @@
       "Bash(git reset *)",
       "Bash(node \"C:/Users/david/feetracker/scripts/generate-sample-csv.js\" 50 \"C:/Users/david/feetracker/public/sample-students-50.csv\")",
       "PowerShell(New-Item *)",
-      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('recharts:', p.dependencies.recharts\\)\")"
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('recharts:', p.dependencies.recharts\\)\")",
+      "Bash(npx vercel *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(curl -s https://feetracker-seven.vercel.app/)",
+      "Bash(curl -s https://feetracker-seven.vercel.app/login)",
+      "Bash(curl -sv https://feetracker-seven.vercel.app/dashboard)",
+      "Bash(curl -s https://feetracker-seven.vercel.app/api/auth/session)",
+      "Bash(curl -sL https://feetracker-seven.vercel.app/)",
+      "Bash(curl -s https://feetracker-seven.vercel.app/api/students)",
+      "Bash(curl -s https://feetracker-seven.vercel.app/api/school)",
+      "Bash(node -e \"const p=JSON.parse\\(require\\('fs'\\).readFileSync\\(0,'utf8'\\)\\); console.log\\('build:', p.scripts.build\\); console.log\\('engines:', p.engines\\)\")",
+      "Bash(node *)",
+      "Bash(curl -s https://feetracker-seven.vercel.app/api/auth/providers)",
+      "Bash(dir C:\\\\Users\\\\david\\\\feetracker\\\\app\\\\dashboard *)",
+      "Bash(Start-Sleep -Seconds 30)",
+      "Bash(curl -sI https://feetracker-seven.vercel.app/)",
+      "Bash(ping -n 35 127.0.0.1)",
+      "Bash(ping -n 50 127.0.0.1)",
+      "Bash(curl -sv https://feetracker-seven.vercel.app/login)",
+      "Bash(npm uninstall *)"
     ]
   }
 }

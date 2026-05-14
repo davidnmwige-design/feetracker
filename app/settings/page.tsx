@@ -82,7 +82,9 @@ export default function Settings() {
   // 2FA state
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
   const [twoFALoading, setTwoFALoading] = useState(false)
-  const [twoFASetup, setTwoFASetup] = useState<{ qrCode: string; secret: string } | null>(null)
+  const [twoFACodeSent, setTwoFACodeSent] = useState(false)
+  const [twoFAMaskedEmail, setTwoFAMaskedEmail] = useState('')
+  const [userEmail, setUserEmail] = useState('')
   const [twoFACode, setTwoFACode] = useState('')
   const [twoFAError, setTwoFAError] = useState('')
   const [twoFASuccess, setTwoFASuccess] = useState('')
@@ -128,6 +130,7 @@ export default function Settings() {
     setStudentCount(Array.isArray(studentsData) ? studentsData.length : 0)
     const meData = await meRes.json().catch(() => ({}))
     setTwoFAEnabled(meData?.twoFactorEnabled ?? false)
+    setUserEmail(meData?.email || '')
     setLoading(false)
   }
 
@@ -289,31 +292,41 @@ export default function Settings() {
     }
   }
 
-  async function start2FASetup() {
+  function maskEmail(email: string): string {
+    if (!email) return ''
+    const [local, domain] = email.split('@')
+    return local[0] + '***@' + domain
+  }
+
+  async function start2FAEmailSetup() {
     setTwoFALoading(true); setTwoFAError(''); setTwoFASuccess('')
     try {
-      const res = await fetch('/api/auth/2fa/setup')
+      const res = await fetch('/api/auth/2fa/send-otp', { method: 'POST' })
       const data = await res.json()
-      if (res.ok) setTwoFASetup(data)
-      else setTwoFAError(data.error || 'Failed to generate QR code')
+      if (res.ok) {
+        setTwoFACodeSent(true)
+        setTwoFAMaskedEmail(data.maskedEmail || maskEmail(userEmail))
+      } else {
+        setTwoFAError(data.error || 'Failed to send code. Please try again.')
+      }
     } catch { setTwoFAError('Something went wrong') }
     setTwoFALoading(false)
   }
 
   async function verify2FASetup() {
-    if (!twoFASetup || !twoFACode.trim() || twoFALoading) return
+    if (!twoFACode.trim() || twoFALoading) return
     setTwoFALoading(true); setTwoFAError('')
     try {
       const res = await fetch('/api/auth/2fa/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret: twoFASetup.secret, code: twoFACode }),
+        body: JSON.stringify({ code: twoFACode }),
       })
       const data = await res.json()
       if (res.ok) {
-        setTwoFAEnabled(true); setTwoFASetup(null); setTwoFACode('')
-        setTwoFASuccess('2FA is now enabled on your account.')
-        setTimeout(() => setTwoFASuccess(''), 4000)
+        setTwoFAEnabled(true); setTwoFACodeSent(false); setTwoFACode('')
+        setTwoFASuccess('Two-Factor Authentication is now enabled. You will receive a code by email each time you sign in.')
+        setTimeout(() => setTwoFASuccess(''), 5000)
       } else {
         setTwoFAError(data.error || 'Invalid code')
       }
@@ -870,17 +883,20 @@ export default function Settings() {
             <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
               <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Two-Factor Authentication</h2>
               <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
-                Add an extra layer of security to your account using Google Authenticator or any TOTP app.
+                Two-Factor Authentication adds an extra layer of security. When enabled, you will receive a verification code by email each time you log in.
               </p>
               {twoFASuccess && <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', color: '#166534', fontSize: '13px', padding: '10px 12px', borderRadius: '6px', marginBottom: '12px'}}>{twoFASuccess}</div>}
-              {twoFAError && !twoFASetup && <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '13px', padding: '10px 12px', borderRadius: '6px', marginBottom: '12px'}}>{twoFAError}</div>}
+              {twoFAError && !twoFACodeSent && <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '13px', padding: '10px 12px', borderRadius: '6px', marginBottom: '12px'}}>{twoFAError}</div>}
 
               {twoFAEnabled ? (
                 <div>
-                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px'}}>
                     <span style={{background: '#e1f5ee', color: '#166534', fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px'}}>✓ Enabled</span>
                     <span style={{fontSize: '13px', color: '#0f172a', fontWeight: 600}}>Two-Factor Authentication is active</span>
                   </div>
+                  <p style={{fontSize: '13px', color: '#64748b', marginBottom: '16px'}}>
+                    Verification codes are sent to {maskEmail(userEmail)}
+                  </p>
                   {!showDisableForm ? (
                     <button onClick={() => { setShowDisableForm(true); setTwoFAError('') }}
                       style={{background: 'none', border: '1px solid #fca5a5', color: '#dc2626', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer'}}>
@@ -907,37 +923,31 @@ export default function Settings() {
                     </div>
                   )}
                 </div>
-              ) : !twoFASetup ? (
+              ) : !twoFACodeSent ? (
                 <div>
                   <p style={{fontSize: '13px', color: '#64748b', marginBottom: '12px'}}>Two-Factor Authentication is not enabled.</p>
-                  <button onClick={start2FASetup} disabled={twoFALoading}
+                  <button onClick={start2FAEmailSetup} disabled={twoFALoading}
                     style={{background: twoFALoading ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '9px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: twoFALoading ? 'not-allowed' : 'pointer'}}>
-                    {twoFALoading ? 'Loading…' : 'Enable 2FA'}
+                    {twoFALoading ? 'Sending code…' : 'Enable 2FA'}
                   </button>
                 </div>
               ) : (
                 <div>
-                  <p style={{fontSize: '13px', color: '#0f172a', fontWeight: 600, marginBottom: '8px'}}>
-                    Scan this QR code with Google Authenticator then enter the 6-digit code below
-                  </p>
-                  <div style={{display: 'flex', justifyContent: 'center', margin: '16px 0'}}>
-                    <img src={twoFASetup.qrCode} alt="QR code" style={{width: '180px', height: '180px', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px'}} />
-                  </div>
-                  <p style={{fontSize: '11px', color: '#94a3b8', textAlign: 'center', marginBottom: '16px'}}>
-                    Can't scan? Manual key: <code style={{background: '#f8f9fc', padding: '2px 6px', borderRadius: '4px', fontSize: '11px'}}>{twoFASetup.secret}</code>
+                  <p style={{fontSize: '13px', color: '#0f172a', marginBottom: '12px'}}>
+                    We sent a 6-digit code to <strong>{twoFAMaskedEmail}</strong>. Enter it below to enable 2FA.
                   </p>
                   {twoFAError && <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '12px', padding: '8px 12px', borderRadius: '6px', marginBottom: '8px'}}>{twoFAError}</div>}
                   <div style={{display: 'flex', gap: '8px'}}>
                     <input type="text" inputMode="numeric" maxLength={6} value={twoFACode}
                       onChange={e => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       onKeyDown={e => e.key === 'Enter' && verify2FASetup()}
-                      placeholder="000000"
+                      placeholder="000000" autoFocus
                       style={{flex: 1, border: '2px solid #0a1f4e', borderRadius: '6px', padding: '9px 12px', fontSize: '18px', letterSpacing: '0.4em', textAlign: 'center', outline: 'none'}} />
                     <button onClick={verify2FASetup} disabled={twoFACode.length !== 6 || twoFALoading}
                       style={{background: (twoFACode.length !== 6 || twoFALoading) ? '#94a3b8' : '#c8a84b', color: (twoFACode.length !== 6 || twoFALoading) ? '#fff' : '#0a1f4e', border: 'none', padding: '9px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: (twoFACode.length !== 6 || twoFALoading) ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const}}>
                       {twoFALoading ? 'Verifying…' : 'Verify and enable'}
                     </button>
-                    <button onClick={() => { setTwoFASetup(null); setTwoFACode(''); setTwoFAError('') }}
+                    <button onClick={() => { setTwoFACodeSent(false); setTwoFACode(''); setTwoFAError('') }}
                       style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '9px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
                       Cancel
                     </button>

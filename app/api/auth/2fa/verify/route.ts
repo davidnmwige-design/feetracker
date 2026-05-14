@@ -1,8 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { verify as verifyTotp } from 'otplib'
-import { decrypt } from '@/lib/encrypt'
 import { create2faCookieValue, COOKIE_NAME } from '@/lib/twofa'
 
 export async function POST(req: Request) {
@@ -18,20 +16,27 @@ export async function POST(req: Request) {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { id: true, twoFactorSecret: true, twoFactorEnabled: true },
+    select: { id: true, twoFactorEnabled: true },
   })
 
-  if (!user?.twoFactorEnabled || !user.twoFactorSecret) {
+  if (!user?.twoFactorEnabled) {
     return NextResponse.json({ error: '2FA is not enabled' }, { status: 400 })
   }
 
-  const secret = decrypt(user.twoFactorSecret)
-  const result = await verifyTotp({ token: String(code), secret } as any)
-  const isValid = typeof result === 'object' ? result.valid : !!result
+  const otpRecord = await prisma.oTPCode.findFirst({
+    where: { userId: user.id, used: false, expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: 'desc' },
+  })
 
-  if (!isValid) {
+  if (!otpRecord) {
+    return NextResponse.json({ error: 'Invalid or expired code. Please request a new one.' }, { status: 400 })
+  }
+
+  if (otpRecord.code !== String(code)) {
     return NextResponse.json({ error: 'Invalid code. Please try again.' }, { status: 400 })
   }
+
+  await prisma.oTPCode.update({ where: { id: otpRecord.id }, data: { used: true } })
 
   const cookieValue = await create2faCookieValue(user.id, process.env.NEXTAUTH_SECRET!)
   const response = NextResponse.json({ success: true })
