@@ -8,22 +8,24 @@ const PROTECTED_PREFIXES = ['/dashboard', '/students', '/upload', '/reminders', 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Skip API routes and Next.js internals
   if (pathname.startsWith('/api/') || pathname.startsWith('/_next/') || pathname.includes('.')) {
     return NextResponse.next()
   }
 
-  // Skip admin routes (handled by admin layout)
-  if (pathname.startsWith('/admin')) {
-    return NextResponse.next()
-  }
+  if (pathname.startsWith('/admin')) return NextResponse.next()
 
-  const isPublic = PUBLIC_PATHS.includes(pathname)
   const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
-
   if (!isProtected) return NextResponse.next()
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  // next-auth v5 uses 'authjs.session-token' (prod: '__Secure-authjs.session-token')
+  const secureCookie = process.env.NODE_ENV === 'production'
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie,
+    cookieName: secureCookie ? '__Secure-authjs.session-token' : 'authjs.session-token',
+    salt: secureCookie ? '__Secure-authjs.session-token' : 'authjs.session-token',
+  })
 
   if (!token) {
     const url = req.nextUrl.clone()
@@ -31,12 +33,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // 2FA check
   const twoFactorEnabled = Boolean((token as any).twoFactorEnabled)
   if (twoFactorEnabled) {
     const userId = Number((token as any).userId)
     const cookie = req.cookies.get(COOKIE_NAME)?.value
-    const verified = verify2faCookie(cookie, userId, process.env.NEXTAUTH_SECRET!)
+    const verified = await verify2faCookie(cookie, userId, process.env.NEXTAUTH_SECRET!)
     if (!verified) {
       const url = req.nextUrl.clone()
       url.pathname = '/verify-2fa'

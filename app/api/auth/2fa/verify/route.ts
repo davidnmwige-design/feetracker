@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid code. Please try again.' }, { status: 400 })
   }
 
-  const cookieValue = create2faCookieValue(user.id, process.env.NEXTAUTH_SECRET!)
+  const cookieValue = await create2faCookieValue(user.id, process.env.NEXTAUTH_SECRET!)
   const response = NextResponse.json({ success: true })
   response.cookies.set(COOKIE_NAME, cookieValue, {
     httpOnly: true,
