@@ -5,8 +5,10 @@ import LogoutButton from '@/components/LogoutButton'
 
 export default function AppNav() {
   const pathname = usePathname()
-  const hideNav = ['/', '/login', '/signup', '/admin'].includes(pathname)
 
+  // Never render on admin pages or public/auth pages
+  if (pathname.startsWith('/admin')) return null
+  const hideNav = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-2fa', '/trial-expired', '/demo', '/privacy'].some(p => pathname === p || pathname.startsWith(p + '/'))
   if (hideNav) return null
 
   return (
@@ -32,7 +34,7 @@ export default function AppNav() {
         fontFamily: 'Georgia, serif', textDecoration: 'none',
         whiteSpace: 'nowrap', flexShrink: 0,
       }}>
-        Fee<span style={{color: '#c8a84b'}}>Tracker</span>
+        <span style={{color: '#0a1f4e'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span>
       </Link>
 
       <div className="appnav-links" style={{
