@@ -46,22 +46,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.sessionVersion = (user as any).sessionVersion ?? 1
-        token.userId = (user as any).id
-        token.twoFactorEnabled = (user as any).twoFactorEnabled ?? false
-      } else if (token.email && token.sessionVersion !== undefined) {
-        // Only validate sessionVersion for tokens that already carry it.
-        // Old tokens without sessionVersion are allowed through for backwards
-        // compatibility — they will naturally expire within 24 hours.
+        // next-auth v5 beta strips custom fields from the user object before
+        // passing it here, so we must fetch directly from DB instead of reading
+        // (user as any).twoFactorEnabled which would always be undefined.
+        token.userId = user.id
+        const dbUser = await prisma.user.findUnique({
+          where: { id: Number(user.id) },
+          select: { twoFactorEnabled: true, sessionVersion: true },
+        })
+        token.twoFactorEnabled = dbUser?.twoFactorEnabled ?? false
+        token.sessionVersion = dbUser?.sessionVersion ?? 1
+      } else if (token.userId && token.sessionVersion !== undefined) {
+        // On every subsequent token refresh, re-validate sessionVersion and
+        // sync twoFactorEnabled so enabling/disabling 2FA takes effect without
+        // requiring a full sign-out.
         try {
           const dbUser = await prisma.user.findUnique({
-            where: { email: token.email as string },
-            select: { sessionVersion: true },
+            where: { id: Number(token.userId) },
+            select: { sessionVersion: true, twoFactorEnabled: true },
           })
-          if (dbUser && dbUser.sessionVersion !== (token.sessionVersion as number)) {
-            // Force expiry by back-dating exp — NextAuth treats this as unauthenticated
+          if (!dbUser) return { ...token, exp: 0 }
+          if (dbUser.sessionVersion !== (token.sessionVersion as number)) {
             return { ...token, exp: 0 }
           }
+          token.twoFactorEnabled = dbUser.twoFactorEnabled
         } catch {
           // DB error — continue with existing token rather than locking users out
         }
