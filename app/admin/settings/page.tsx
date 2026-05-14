@@ -32,6 +32,14 @@ export default function AdminSettings() {
     notifyTrialExpiry: true,
     notifyUpgradeRequest: true,
     notifyAccountDeleted: true,
+    companyName: 'Elimu Pay',
+    adminName: 'David Njiru',
+    companyAddress: '',
+    kraPin: '',
+    startingInvoiceNumber: 1000,
+    invoiceDueDays: 30,
+    lateInterestRate: 0,
+    emailSignature: '',
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -148,6 +156,61 @@ export default function AdminSettings() {
         <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Admin Settings</h1>
         <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0' }}>Platform configuration and admin management</p>
       </div>
+
+      {/* Company details */}
+      <Section title="Company Details">
+        <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 16px' }}>These details appear on invoices sent to schools.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <Field label="Your name">
+            <input value={settings.adminName} onChange={e => setSettings(s => ({ ...s, adminName: e.target.value }))} style={inputStyle} placeholder="David Njiru" />
+          </Field>
+          <Field label="Company name">
+            <input value={settings.companyName} onChange={e => setSettings(s => ({ ...s, companyName: e.target.value }))} style={inputStyle} placeholder="Elimu Pay" />
+          </Field>
+          <Field label="Physical address">
+            <input value={settings.companyAddress} onChange={e => setSettings(s => ({ ...s, companyAddress: e.target.value }))} style={inputStyle} placeholder="Nairobi, Kenya" />
+          </Field>
+          <Field label="KRA PIN">
+            <input value={settings.kraPin} onChange={e => setSettings(s => ({ ...s, kraPin: e.target.value }))} style={inputStyle} placeholder="A000000000Z" />
+          </Field>
+        </div>
+        <button onClick={saveSettings} disabled={saving}
+          style={{ background: saving ? '#94a3b8' : '#c8a84b', color: saving ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+          {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save company details'}
+        </button>
+      </Section>
+
+      {/* Invoice settings */}
+      <Section title="Invoice Settings">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <Field label="Starting invoice number" hint="e.g. 1000 generates INV-2026-1000">
+            <input type="number" value={settings.startingInvoiceNumber} onChange={e => setSettings(s => ({ ...s, startingInvoiceNumber: Number(e.target.value) }))} style={inputStyle} min={1} />
+          </Field>
+          <Field label="Invoice due days" hint="Days after invoice date until payment due">
+            <input type="number" value={settings.invoiceDueDays} onChange={e => setSettings(s => ({ ...s, invoiceDueDays: Number(e.target.value) }))} style={inputStyle} min={1} max={365} />
+          </Field>
+          <Field label="Late payment interest (%)" hint="Annual rate added to overdue invoices">
+            <input type="number" value={settings.lateInterestRate} onChange={e => setSettings(s => ({ ...s, lateInterestRate: Number(e.target.value) }))} style={inputStyle} min={0} max={100} step={0.5} />
+          </Field>
+        </div>
+        <button onClick={saveSettings} disabled={saving}
+          style={{ background: saving ? '#94a3b8' : '#c8a84b', color: saving ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+          {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save invoice settings'}
+        </button>
+      </Section>
+
+      {/* Email signature */}
+      <Section title="Admin Email Signature">
+        <Field label="Personal signature" hint="Appears at the bottom of admin emails sent to schools">
+          <textarea value={settings.emailSignature} onChange={e => setSettings(s => ({ ...s, emailSignature: e.target.value }))}
+            placeholder={`David Njiru\nElimupay | +254 700 000 000`}
+            rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+        </Field>
+        <button onClick={saveSettings} disabled={saving}
+          style={{ background: saving ? '#94a3b8' : '#c8a84b', color: saving ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+          {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save signature'}
+        </button>
+      </Section>
 
       {/* Account security */}
       <Section title="Account Security">

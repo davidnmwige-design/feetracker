@@ -2,13 +2,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-const PLANS = {
-  Starter: { monthly: 4500, setup: 15000, maxStudents: 300 },
-  Growth: { monthly: 6500, setup: 20000, maxStudents: 600 },
-  Premium: { monthly: 9000, setup: 25000, maxStudents: 1000 },
-  Enterprise: { monthly: 15000, setup: 35000, maxStudents: null },
+const PLANS: Record<string, { monthly: number; setup: number }> = {
+  Starter: { monthly: 4500, setup: 15000 },
+  Growth: { monthly: 6500, setup: 20000 },
+  Premium: { monthly: 9000, setup: 25000 },
+  Enterprise: { monthly: 15000, setup: 35000 },
 }
-
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 export default function AdminBilling() {
@@ -19,44 +18,43 @@ export default function AdminBilling() {
   const [upgradeRequests, setUpgradeRequests] = useState<any[]>([])
   const [upgradeLoading, setUpgradeLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<Record<number, boolean>>({})
+  const [overdueOnly, setOverdueOnly] = useState(false)
 
   const now = new Date()
   const currentMonth = now.getMonth() + 1
   const currentYear = now.getFullYear()
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
   useEffect(() => {
-    fetch('/api/admin/schools')
-      .then(r => r.json())
-      .then(data => { setSchools(data); setLoading(false) })
-    fetch('/api/admin/billing')
-      .then(r => r.json())
-      .then(data => setBillingRecords(Array.isArray(data) ? data : []))
-    fetch('/api/admin/upgrade')
-      .then(r => r.json())
-      .then(data => { setUpgradeRequests(Array.isArray(data) ? data : []); setUpgradeLoading(false) })
+    fetch('/api/admin/schools').then(r => r.json()).then(d => { setSchools(Array.isArray(d) ? d : []); setLoading(false) })
+    fetch('/api/admin/billing').then(r => r.json()).then(d => setBillingRecords(Array.isArray(d) ? d : []))
+    fetch('/api/admin/upgrade').then(r => r.json()).then(d => { setUpgradeRequests(Array.isArray(d) ? d : []); setUpgradeLoading(false) })
   }, [])
 
   function getBillingRecord(schoolId: number) {
     return billingRecords.find(r => r.schoolId === schoolId && r.month === currentMonth && r.year === currentYear)
   }
 
+  function getSchoolAllPaidRecords(schoolId: number) {
+    return billingRecords.filter(r => r.schoolId === schoolId && r.isPaid)
+  }
+
+  function isOverdue(school: any) {
+    const record = getBillingRecord(school.id)
+    if (record?.isPaid) return false
+    // Overdue if they joined more than 30 days ago and haven't paid this month
+    return new Date(school.createdAt) < thirtyDaysAgo
+  }
+
   async function togglePaid(school: any) {
-    const planName = getPlanName(school)
-    const plan = PLANS[planName as keyof typeof PLANS] || PLANS.Starter
+    const planName = school.currentPlan || 'Starter'
+    const plan = PLANS[planName] || PLANS.Starter
     const existing = getBillingRecord(school.id)
     const newIsPaid = !existing?.isPaid
-
     setMarkingPaid(prev => ({ ...prev, [school.id]: true }))
     const res = await fetch('/api/admin/billing', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        schoolId: school.id,
-        month: currentMonth,
-        year: currentYear,
-        amount: plan.monthly,
-        isPaid: newIsPaid,
-      }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ schoolId: school.id, month: currentMonth, year: currentYear, amount: plan.monthly, isPaid: newIsPaid }),
     })
     const record = await res.json()
     setBillingRecords(prev => {
@@ -69,95 +67,82 @@ export default function AdminBilling() {
   async function handleUpgradeAction(requestId: number, action: 'approve' | 'reject') {
     setActionLoading(prev => ({ ...prev, [requestId]: true }))
     await fetch('/api/admin/upgrade', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requestId, action })
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestId, action }),
     })
     setUpgradeRequests(prev => prev.filter(r => r.id !== requestId))
     if (action === 'approve') {
       const req = upgradeRequests.find(r => r.id === requestId)
-      if (req) {
-        setSchools(prev => prev.map(s => s.id === req.schoolId ? { ...s, currentPlan: req.requestedPlan } : s))
-      }
+      if (req) setSchools(prev => prev.map(s => s.id === req.schoolId ? { ...s, currentPlan: req.requestedPlan } : s))
     }
     setActionLoading(prev => ({ ...prev, [requestId]: false }))
   }
 
-  const getPlanName = (school: any) => school.currentPlan || 'Starter'
-
-  const totalMonthly = schools.reduce((sum, s) => {
-    const plan = PLANS[getPlanName(s) as keyof typeof PLANS] || PLANS.Starter
-    return sum + plan.monthly
-  }, 0)
-
-  const totalSetup = schools.reduce((sum, s) => {
-    const plan = PLANS[getPlanName(s) as keyof typeof PLANS] || PLANS.Starter
-    return sum + plan.setup
-  }, 0)
-
+  const getPlanName = (s: any) => s.currentPlan || 'Starter'
+  const totalMRR = schools.reduce((sum, s) => sum + (PLANS[getPlanName(s)]?.monthly || 4500), 0)
   const paidThisMonth = billingRecords.filter(r => r.month === currentMonth && r.year === currentYear && r.isPaid)
   const totalPaidMonthly = paidThisMonth.reduce((sum, r) => sum + r.amount, 0)
-  const totalOutstanding = totalMonthly - totalPaidMonthly
+  const outstanding = totalMRR - totalPaidMonthly
+  const overdueSchools = schools.filter(isOverdue)
+
+  const displayedSchools = overdueOnly ? schools.filter(isOverdue) : schools
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/admin/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">← Back</Link>
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Billing</h1>
-            <p className="text-gray-500 text-sm mt-0.5">Track what each school owes you</p>
-          </div>
-        </div>
+    <div>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Billing</h1>
+        <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0' }}>Track subscriptions and payments for {MONTH_NAMES[currentMonth - 1]} {currentYear}</p>
+      </div>
 
-        {/* Pending upgrade requests */}
-        {!upgradeLoading && upgradeRequests.length > 0 && (
-          <div className="bg-white rounded-xl border border-amber-200 mb-6">
-            <div className="p-4 border-b border-amber-100 flex items-center gap-2">
-              <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full">{upgradeRequests.length}</span>
-              <h2 className="font-medium text-gray-900">Pending Plan Upgrade Requests</h2>
-            </div>
-            <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{minWidth: '640px'}}>
+      {/* Revenue summary */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+        {[
+          { label: 'Collected this month', value: `KES ${totalPaidMonthly.toLocaleString()}`, color: '#16a34a' },
+          { label: 'Outstanding this month', value: `KES ${outstanding.toLocaleString()}`, color: outstanding > 0 ? '#d97706' : '#94a3b8' },
+          { label: `Overdue (30+ days) — ${overdueSchools.length} schools`, value: `KES ${(overdueSchools.length * 4500).toLocaleString()}`, color: overdueSchools.length > 0 ? '#dc2626' : '#94a3b8' },
+        ].map(card => (
+          <div key={card.label} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '16px' }}>
+            <p style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 6px' }}>{card.label}</p>
+            <p style={{ fontSize: '22px', fontWeight: 700, color: card.color, margin: 0 }}>{card.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Pending upgrade requests */}
+      {!upgradeLoading && upgradeRequests.length > 0 && (
+        <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #fcd34d', marginBottom: '20px' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #fef3c7', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px' }}>{upgradeRequests.length}</span>
+            <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Pending Plan Upgrade Requests</h2>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', minWidth: '640px' }}>
               <thead>
-                <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
-                  <th className="p-3">School</th>
-                  <th className="p-3">Current plan</th>
-                  <th className="p-3">Requested plan</th>
-                  <th className="p-3">Notes</th>
-                  <th className="p-3">Submitted</th>
-                  <th className="p-3">Action</th>
+                <tr style={{ color: '#94a3b8', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {['School', 'Current plan', 'Requested', 'Notes', 'Submitted', 'Action'].map(h => (
+                    <th key={h} style={{ padding: '10px 14px', borderBottom: '1px solid #f1f5f9', fontWeight: 600, textAlign: 'left' }}>{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {upgradeRequests.map(req => (
-                  <tr key={req.id} className="border-b border-gray-50">
-                    <td className="p-3">
-                      <div className="font-medium text-gray-900">{req.school?.name}</div>
-                      <div className="text-xs text-gray-400">{req.school?.user?.email}</div>
+                  <tr key={req.id} style={{ borderBottom: '1px solid #f8f9fc' }}>
+                    <td style={{ padding: '10px 14px' }}>
+                      <div style={{ fontWeight: 600 }}>{req.school?.name}</div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{req.school?.user?.email}</div>
                     </td>
-                    <td className="p-3">
-                      <span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-700">{req.currentPlan}</span>
-                    </td>
-                    <td className="p-3">
-                      <span className="text-xs px-2 py-1 rounded-full font-medium bg-amber-100 text-amber-700">{req.requestedPlan}</span>
-                    </td>
-                    <td className="p-3 text-gray-500 text-xs max-w-xs">{req.notes || '—'}</td>
-                    <td className="p-3 text-gray-500 text-xs">{new Date(req.createdAt).toLocaleDateString('en-KE')}</td>
-                    <td className="p-3">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleUpgradeAction(req.id, 'approve')}
-                          disabled={actionLoading[req.id]}
-                          className="text-xs px-3 py-1.5 rounded-lg font-medium bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 disabled:opacity-50"
-                        >
+                    <td style={{ padding: '10px 14px' }}><span style={{ background: '#f1f5f9', color: '#475569', fontSize: '11px', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>{req.currentPlan}</span></td>
+                    <td style={{ padding: '10px 14px' }}><span style={{ background: '#fef3c7', color: '#92400e', fontSize: '11px', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>{req.requestedPlan}</span></td>
+                    <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '12px', maxWidth: '200px' }}>{req.notes || '—'}</td>
+                    <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: '12px' }}>{new Date(req.createdAt).toLocaleDateString('en-KE')}</td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button onClick={() => handleUpgradeAction(req.id, 'approve')} disabled={actionLoading[req.id]}
+                          style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0', padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
                           Approve
                         </button>
-                        <button
-                          onClick={() => handleUpgradeAction(req.id, 'reject')}
-                          disabled={actionLoading[req.id]}
-                          className="text-xs px-3 py-1.5 rounded-lg font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 disabled:opacity-50"
-                        >
+                        <button onClick={() => handleUpgradeAction(req.id, 'reject')} disabled={actionLoading[req.id]}
+                          style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
                           Reject
                         </button>
                       </div>
@@ -166,94 +151,73 @@ export default function AdminBilling() {
                 ))}
               </tbody>
             </table>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Monthly recurring</p>
-            <p className="text-2xl font-semibold text-gray-900">KES {totalMonthly.toLocaleString()}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Total setup fees</p>
-            <p className="text-2xl font-semibold text-gray-900">KES {totalSetup.toLocaleString()}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Collected this month</p>
-            <p className="text-2xl font-semibold text-green-700">KES {totalPaidMonthly.toLocaleString()}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Outstanding</p>
-            <p className="text-2xl font-semibold text-red-600">KES {totalOutstanding.toLocaleString()}</p>
           </div>
         </div>
+      )}
 
-        <div className="bg-white rounded-xl border border-gray-200">
-          <div className="p-4 border-b border-gray-100">
-            <h2 className="font-medium text-gray-900">School billing — {MONTH_NAMES[currentMonth - 1]} {currentYear}</h2>
-          </div>
-          <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{minWidth: '640px'}}>
+      {/* Billing table */}
+      <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+        <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            School billing — {MONTH_NAMES[currentMonth - 1]} {currentYear}
+          </h2>
+          <button onClick={() => setOverdueOnly(v => !v)}
+            style={{ background: overdueOnly ? '#dc2626' : '#f8f9fc', color: overdueOnly ? '#fff' : '#64748b', border: `1px solid ${overdueOnly ? '#dc2626' : '#e2e8f0'}`, padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+            {overdueOnly ? '✕ Clear filter' : `⚠ Show overdue only (${overdueSchools.length})`}
+          </button>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', minWidth: '760px' }}>
             <thead>
-              <tr className="text-left text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
-                <th className="p-3">School</th>
-                <th className="p-3">Plan</th>
-                <th className="p-3">Students</th>
-                <th className="p-3">Monthly fee</th>
-                <th className="p-3">Setup fee</th>
-                <th className="p-3">Joined</th>
-                <th className="p-3">This month</th>
+              <tr style={{ color: '#94a3b8', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {['School', 'Plan', 'Students', 'Monthly fee', 'Invoice history', 'Joined', 'This month'].map(h => (
+                  <th key={h} style={{ padding: '10px 14px', borderBottom: '1px solid #f1f5f9', fontWeight: 600, textAlign: 'left' }}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {loading && (
-                <tr><td colSpan={7} className="p-4 text-center text-gray-400">Loading...</td></tr>
-              )}
-              {schools.map(school => {
-                const studentCount = school._count?.students || 0
+              {loading && <tr><td colSpan={7} style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>Loading…</td></tr>}
+              {displayedSchools.map(school => {
                 const planName = getPlanName(school)
-                const plan = PLANS[planName as keyof typeof PLANS] || PLANS.Starter
+                const plan = PLANS[planName] || PLANS.Starter
                 const record = getBillingRecord(school.id)
                 const isPaid = record?.isPaid || false
                 const isMarking = markingPaid[school.id] || false
-                const planColor = planName === 'Starter' ? 'bg-gray-100 text-gray-700' : planName === 'Growth' ? 'bg-blue-100 text-blue-700' : planName === 'Premium' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
+                const overdue = isOverdue(school)
+                const allPaid = getSchoolAllPaidRecords(school.id)
+                const totalLifetime = allPaid.reduce((s, r) => s + r.amount, 0)
+                const planColors: Record<string, string> = { Starter: '#f1f5f9', Growth: '#dbeafe', Premium: '#fef3c7', Enterprise: '#f3e8ff' }
+                const planTextColors: Record<string, string> = { Starter: '#475569', Growth: '#1e40af', Premium: '#92400e', Enterprise: '#6b21a8' }
 
                 return (
-                  <tr key={school.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="p-3">
-                      <Link href={'/admin/schools/' + school.id} className="font-medium text-blue-900 hover:underline">{school.name}</Link>
-                      <div className="text-xs text-gray-400">{school.user?.email}</div>
+                  <tr key={school.id} style={{ borderBottom: '1px solid #f8f9fc', borderLeft: overdue ? '3px solid #dc2626' : '3px solid transparent' }}>
+                    <td style={{ padding: '10px 14px' }}>
+                      <Link href={`/admin/schools/${school.id}`} style={{ fontWeight: 600, color: '#0a1f4e', textDecoration: 'none' }}>{school.name}</Link>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>{school.user?.email}</div>
+                      {overdue && <span style={{ fontSize: '10px', color: '#dc2626', fontWeight: 700 }}>OVERDUE</span>}
                     </td>
-                    <td className="p-3">
-                      <span className={'text-xs px-2 py-1 rounded-full font-medium ' + planColor}>{planName}</span>
+                    <td style={{ padding: '10px 14px' }}>
+                      <span style={{ background: planColors[planName] || '#f1f5f9', color: planTextColors[planName] || '#475569', fontSize: '11px', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>{planName}</span>
                     </td>
-                    <td className="p-3">{studentCount}</td>
-                    <td className="p-3 font-medium">KES {plan.monthly.toLocaleString()}</td>
-                    <td className="p-3 text-gray-500">KES {plan.setup.toLocaleString()}</td>
-                    <td className="p-3 text-gray-500">{new Date(school.createdAt).toLocaleDateString('en-KE')}</td>
-                    <td className="p-3">
-                      <div className="flex flex-col gap-1">
-                        <button
-                          onClick={() => togglePaid(school)}
-                          disabled={isMarking}
-                          className={'text-xs px-3 py-1.5 rounded-lg font-medium border disabled:opacity-50 ' + (isPaid ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200')}
-                        >
-                          {isMarking ? '...' : isPaid ? 'Paid ✓' : 'Mark as paid'}
-                        </button>
-                        {isPaid && record?.paidAt && (
-                          <span className="text-xs text-gray-400">
-                            {new Date(record.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
-                          </span>
-                        )}
-                      </div>
+                    <td style={{ padding: '10px 14px' }}>{school._count?.students || 0}</td>
+                    <td style={{ padding: '10px 14px', fontWeight: 600 }}>KES {plan.monthly.toLocaleString()}</td>
+                    <td style={{ padding: '10px 14px', fontSize: '12px', color: '#475569' }}>
+                      <div>{allPaid.length} invoice{allPaid.length !== 1 ? 's' : ''}</div>
+                      <div style={{ color: '#94a3b8', fontSize: '11px' }}>KES {totalLifetime.toLocaleString()} total</div>
+                    </td>
+                    <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: '12px' }}>{new Date(school.createdAt).toLocaleDateString('en-KE')}</td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <button onClick={() => togglePaid(school)} disabled={isMarking}
+                        style={{ background: isPaid ? '#dcfce7' : '#fee2e2', color: isPaid ? '#166534' : '#dc2626', border: `1px solid ${isPaid ? '#bbf7d0' : '#fecaca'}`, padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                        {isMarking ? '…' : isPaid ? 'Paid ✓' : 'Mark paid'}
+                      </button>
+                      {isPaid && record?.paidAt && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>{new Date(record.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}</div>}
                     </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
-          </div>
         </div>
       </div>
     </div>

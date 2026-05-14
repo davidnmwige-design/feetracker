@@ -237,4 +237,22 @@ model PlatformSettings {
   notifyTrialExpiry    Boolean @default(true)
   notifyUpgradeRequest Boolean @default(true)
   notifyAccountDeleted Boolean @default(true)
+  companyName     String  @default("Elimu Pay")
+  adminName       String  @default("David Njiru")
+  companyAddress  String  @default("")
+  kraPin          String  @default("")
+  startingInvoiceNumber Int @default(1000)
+  invoiceDueDays  Int     @default(30)
+  lateInterestRate Float  @default(0)
+  emailSignature  String  @default("")
+}
+
+model AdminAnnouncement {
+  id            Int      @id @default(autoincrement())
+  subject       String
+  message       String
+  recipientType String   @default("all")
+  recipientCount Int     @default(0)
+  sentBy        String
+  createdAt     DateTime @default(now())
 }
