@@ -2,13 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-
-const PLANS = {
-  Starter: { monthly: 4500, setup: 15000 },
-  Growth: { monthly: 6500, setup: 20000 },
-  Premium: { monthly: 9000, setup: 25000 },
-  Enterprise: { monthly: 15000, setup: 35000 },
-}
+import { getAnnualTotal, getBillingAmount, getSetupFee, getPlanName } from '@/lib/pricing'
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -91,8 +85,11 @@ export default function SchoolDetail() {
   if (!school) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">School not found</div>
 
   const studentCount = school._count?.students || 0
-  const planName = school.currentPlan || 'Starter'
-  const plan = PLANS[planName as keyof typeof PLANS] || PLANS.Starter
+  const planName = getPlanName(studentCount)
+  const cycle = (school.billingCycle as 'monthly' | 'term' | 'annual') || 'monthly'
+  const annualFee = getAnnualTotal(studentCount)
+  const billingAmt = getBillingAmount(studentCount, cycle)
+  const setupFee = getSetupFee(studentCount)
   const totalExpected = school.students?.reduce((sum: number, s: any) => sum + s.feeRequired, 0) || 0
   const totalCollected = school.students?.reduce((sum: number, s: any) =>
     sum + s.payments.reduce((p: number, pay: any) => p + pay.amount, 0), 0) || 0
@@ -164,16 +161,24 @@ export default function SchoolDetail() {
             <h2 className="font-medium text-gray-900 mb-4">Subscription and usage</h2>
             <div className="space-y-3">
               <div className="flex justify-between py-1.5 border-b border-gray-50">
-                <span className="text-sm text-gray-500">Plan</span>
+                <span className="text-sm text-gray-500">Plan tier</span>
                 <span className="text-sm font-medium">{planName}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-gray-50">
-                <span className="text-sm text-gray-500">Monthly fee</span>
-                <span className="text-sm font-medium">KES {plan.monthly.toLocaleString()}</span>
+                <span className="text-sm text-gray-500">Annual subscription</span>
+                <span className="text-sm font-medium">{studentCount} × KES 200 = KES {annualFee.toLocaleString()}/yr</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Billing cycle</span>
+                <span className="text-sm font-medium capitalize">{cycle}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Amount per period</span>
+                <span className="text-sm font-medium">KES {billingAmt.toLocaleString()}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-gray-50">
                 <span className="text-sm text-gray-500">Setup fee</span>
-                <span className="text-sm font-medium">KES {plan.setup.toLocaleString()}</span>
+                <span className="text-sm font-medium">KES {setupFee.toLocaleString()}</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-gray-50">
                 <span className="text-sm text-gray-500">Students</span>

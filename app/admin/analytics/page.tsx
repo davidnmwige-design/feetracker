@@ -2,10 +2,15 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
+import { getAnnualTotal, getPlanName } from '@/lib/pricing'
 
-const PLAN_MONTHLY: Record<string, number> = { Starter: 4500, Growth: 6500, Premium: 9000, Enterprise: 15000 }
-const PLAN_COLORS: Record<string, string> = { Starter: '#64748b', Growth: '#3b82f6', Premium: '#f59e0b', Enterprise: '#c8a84b' }
+const PLAN_COLORS: Record<string, string> = { Starter: '#64748b', Growth: '#3b82f6', Professional: '#8b5cf6', Premium: '#f59e0b', Enterprise: '#c8a84b' }
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function schoolMRR(s: any): number {
+  const count = s._count?.students || 0
+  return Math.round(getAnnualTotal(count) / 12)
+}
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
@@ -37,7 +42,7 @@ export default function AdminAnalytics() {
   const totalSchools = schools.length
   const activeSchools = schools.filter(s => (s._count?.students || 0) > 0).length
   const totalStudents = schools.reduce((sum, s) => sum + (s._count?.students || 0), 0)
-  const monthlyRevenue = schools.reduce((sum, s) => sum + (PLAN_MONTHLY[s.currentPlan || 'Starter'] || 4500), 0)
+  const monthlyRevenue = schools.reduce((sum, s) => sum + schoolMRR(s), 0)
   const annualRunRate = monthlyRevenue * 12
 
   const newThisMonth = schools.filter(s => {
@@ -73,7 +78,7 @@ export default function AdminAnalytics() {
     const monthEnd = new Date(year, month + 1, 0, 23, 59, 59)
     const revenue = schools
       .filter(s => new Date(s.createdAt) <= monthEnd)
-      .reduce((sum, s) => sum + (PLAN_MONTHLY[s.currentPlan || 'Starter'] || 4500), 0)
+      .reduce((sum, s) => sum + schoolMRR(s), 0)
     return { month: MONTH_NAMES[month], revenue }
   })
 
@@ -131,8 +136,8 @@ export default function AdminAnalytics() {
         {/* Plan distribution */}
         <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '20px' }}>
           <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: '0 0 16px' }}>Plan distribution</h2>
-          {['Starter', 'Growth', 'Premium', 'Enterprise'].map(plan => {
-            const count = schools.filter(s => (s.currentPlan || 'Starter') === plan).length
+          {['Starter', 'Growth', 'Professional', 'Premium', 'Enterprise'].map(plan => {
+            const count = schools.filter(s => getPlanName(s._count?.students || 0) === plan).length
             const pct = totalSchools > 0 ? Math.round((count / totalSchools) * 100) : 0
             return (
               <div key={plan} style={{ marginBottom: '12px' }}>
@@ -192,7 +197,8 @@ export default function AdminAnalytics() {
               </thead>
               <tbody>
                 {topSchools.map((school, i) => {
-                  const plan = school.currentPlan || 'Starter'
+                  const studentCount = school._count?.students || 0
+                  const plan = getPlanName(studentCount)
                   return (
                     <tr key={school.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                       <td style={{ padding: '10px 16px', color: '#94a3b8', fontWeight: 700 }}>{i + 1}</td>
@@ -202,8 +208,8 @@ export default function AdminAnalytics() {
                       <td style={{ padding: '10px 16px' }}>
                         <span style={{ background: '#f8f9fc', color: '#475569', padding: '2px 8px', borderRadius: '4px', fontWeight: 600, fontSize: '11px' }}>{plan}</span>
                       </td>
-                      <td style={{ padding: '10px 16px', fontWeight: 600 }}>{school._count?.students || 0}</td>
-                      <td style={{ padding: '10px 16px', color: '#0a7c4e', fontWeight: 600 }}>KES {(PLAN_MONTHLY[plan] || 4500).toLocaleString()}</td>
+                      <td style={{ padding: '10px 16px', fontWeight: 600 }}>{studentCount}</td>
+                      <td style={{ padding: '10px 16px', color: '#0a7c4e', fontWeight: 600 }}>KES {schoolMRR(school).toLocaleString()}/mo</td>
                       <td style={{ padding: '10px 16px', color: '#64748b' }}>{new Date(school.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                     </tr>
                   )

@@ -24,20 +24,19 @@ export default function TrialExpired() {
             </p>
 
             <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '20px', marginBottom: '28px', textAlign: 'left'}}>
-              <p style={{fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Choose a plan to continue</p>
+              <p style={{fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Subscription pricing</p>
+              <p style={{fontSize: '12px', color: '#64748b', marginBottom: '12px'}}>KES 200 per student per year (min. KES 20,000/year)</p>
               {[
-                {name: 'Starter', sub: 'Up to 300 students', price: '4,500'},
-                {name: 'Growth', sub: '300 – 600 students', price: '6,500'},
-                {name: 'Premium', sub: '600 – 1,000 students', price: '9,000'},
-              ].map((plan, i) => (
-                <div key={plan.name} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none'}}>
-                  <div>
-                    <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{plan.name}</span>
-                    <span style={{fontSize: '12px', color: '#94a3b8', marginLeft: '8px'}}>{plan.sub}</span>
-                  </div>
-                  <span style={{fontSize: '13px', fontWeight: 700, color: '#c8a84b'}}>KES {plan.price}/mo</span>
+                {name: 'Up to 200 students',  monthly: Math.round(20000/12),  setup: '25,000'},
+                {name: '201–400 students',    monthly: Math.round(80000/12),  setup: '35,000'},
+                {name: '401–700 students',    monthly: Math.round(140000/12), setup: '50,000'},
+              ].map((tier, i) => (
+                <div key={tier.name} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none'}}>
+                  <span style={{fontSize: '12px', color: '#475569'}}>{tier.name}</span>
+                  <span style={{fontSize: '13px', fontWeight: 700, color: '#c8a84b'}}>~KES {tier.monthly.toLocaleString()}/mo</span>
                 </div>
               ))}
+              <p style={{fontSize: '10px', color: '#94a3b8', marginTop: '10px', marginBottom: 0}}>One-time setup fee from KES 25,000. Discounts available for per-term or annual billing.</p>
             </div>
 
             <p style={{fontSize: '13px', color: '#64748b', marginBottom: '20px'}}>

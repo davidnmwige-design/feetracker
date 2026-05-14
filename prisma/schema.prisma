@@ -41,6 +41,7 @@ model School {
   whatsappNumber      String?
   currentTerm         String               @default("Term 1 2026")
   currentPlan         String               @default("Starter")
+  billingCycle        String               @default("monthly")
   createdAt           DateTime             @default(now())
   trialEndsAt             DateTime?
   trialExpiryNotified     Boolean              @default(false)

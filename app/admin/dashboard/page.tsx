@@ -2,9 +2,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { getAnnualTotal } from '@/lib/pricing'
 
-const PLAN_MONTHLY: Record<string, number> = { Starter: 4500, Growth: 6500, Premium: 9000, Enterprise: 15000 }
 const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+function schoolMRR(s: any): number {
+  return Math.round(getAnnualTotal(s._count?.students || 0) / 12)
+}
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
@@ -50,7 +54,7 @@ export default function AdminDashboard() {
 
   const totalSchools = schools.length
   const totalStudents = schools.reduce((sum, s) => sum + (s._count?.students || 0), 0)
-  const mrr = schools.reduce((sum, s) => sum + (PLAN_MONTHLY[s.currentPlan || 'Starter'] || 4500), 0)
+  const mrr = schools.reduce((sum, s) => sum + schoolMRR(s), 0)
 
   // 6-month MRR trend from billing records
   const now = new Date()

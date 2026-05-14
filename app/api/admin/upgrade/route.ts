@@ -3,12 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sendEmail } from '@/lib/email'
-
-const PLAN_DETAILS: Record<string, { monthly: number; maxStudents: number }> = {
-  Starter: { monthly: 4500, maxStudents: 300 },
-  Growth: { monthly: 6500, maxStudents: 600 },
-  Premium: { monthly: 9000, maxStudents: 1000 },
-}
+import { RATE_PER_STUDENT_PER_YEAR } from '@/lib/pricing'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -76,7 +71,9 @@ export async function PATCH(req: Request) {
         data: { currentPlan: upgradeRequest.requestedPlan }
       })
 
-      const newPlan = PLAN_DETAILS[upgradeRequest.requestedPlan] || PLAN_DETAILS['Starter']
+      const schoolStudentCount = await prisma.student.count({ where: { schoolId: upgradeRequest.schoolId } })
+      const annualFee = Math.max(schoolStudentCount * RATE_PER_STUDENT_PER_YEAR, 20000)
+      const monthlyFee = Math.round(annualFee / 12)
 
       const approvalHtml = `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
@@ -96,12 +93,16 @@ export async function PATCH(req: Request) {
                   <td style="text-align:right;font-weight:700;color:#c8a84b;font-size:14px">${upgradeRequest.requestedPlan}</td>
                 </tr>
                 <tr style="border-top:1px solid #e2e8f0">
-                  <td style="padding:8px 0;color:#64748b;font-size:13px">Student capacity</td>
-                  <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">Up to ${newPlan.maxStudents} students</td>
+                  <td style="padding:8px 0;color:#64748b;font-size:13px">Students enrolled</td>
+                  <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">${schoolStudentCount}</td>
                 </tr>
                 <tr style="border-top:1px solid #e2e8f0">
-                  <td style="padding:8px 0;color:#64748b;font-size:13px">Monthly fee</td>
-                  <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">KES ${newPlan.monthly.toLocaleString()}/month</td>
+                  <td style="padding:8px 0;color:#64748b;font-size:13px">Annual subscription</td>
+                  <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">KES ${annualFee.toLocaleString()}/year</td>
+                </tr>
+                <tr style="border-top:1px solid #e2e8f0">
+                  <td style="padding:8px 0;color:#64748b;font-size:13px">Monthly equivalent</td>
+                  <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">~KES ${monthlyFee.toLocaleString()}/month</td>
                 </tr>
               </table>
             </div>

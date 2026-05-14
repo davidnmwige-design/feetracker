@@ -3,32 +3,15 @@ import { useState, useEffect } from 'react'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import {
+  getAnnualTotal, getBillingAmount, getDiscountedAnnual,
+  getAnnualSavings, getSetupFee, getPlanName, BILLING_DISCOUNTS,
+} from '@/lib/pricing'
 
 const TERMS = [
   'Term 1 2026', 'Term 2 2026', 'Term 3 2026',
   'Term 1 2027', 'Term 2 2027', 'Term 3 2027',
 ]
-
-const PLAN_DETAILS: Record<string, { name: string; maxStudents: number | null; monthly: number; setup: number }> = {
-  Starter: { name: 'Starter', maxStudents: 300, monthly: 4500, setup: 15000 },
-  Growth: { name: 'Growth', maxStudents: 600, monthly: 6500, setup: 20000 },
-  Premium: { name: 'Premium', maxStudents: 1000, monthly: 9000, setup: 25000 },
-  Enterprise: { name: 'Enterprise', maxStudents: null, monthly: 15000, setup: 35000 },
-}
-
-const PLAN_UPGRADES: Record<string, Array<{ name: string; maxStudents: number | null; monthly: number }>> = {
-  Starter: [
-    { name: 'Growth', maxStudents: 600, monthly: 6500 },
-    { name: 'Premium', maxStudents: 1000, monthly: 9000 },
-  ],
-  Growth: [
-    { name: 'Premium', maxStudents: 1000, monthly: 9000 },
-  ],
-  Premium: [
-    { name: 'Enterprise', maxStudents: null, monthly: 15000 },
-  ],
-  Enterprise: [],
-}
 
 export default function Settings() {
   useEffect(() => {
@@ -431,8 +414,11 @@ export default function Settings() {
   async function downloadInvoice() {
     if (!school) return
     const { jsPDF } = await import('jspdf')
-    const planName = school.currentPlan || 'Starter'
-    const plan = PLAN_DETAILS[planName] || PLAN_DETAILS['Starter']
+    const invPlanName = getPlanName(studentCount)
+    const invAnnualTotal = getAnnualTotal(studentCount)
+    const invBillingAmt = getBillingAmount(studentCount, selectedCycle)
+    const invSetupFee = getSetupFee(studentCount)
+    const cycleLabel = selectedCycle === 'monthly' ? 'monthly' : selectedCycle === 'term' ? 'per term' : 'annual'
     const today = new Date()
     const dueDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
     const invoiceNum = 'FT-' + school.id + '-' + today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0')
@@ -479,7 +465,7 @@ export default function Settings() {
     doc.setTextColor(15, 23, 42)
     doc.text(today.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }), 20, metaY + 6)
     doc.text(dueDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }), 80, metaY + 6)
-    doc.text(plan.name, 140, metaY + 6)
+    doc.text(invPlanName, 140, metaY + 6)
 
     doc.setDrawColor(226, 232, 240)
     doc.setLineWidth(0.3)
@@ -509,12 +495,11 @@ export default function Settings() {
     doc.text('DESCRIPTION', 24, tableY + 5.5)
     doc.text('AMOUNT', w - 24, tableY + 5.5, { align: 'right' })
 
-    const maxDesc = plan.maxStudents !== null ? `${plan.maxStudents} students max` : 'unlimited students'
     const items: [string, number][] = [
-      [plan.name + ' Plan — monthly subscription (' + maxDesc + ')', plan.monthly],
+      [invPlanName + ' Plan — ' + cycleLabel + ' subscription (' + studentCount + ' students × KES 200/yr)', invBillingAmt],
     ]
     if (isFirstInvoice) {
-      items.push(['One-time platform setup fee', plan.setup])
+      items.push(['One-time platform setup fee', invSetupFee])
     }
 
     let itemY = tableY + 16
@@ -571,30 +556,47 @@ export default function Settings() {
     doc.text('Thank you for choosing Elimu Pay to manage your school fees.', w / 2, 290, { align: 'center' })
 
     doc.save('EllimuPay_Invoice_' + invoiceNum + '.pdf')
-    return { invoiceNum, plan, total, isFirstInvoice, today, dueDate }
+    return { invoiceNum, invPlanName, total, isFirstInvoice, today, dueDate }
   }
 
   function sendInvoiceWhatsApp() {
     if (!school) return
-    const planName = school.currentPlan || 'Starter'
-    const plan = PLAN_DETAILS[planName] || PLAN_DETAILS['Starter']
+    const waPlanName = getPlanName(studentCount)
+    const waBillingAmt = getBillingAmount(studentCount, selectedCycle)
+    const waSetupFee = getSetupFee(studentCount)
+    const waCycleLabel = selectedCycle === 'monthly' ? 'monthly subscription' : selectedCycle === 'term' ? 'per-term subscription' : 'annual subscription'
     const today = new Date()
     const dueDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
     const invoiceNum = 'FT-' + school.id + '-' + today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0')
     const isFirstInvoice = terms.length <= 1
-    const total = plan.monthly + (isFirstInvoice ? plan.setup : 0)
+    const total = waBillingAmt + (isFirstInvoice ? waSetupFee : 0)
 
-    const planCapDesc = plan.maxStudents !== null ? `up to ${plan.maxStudents} students` : 'unlimited students'
-    const msg = `*Elimu Pay Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${plan.name} (${planCapDesc})\n\n*Breakdown:*\n• ${plan.name} monthly subscription: KES ${plan.monthly.toLocaleString()}${isFirstInvoice ? `\n• One-time setup fee: KES ${plan.setup.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@elimupay.co.ke`
+    const msg = `*Elimu Pay Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${waPlanName} (${studentCount} students × KES 200/yr)\n\n*Breakdown:*\n• ${waCycleLabel}: KES ${waBillingAmt.toLocaleString()}${isFirstInvoice ? `\n• One-time setup fee: KES ${waSetupFee.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@elimupay.co.ke`
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank')
   }
 
-  const currentPlan = school?.currentPlan || 'Starter'
-  const planDetails = PLAN_DETAILS[currentPlan] || PLAN_DETAILS['Starter']
-  const availableUpgrades = PLAN_UPGRADES[currentPlan] || []
-  const remaining = planDetails.maxStudents !== null ? planDetails.maxStudents - studentCount : Infinity
-  const progressPct = planDetails.maxStudents !== null ? (studentCount / planDetails.maxStudents) * 100 : 0
-  const nearLimit = planDetails.maxStudents !== null && remaining <= 20
+  const currentPlanName = getPlanName(studentCount)
+  const [selectedCycle, setSelectedCycle] = useState<'monthly' | 'term' | 'annual'>((school?.billingCycle as any) || 'monthly')
+  const annualTotal = getAnnualTotal(studentCount)
+  const billingAmount = getBillingAmount(studentCount, selectedCycle)
+  const discountedAnnual = getDiscountedAnnual(studentCount, selectedCycle)
+  const annualSavings = getAnnualSavings(studentCount, selectedCycle)
+  const monthlyAmount = getBillingAmount(studentCount, 'monthly')
+  const setupFee = getSetupFee(studentCount)
+  const [savingCycle, setSavingCycle] = useState(false)
+  const [cycleSaved, setCycleSaved] = useState(false)
+
+  async function saveBillingCycle() {
+    setSavingCycle(true)
+    await fetch('/api/school', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ billingCycle: selectedCycle }),
+    })
+    setSavingCycle(false)
+    setCycleSaved(true)
+    setTimeout(() => setCycleSaved(false), 2000)
+  }
 
   return (
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
@@ -650,7 +652,7 @@ export default function Settings() {
                     {label: 'Current term', value: school?.currentTerm},
                     {label: 'WhatsApp number', value: school?.whatsappNumber || '—'},
                     {label: 'Reply-to email', value: school?.replyToEmail || '—'},
-                    {label: 'Plan', value: planDetails.maxStudents !== null ? `${currentPlan} (${studentCount} / ${planDetails.maxStudents} students)` : `${currentPlan} (${studentCount} students)`},
+                    {label: 'Plan', value: `${currentPlanName} (${studentCount} students)`},
                   ].map((row, i, arr) => (
                     <div key={row.label} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none'}}>
                       <span style={{fontSize: '13px', color: '#64748b'}}>{row.label}</span>
@@ -888,61 +890,66 @@ export default function Settings() {
 
             {/* Your Plan */}
             <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px'}}>
-                <div>
-                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Your Plan</h2>
-                  <p style={{fontSize: '12px', color: '#94a3b8'}}>Current plan and student usage</p>
-                </div>
-                {availableUpgrades.length > 0 && (
-                  <button
-                    onClick={() => setShowUpgradeModal(true)}
-                    style={{background: '#c8a84b', color: '#0a1f4e', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'}}
-                  >
-                    Upgrade Plan
-                  </button>
-                )}
-              </div>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Subscription</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>KES 200 per student per year</p>
 
-              <div className="set-plan-cards" style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
-                <div style={{flex: 1, background: '#f8f9fc', borderRadius: '8px', padding: '14px'}}>
-                  <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', margin: '0 0 4px'}}>Plan</p>
-                  <p style={{fontSize: '17px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 2px'}}>{currentPlan}</p>
-                  <p style={{fontSize: '12px', color: '#64748b', margin: 0}}>KES {planDetails.monthly.toLocaleString()}/month</p>
+              {/* Pricing breakdown */}
+              <div style={{background: '#f8f9fc', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px', fontSize: '13px'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
+                  <span style={{color: '#64748b'}}>Students enrolled</span>
+                  <span style={{fontWeight: 700, color: '#0f172a'}}>{studentCount}</span>
                 </div>
-                <div style={{flex: 1, background: '#f8f9fc', borderRadius: '8px', padding: '14px'}}>
-                  <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px'}}>Students</p>
-                  <p style={{fontSize: '17px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 2px'}}>
-                    {planDetails.maxStudents !== null ? `${studentCount} / ${planDetails.maxStudents}` : `${studentCount}`}
-                  </p>
-                  <p style={{fontSize: '12px', color: '#64748b', margin: 0}}>{planDetails.maxStudents !== null ? 'enrolled' : 'enrolled (unlimited)'}</p>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
+                  <span style={{color: '#64748b'}}>Annual rate (KES 200 × {studentCount})</span>
+                  <span style={{fontWeight: 700, color: '#0f172a'}}>KES {annualTotal.toLocaleString()}/year</span>
+                </div>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
+                  <span style={{color: '#64748b'}}>Plan tier</span>
+                  <span style={{fontWeight: 700, color: '#0a1f4e'}}>{currentPlanName}</span>
+                </div>
+                <div style={{borderTop: '1px solid #e2e8f0', paddingTop: '8px', display: 'flex', justifyContent: 'space-between'}}>
+                  <span style={{color: '#64748b'}}>Setup fee (one-time)</span>
+                  <span style={{fontWeight: 700, color: '#0f172a'}}>KES {setupFee.toLocaleString()}</span>
                 </div>
               </div>
 
-              {planDetails.maxStudents !== null && (
-                <>
-                  <div style={{marginBottom: nearLimit ? '8px' : '0'}}>
-                    <div style={{background: '#f1f5f9', borderRadius: '4px', height: '8px', overflow: 'hidden'}}>
-                      <div style={{
-                        background: remaining <= 0 ? '#ef4444' : nearLimit ? '#f59e0b' : '#0a1f4e',
-                        width: Math.min(progressPct, 100) + '%',
-                        height: '100%',
-                        borderRadius: '4px',
-                        transition: 'width 0.3s ease'
-                      }} />
-                    </div>
-                  </div>
-                  {nearLimit && remaining > 0 && (
-                    <p style={{fontSize: '12px', color: '#d97706', margin: '8px 0 0'}}>
-                      ⚠ Only {remaining} student slot{remaining === 1 ? '' : 's'} remaining. Consider upgrading your plan.
-                    </p>
-                  )}
-                  {remaining <= 0 && (
-                    <p style={{fontSize: '12px', color: '#ef4444', margin: '8px 0 0'}}>
-                      Student limit reached. Upgrade your plan to add more students.
-                    </p>
-                  )}
-                </>
+              {/* Billing cycle selector */}
+              <p style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', marginBottom: '10px'}}>Billing cycle</p>
+              <div style={{display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap'}}>
+                {(['monthly', 'term', 'annual'] as const).map(c => {
+                  const amt = getBillingAmount(studentCount, c)
+                  const savings = getAnnualSavings(studentCount, c)
+                  const suffix = c === 'monthly' ? '/month' : c === 'term' ? '/term' : '/year'
+                  return (
+                    <button key={c} onClick={() => setSelectedCycle(c)} style={{
+                      flex: 1, minWidth: '140px', padding: '10px 12px', borderRadius: '8px', textAlign: 'left',
+                      border: selectedCycle === c ? '2px solid #0a1f4e' : '1px solid #e2e8f0',
+                      background: selectedCycle === c ? '#f0f4ff' : '#fff', cursor: 'pointer',
+                    }}>
+                      <div style={{fontSize: '12px', fontWeight: 700, color: '#0f172a', textTransform: 'capitalize'}}>{c === 'term' ? 'Per Term' : c.charAt(0).toUpperCase() + c.slice(1)}</div>
+                      <div style={{fontSize: '15px', fontWeight: 700, color: '#0a1f4e', margin: '2px 0'}}>KES {amt.toLocaleString()}<span style={{fontSize: '11px', fontWeight: 400, color: '#94a3b8'}}>{suffix}</span></div>
+                      {savings > 0
+                        ? <div style={{fontSize: '10px', color: '#16a34a', fontWeight: 600}}>Save KES {savings.toLocaleString()}/year</div>
+                        : <div style={{fontSize: '10px', color: '#94a3b8'}}>No discount</div>
+                      }
+                    </button>
+                  )
+                })}
+              </div>
+
+              {annualSavings > 0 && (
+                <p style={{fontSize: '12px', color: '#16a34a', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '8px 12px', marginBottom: '12px'}}>
+                  By paying {selectedCycle === 'term' ? 'per term' : 'annually'} you save KES {annualSavings.toLocaleString()} per year vs monthly billing.
+                </p>
               )}
+
+              <button
+                onClick={saveBillingCycle}
+                disabled={savingCycle}
+                style={{background: cycleSaved ? '#16a34a' : '#0a1f4e', color: '#fff', padding: '9px 18px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: savingCycle ? 'not-allowed' : 'pointer'}}
+              >
+                {cycleSaved ? 'Saved ✓' : savingCycle ? 'Saving…' : 'Change billing cycle'}
+              </button>
             </div>
 
             <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
@@ -979,7 +986,7 @@ export default function Settings() {
               <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Subscription invoice</h2>
               <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
                 Generate your Elimu Pay subscription invoice for {new Date().toLocaleString('en-KE', { month: 'long', year: 'numeric' })}.
-                Plan: <strong>{planDetails.name}</strong> — KES {planDetails.monthly.toLocaleString()}/month.
+                Plan: <strong>{currentPlanName}</strong> — KES {billingAmount.toLocaleString()} {selectedCycle === 'monthly' ? '/month' : selectedCycle === 'term' ? '/term' : '/year'}.
               </p>
               <div className="set-invoice-row" style={{display: 'flex', gap: '10px'}}>
                 <button
@@ -1248,30 +1255,32 @@ export default function Settings() {
               </>
             ) : (
               <>
-                <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Upgrade Your Plan</h3>
-                <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '20px'}}>Select a plan to upgrade to</p>
+                <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Request Tier Change</h3>
+                <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '12px'}}>Pricing is KES 200 per student per year — your bill adjusts automatically as you add students. Select a tier to move to:</p>
 
-                {availableUpgrades.map(plan => (
+                <div style={{background: '#f8f9fc', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px', color: '#64748b'}}>
+                  <div style={{marginBottom: '4px'}}><strong style={{color: '#0f172a'}}>Your current tier:</strong> {currentPlanName} ({studentCount} students)</div>
+                  <div><strong style={{color: '#0f172a'}}>Annual subscription:</strong> KES {annualTotal.toLocaleString()}/year</div>
+                </div>
+
+                {(['Growth', 'Professional', 'Premium', 'Enterprise'] as const).map(tier => (
                   <div
-                    key={plan.name}
-                    onClick={() => setRequestedPlan(plan.name)}
+                    key={tier}
+                    onClick={() => setRequestedPlan(tier)}
                     style={{
-                      border: requestedPlan === plan.name ? '2px solid #0a1f4e' : '1px solid #e2e8f0',
-                      borderRadius: '8px', padding: '14px 16px', marginBottom: '10px', cursor: 'pointer',
-                      background: requestedPlan === plan.name ? '#f0f4ff' : '#fff'
+                      border: requestedPlan === tier ? '2px solid #0a1f4e' : '1px solid #e2e8f0',
+                      borderRadius: '8px', padding: '12px 14px', marginBottom: '8px', cursor: 'pointer',
+                      background: requestedPlan === tier ? '#f0f4ff' : '#fff'
                     }}
                   >
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                       <div>
-                        <p style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0}}>{plan.name}</p>
-                        <p style={{fontSize: '12px', color: '#64748b', margin: '2px 0 0'}}>
-                    {plan.maxStudents !== null ? `Up to ${plan.maxStudents} students` : '1,000+ students (unlimited)'}
-                  </p>
+                        <p style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: 0}}>{tier}</p>
+                        <p style={{fontSize: '11px', color: '#64748b', margin: '2px 0 0'}}>
+                          {tier === 'Growth' ? 'Up to 400 students' : tier === 'Professional' ? 'Up to 700 students' : tier === 'Premium' ? 'Up to 1,000 students' : '1,000+ students'}
+                        </p>
                       </div>
-                      <div style={{textAlign: 'right'}}>
-                        <p style={{fontSize: '14px', fontWeight: 700, color: '#0a1f4e', margin: 0}}>KES {plan.monthly.toLocaleString()}</p>
-                        <p style={{fontSize: '11px', color: '#94a3b8', margin: '2px 0 0'}}>per month</p>
-                      </div>
+                      <div style={{textAlign: 'right', fontSize: '11px', color: '#64748b'}}>KES 200/student/yr</div>
                     </div>
                   </div>
                 ))}

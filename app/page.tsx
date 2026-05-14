@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import PricingSection from '@/components/PricingSection'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker.co.ke'
 
@@ -139,59 +140,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="land-section" style={{padding: '48px 32px', background: '#0a1f4e'}}>
-        <div style={{maxWidth: '860px', margin: '0 auto'}}>
-          <div style={{fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '2px', color: '#c8a84b', marginBottom: '10px'}}>Pricing</div>
-          <h2 style={{fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '6px', fontFamily: 'Georgia, serif'}}>Simple, honest pricing</h2>
-          <p style={{fontSize: '12px', color: '#94a3c8', marginBottom: '28px'}}>Less than the cost of one hour of your bursar's time per day</p>
-          <div className="land-grid-4" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px'}}>
-            {[
-              {name: 'Starter', sub: 'Up to 300 students', price: '4,500', setup: '15,000', featured: false},
-              {name: 'Growth', sub: '300 – 600 students', price: '6,500', setup: '20,000', featured: true},
-              {name: 'Premium', sub: '600 – 1,000 students', price: '9,000', setup: '25,000', featured: false},
-            ].map(plan => (
-              <div key={plan.name} style={{background: plan.featured ? '#fff' : '#0d2660', border: plan.featured ? '2px solid #c8a84b' : '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '22px', position: 'relative' as const}}>
-                {plan.featured && (
-                  <div style={{position: 'absolute' as const, top: '-10px', left: '50%', transform: 'translateX(-50%)', background: '#c8a84b', color: '#0a1f4e', fontSize: '10px', padding: '3px 10px', borderRadius: '999px', fontWeight: 700, whiteSpace: 'nowrap' as const}}>
-                    Most popular
-                  </div>
-                )}
-                <div style={{fontSize: '14px', fontWeight: 700, color: plan.featured ? '#0a1f4e' : '#fff', marginBottom: '3px'}}>{plan.name}</div>
-                <div style={{fontSize: '11px', color: plan.featured ? '#64748b' : '#94a3c8', marginBottom: '16px'}}>{plan.sub}</div>
-                <div style={{fontSize: '24px', fontWeight: 700, color: plan.featured ? '#0a1f4e' : '#c8a84b'}}>KES {plan.price}</div>
-                <div style={{fontSize: '11px', color: plan.featured ? '#64748b' : '#94a3c8'}}>/month</div>
-                <div style={{fontSize: '11px', color: '#64748b', marginBottom: '20px'}}>+ KES {plan.setup} setup fee</div>
-                <Link href="/signup" style={{display: 'block', textAlign: 'center' as const, padding: '9px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: '#0a1f4e', color: '#fff', textDecoration: 'none'}}>
-                  Get started
-                </Link>
-                <div style={{fontSize: '10px', color: '#94a3c8', textAlign: 'center' as const, marginTop: '8px'}}>30-day free trial included</div>
-              </div>
-            ))}
-
-            {/* Enterprise card */}
-            <div style={{background: '#0a1f4e', border: '2px solid rgba(200,168,75,0.5)', borderRadius: '8px', padding: '22px', position: 'relative' as const}}>
-              <div style={{position: 'absolute' as const, top: '-10px', left: '50%', transform: 'translateX(-50%)', background: '#c8a84b', color: '#0a1f4e', fontSize: '10px', padding: '3px 10px', borderRadius: '999px', fontWeight: 700, whiteSpace: 'nowrap' as const}}>
-                Top tier
-              </div>
-              <div style={{fontSize: '14px', fontWeight: 700, color: '#c8a84b', marginBottom: '3px'}}>Enterprise</div>
-              <div style={{fontSize: '11px', color: 'rgba(200,168,75,0.7)', marginBottom: '16px'}}>1,000+ students</div>
-              <div style={{fontSize: '24px', fontWeight: 700, color: '#c8a84b'}}>KES 15,000</div>
-              <div style={{fontSize: '11px', color: 'rgba(200,168,75,0.7)'}}>/month</div>
-              <div style={{fontSize: '11px', color: 'rgba(200,168,75,0.5)', marginBottom: '8px'}}>+ KES 35,000 setup fee</div>
-              <div style={{fontSize: '11px', color: '#94a3c8', marginBottom: '20px'}}>Priority support + dedicated onboarding</div>
-              <Link href="/signup" style={{display: 'block', textAlign: 'center' as const, padding: '9px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, background: '#c8a84b', color: '#0a1f4e', textDecoration: 'none'}}>
-                Get started
-              </Link>
-              <div style={{fontSize: '10px', color: 'rgba(148,163,200,0.8)', textAlign: 'center' as const, marginTop: '8px'}}>
-                30-day free trial included
-              </div>
-              <div style={{fontSize: '10px', color: 'rgba(148,163,200,0.6)', textAlign: 'center' as const, marginTop: '4px'}}>
-                Custom pricing available · Contact us
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PricingSection />
 
       {/* FAQ */}
       <div className="land-section" style={{padding: '48px 32px', background: '#f8f9fc'}}>

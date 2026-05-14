@@ -1,14 +1,20 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { getBillingAmount, getAnnualTotal, getSetupFee, getPlanName, getDiscountedAnnual, BILLING_DISCOUNTS } from '@/lib/pricing'
 
-const PLANS: Record<string, { monthly: number; setup: number }> = {
-  Starter: { monthly: 4500, setup: 15000 },
-  Growth: { monthly: 6500, setup: 20000 },
-  Premium: { monthly: 9000, setup: 25000 },
-  Enterprise: { monthly: 15000, setup: 35000 },
-}
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
+function schoolBillingAmount(school: any): number {
+  const count = school._count?.students || 0
+  const cycle = (school.billingCycle as 'monthly' | 'term' | 'annual') || 'monthly'
+  return getBillingAmount(count, cycle)
+}
+
+function schoolMRR(school: any): number {
+  const count = school._count?.students || 0
+  return Math.round(getAnnualTotal(count) / 12)
+}
 
 export default function AdminBilling() {
   const [schools, setSchools] = useState<any[]>([])
@@ -47,14 +53,13 @@ export default function AdminBilling() {
   }
 
   async function togglePaid(school: any) {
-    const planName = school.currentPlan || 'Starter'
-    const plan = PLANS[planName] || PLANS.Starter
+    const amount = schoolBillingAmount(school)
     const existing = getBillingRecord(school.id)
     const newIsPaid = !existing?.isPaid
     setMarkingPaid(prev => ({ ...prev, [school.id]: true }))
     const res = await fetch('/api/admin/billing', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ schoolId: school.id, month: currentMonth, year: currentYear, amount: plan.monthly, isPaid: newIsPaid }),
+      body: JSON.stringify({ schoolId: school.id, month: currentMonth, year: currentYear, amount, isPaid: newIsPaid }),
     })
     const record = await res.json()
     setBillingRecords(prev => {
@@ -78,8 +83,7 @@ export default function AdminBilling() {
     setActionLoading(prev => ({ ...prev, [requestId]: false }))
   }
 
-  const getPlanName = (s: any) => s.currentPlan || 'Starter'
-  const totalMRR = schools.reduce((sum, s) => sum + (PLANS[getPlanName(s)]?.monthly || 4500), 0)
+  const totalMRR = schools.reduce((sum, s) => sum + schoolMRR(s), 0)
   const paidThisMonth = billingRecords.filter(r => r.month === currentMonth && r.year === currentYear && r.isPaid)
   const totalPaidMonthly = paidThisMonth.reduce((sum, r) => sum + r.amount, 0)
   const outstanding = totalMRR - totalPaidMonthly
@@ -99,7 +103,7 @@ export default function AdminBilling() {
         {[
           { label: 'Collected this month', value: `KES ${totalPaidMonthly.toLocaleString()}`, color: '#16a34a' },
           { label: 'Outstanding this month', value: `KES ${outstanding.toLocaleString()}`, color: outstanding > 0 ? '#d97706' : '#94a3b8' },
-          { label: `Overdue (30+ days) — ${overdueSchools.length} schools`, value: `KES ${(overdueSchools.length * 4500).toLocaleString()}`, color: overdueSchools.length > 0 ? '#dc2626' : '#94a3b8' },
+          { label: `Overdue (30+ days) — ${overdueSchools.length} schools`, value: `KES ${overdueSchools.reduce((s, sch) => s + schoolMRR(sch), 0).toLocaleString()}`, color: overdueSchools.length > 0 ? '#dc2626' : '#94a3b8' },
         ].map(card => (
           <div key={card.label} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '16px' }}>
             <p style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 6px' }}>{card.label}</p>
@@ -170,7 +174,7 @@ export default function AdminBilling() {
           <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', minWidth: '760px' }}>
             <thead>
               <tr style={{ color: '#94a3b8', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                {['School', 'Plan', 'Students', 'Monthly fee', 'Invoice history', 'Joined', 'This month'].map(h => (
+                {['School', 'Plan', 'Students', 'Billing amount', 'Invoice history', 'Joined', 'This month'].map(h => (
                   <th key={h} style={{ padding: '10px 14px', borderBottom: '1px solid #f1f5f9', fontWeight: 600, textAlign: 'left' }}>{h}</th>
                 ))}
               </tr>
@@ -178,16 +182,20 @@ export default function AdminBilling() {
             <tbody>
               {loading && <tr><td colSpan={7} style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>Loading…</td></tr>}
               {displayedSchools.map(school => {
-                const planName = getPlanName(school)
-                const plan = PLANS[planName] || PLANS.Starter
+                const studentCount = school._count?.students || 0
+                const planName = getPlanName(studentCount)
+                const cycle = (school.billingCycle as 'monthly' | 'term' | 'annual') || 'monthly'
+                const billingAmt = getBillingAmount(studentCount, cycle)
+                const annualTotal = getAnnualTotal(studentCount)
                 const record = getBillingRecord(school.id)
                 const isPaid = record?.isPaid || false
                 const isMarking = markingPaid[school.id] || false
                 const overdue = isOverdue(school)
                 const allPaid = getSchoolAllPaidRecords(school.id)
                 const totalLifetime = allPaid.reduce((s, r) => s + r.amount, 0)
-                const planColors: Record<string, string> = { Starter: '#f1f5f9', Growth: '#dbeafe', Premium: '#fef3c7', Enterprise: '#f3e8ff' }
-                const planTextColors: Record<string, string> = { Starter: '#475569', Growth: '#1e40af', Premium: '#92400e', Enterprise: '#6b21a8' }
+                const planColors: Record<string, string> = { Starter: '#f1f5f9', Growth: '#dbeafe', Professional: '#ede9fe', Premium: '#fef3c7', Enterprise: '#f3e8ff' }
+                const planTextColors: Record<string, string> = { Starter: '#475569', Growth: '#1e40af', Professional: '#6d28d9', Premium: '#92400e', Enterprise: '#6b21a8' }
+                const cycleLabel: Record<string, string> = { monthly: '/mo', term: '/term', annual: '/yr' }
 
                 return (
                   <tr key={school.id} style={{ borderBottom: '1px solid #f8f9fc', borderLeft: overdue ? '3px solid #dc2626' : '3px solid transparent' }}>
@@ -199,8 +207,11 @@ export default function AdminBilling() {
                     <td style={{ padding: '10px 14px' }}>
                       <span style={{ background: planColors[planName] || '#f1f5f9', color: planTextColors[planName] || '#475569', fontSize: '11px', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>{planName}</span>
                     </td>
-                    <td style={{ padding: '10px 14px' }}>{school._count?.students || 0}</td>
-                    <td style={{ padding: '10px 14px', fontWeight: 600 }}>KES {plan.monthly.toLocaleString()}</td>
+                    <td style={{ padding: '10px 14px' }}>{studentCount}</td>
+                    <td style={{ padding: '10px 14px', fontWeight: 600 }}>
+                      <div>KES {billingAmt.toLocaleString()}<span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 400 }}>{cycleLabel[cycle]}</span></div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>{studentCount} × 200 = KES {annualTotal.toLocaleString()}/yr</div>
+                    </td>
                     <td style={{ padding: '10px 14px', fontSize: '12px', color: '#475569' }}>
                       <div>{allPaid.length} invoice{allPaid.length !== 1 ? 's' : ''}</div>
                       <div style={{ color: '#94a3b8', fontSize: '11px' }}>KES {totalLifetime.toLocaleString()} total</div>

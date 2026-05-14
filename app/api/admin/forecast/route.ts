@@ -1,8 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-
-const PLAN_MONTHLY: Record<string, number> = { Starter: 4500, Growth: 6500, Premium: 9000, Enterprise: 15000 }
+import { getBillingAmount, getAnnualTotal } from '@/lib/pricing'
 
 export async function GET() {
   const session = await auth()
@@ -11,17 +10,25 @@ export async function GET() {
   if (!user?.isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const now = new Date()
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-  const nextQuarterEnd = new Date(now.getFullYear(), now.getMonth() + 3, 1)
   const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
   const schools = await prisma.school.findMany({
-    include: { user: { select: { name: true, email: true } } },
+    include: {
+      user: { select: { name: true, email: true } },
+      _count: { select: { students: true } },
+    },
   })
+
+  function schoolMRR(s: (typeof schools)[number]): number {
+    const count = s._count?.students || 0
+    const cycle = (s.billingCycle as 'monthly' | 'term' | 'annual') || 'monthly'
+    // Monthly equivalent regardless of billing cycle
+    return Math.round(getAnnualTotal(count) / 12)
+  }
 
   // Active schools (not trial expired, or no trial)
   const activeSchools = schools.filter(s => !s.trialEndsAt || new Date(s.trialEndsAt) > now)
-  const mrr = activeSchools.reduce((sum, s) => sum + (PLAN_MONTHLY[s.currentPlan || 'Starter'] || 4500), 0)
+  const mrr = activeSchools.reduce((sum, s) => sum + schoolMRR(s), 0)
 
   // Schools whose trials expire this month (conversion opportunities)
   const trialsExpiringThisMonth = schools.filter(s => {
@@ -31,10 +38,7 @@ export async function GET() {
   })
 
   // 6-month MRR history from billing records
-  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
-  const billingHistory = await prisma.billingRecord.findMany({
-    where: { isPaid: true },
-  })
+  const billingHistory = await prisma.billingRecord.findMany({ where: { isPaid: true } })
 
   const monthlyRevenue: Record<string, number> = {}
   for (let i = 5; i >= 0; i--) {
@@ -54,16 +58,13 @@ export async function GET() {
     }
   })
 
-  // Next month forecast: current active schools
   const nextMonthForecast = mrr
-  // Next quarter: assume 5% growth per month
   const nextQuarterForecast = Math.round(mrr * 3 * 1.05)
-
-  // Best/worst case
-  const bestCase = Math.round(mrr + trialsExpiringThisMonth.length * 4500)
+  // Avg new trial converts at minimum subscription (20,000/year = ~1,667/month)
+  const avgTrialValue = Math.round(20000 / 12)
+  const bestCase = Math.round(mrr + trialsExpiringThisMonth.length * avgTrialValue)
   const worstCase = Math.round(mrr * 0.9)
 
-  // Schools renewing this month (joined in a previous year but same month)
   const renewingThisMonth = schools.filter(s => {
     const joined = new Date(s.createdAt)
     return joined.getMonth() === now.getMonth() && joined.getFullYear() < now.getFullYear()
@@ -81,11 +82,17 @@ export async function GET() {
       adminEmail: s.user?.email,
       adminName: s.user?.name,
     })),
-    renewingThisMonth: renewingThisMonth.map(s => ({
-      id: s.id, name: s.name,
-      plan: s.currentPlan,
-      monthlyFee: PLAN_MONTHLY[s.currentPlan || 'Starter'] || 4500,
-    })),
+    renewingThisMonth: renewingThisMonth.map(s => {
+      const count = s._count?.students || 0
+      const cycle = (s.billingCycle as 'monthly' | 'term' | 'annual') || 'monthly'
+      return {
+        id: s.id, name: s.name,
+        plan: s.currentPlan,
+        monthlyFee: Math.round(getAnnualTotal(count) / 12),
+        billingCycle: cycle,
+        billingAmount: getBillingAmount(count, cycle),
+      }
+    }),
     mrrHistory,
   })
 }
