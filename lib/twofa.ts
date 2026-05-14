@@ -18,12 +18,12 @@ function toHex(buf: ArrayBuffer): string {
     .join('')
 }
 
-function fromHex(hex: string): Uint8Array {
+function fromHex(hex: string): ArrayBuffer {
   const bytes = new Uint8Array(hex.length / 2)
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16)
   }
-  return bytes
+  return bytes.buffer as ArrayBuffer
 }
 
 export async function create2faCookieValue(userId: number, secret: string): Promise<string> {
@@ -44,7 +44,7 @@ export async function verify2faCookie(value: string | undefined, userId: number,
   const data = `${uid}:${exp}`
   const key = await getKey(secret)
   try {
-    return await globalThis.crypto.subtle.verify('HMAC', key, fromHex(sig), new TextEncoder().encode(data))
+    return await globalThis.crypto.subtle.verify('HMAC', key, fromHex(sig) as ArrayBuffer, new TextEncoder().encode(data))
   } catch {
     return false
   }
