@@ -46,16 +46,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // next-auth v5 beta strips custom fields from the user object before
-        // passing it here, so we must fetch directly from DB instead of reading
-        // (user as any).twoFactorEnabled which would always be undefined.
+        console.log('[JWT callback] user present, id:', user.id, 'email:', user.email)
         token.userId = user.id
-        const dbUser = await prisma.user.findUnique({
-          where: { id: Number(user.id) },
-          select: { twoFactorEnabled: true, sessionVersion: true },
-        })
-        token.twoFactorEnabled = dbUser?.twoFactorEnabled ?? false
-        token.sessionVersion = dbUser?.sessionVersion ?? 1
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: Number(user.id) },
+            select: { twoFactorEnabled: true, sessionVersion: true },
+          })
+          console.log('[JWT callback] dbUser fetched:', dbUser)
+          token.twoFactorEnabled = dbUser?.twoFactorEnabled ?? false
+          token.sessionVersion = dbUser?.sessionVersion ?? 1
+        } catch (err) {
+          console.error('[JWT callback] DB fetch failed:', err)
+          token.twoFactorEnabled = false
+          token.sessionVersion = 1
+        }
       } else if (token.userId && token.sessionVersion !== undefined) {
         // On every subsequent token refresh, re-validate sessionVersion and
         // sync twoFactorEnabled so enabling/disabling 2FA takes effect without
