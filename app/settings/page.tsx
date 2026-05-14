@@ -78,6 +78,21 @@ export default function Settings() {
 
   const [exporting, setExporting] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+
+  // 2FA state
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false)
+  const [twoFALoading, setTwoFALoading] = useState(false)
+  const [twoFASetup, setTwoFASetup] = useState<{ qrCode: string; secret: string } | null>(null)
+  const [twoFACode, setTwoFACode] = useState('')
+  const [twoFAError, setTwoFAError] = useState('')
+  const [twoFASuccess, setTwoFASuccess] = useState('')
+  const [twoFADisablePass, setTwoFADisablePass] = useState('')
+  const [twoFADisabling, setTwoFADisabling] = useState(false)
+  const [showDisableForm, setShowDisableForm] = useState(false)
+
+  // Daraja state
+  const [darajaRegistering, setDarajaRegistering] = useState(false)
+  const [darajaResult, setDarajaResult] = useState<{ success?: boolean; error?: string; msg?: string } | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
@@ -90,10 +105,11 @@ export default function Settings() {
   async function fetchData() {
     setLoading(true)
     setTeamLoading(true)
-    const [schoolRes, termsRes, studentsRes] = await Promise.all([
+    const [schoolRes, termsRes, studentsRes, meRes] = await Promise.all([
       fetch('/api/school'),
       fetch('/api/terms'),
-      fetch('/api/students')
+      fetch('/api/students'),
+      fetch('/api/account'),
     ])
     fetch('/api/team').then(r => r.json()).then(d => { setTeamMembers(Array.isArray(d) ? d : []); setTeamLoading(false) })
     const schoolData = await schoolRes.json()
@@ -110,6 +126,8 @@ export default function Settings() {
     setPenaltyDueDate(schoolData?.penaltyDueDate || 15)
     setTerms(termsData)
     setStudentCount(Array.isArray(studentsData) ? studentsData.length : 0)
+    const meData = await meRes.json().catch(() => ({}))
+    setTwoFAEnabled(meData?.twoFactorEnabled ?? false)
     setLoading(false)
   }
 
@@ -269,6 +287,70 @@ export default function Settings() {
       setDeleteError('Something went wrong')
       setDeleting(false)
     }
+  }
+
+  async function start2FASetup() {
+    setTwoFALoading(true); setTwoFAError(''); setTwoFASuccess('')
+    try {
+      const res = await fetch('/api/auth/2fa/setup')
+      const data = await res.json()
+      if (res.ok) setTwoFASetup(data)
+      else setTwoFAError(data.error || 'Failed to generate QR code')
+    } catch { setTwoFAError('Something went wrong') }
+    setTwoFALoading(false)
+  }
+
+  async function verify2FASetup() {
+    if (!twoFASetup || !twoFACode.trim() || twoFALoading) return
+    setTwoFALoading(true); setTwoFAError('')
+    try {
+      const res = await fetch('/api/auth/2fa/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: twoFASetup.secret, code: twoFACode }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setTwoFAEnabled(true); setTwoFASetup(null); setTwoFACode('')
+        setTwoFASuccess('2FA is now enabled on your account.')
+        setTimeout(() => setTwoFASuccess(''), 4000)
+      } else {
+        setTwoFAError(data.error || 'Invalid code')
+      }
+    } catch { setTwoFAError('Something went wrong') }
+    setTwoFALoading(false)
+  }
+
+  async function disable2FA() {
+    if (!twoFADisablePass.trim() || twoFADisabling) return
+    setTwoFADisabling(true); setTwoFAError('')
+    try {
+      const res = await fetch('/api/auth/2fa/setup', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: twoFADisablePass }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setTwoFAEnabled(false); setShowDisableForm(false); setTwoFADisablePass('')
+        setTwoFASuccess('2FA has been disabled.')
+        setTimeout(() => setTwoFASuccess(''), 4000)
+      } else {
+        setTwoFAError(data.error || 'Failed to disable 2FA')
+      }
+    } catch { setTwoFAError('Something went wrong') }
+    setTwoFADisabling(false)
+  }
+
+  async function registerDaraja() {
+    setDarajaRegistering(true); setDarajaResult(null)
+    try {
+      const res = await fetch('/api/daraja/register')
+      const data = await res.json()
+      if (res.ok) setDarajaResult({ success: true, msg: 'Real-time MPESA notifications are now active.' })
+      else setDarajaResult({ error: data.error || 'Registration failed' })
+    } catch { setDarajaResult({ error: 'Something went wrong' }) }
+    setDarajaRegistering(false)
   }
 
   function closeUpgradeModal() {
@@ -782,6 +864,131 @@ export default function Settings() {
               >
                 {exporting ? 'Exporting...' : 'Export all data (.xlsx)'}
               </button>
+            </div>
+
+            {/* Two-Factor Authentication */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Two-Factor Authentication</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+                Add an extra layer of security to your account using Google Authenticator or any TOTP app.
+              </p>
+              {twoFASuccess && <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', color: '#166534', fontSize: '13px', padding: '10px 12px', borderRadius: '6px', marginBottom: '12px'}}>{twoFASuccess}</div>}
+              {twoFAError && !twoFASetup && <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '13px', padding: '10px 12px', borderRadius: '6px', marginBottom: '12px'}}>{twoFAError}</div>}
+
+              {twoFAEnabled ? (
+                <div>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px'}}>
+                    <span style={{background: '#e1f5ee', color: '#166534', fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px'}}>✓ Enabled</span>
+                    <span style={{fontSize: '13px', color: '#0f172a', fontWeight: 600}}>Two-Factor Authentication is active</span>
+                  </div>
+                  {!showDisableForm ? (
+                    <button onClick={() => { setShowDisableForm(true); setTwoFAError('') }}
+                      style={{background: 'none', border: '1px solid #fca5a5', color: '#dc2626', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer'}}>
+                      Disable 2FA
+                    </button>
+                  ) : (
+                    <div>
+                      <p style={{fontSize: '12px', color: '#64748b', marginBottom: '8px'}}>Enter your current password to disable 2FA:</p>
+                      {twoFAError && <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '12px', padding: '8px 12px', borderRadius: '6px', marginBottom: '8px'}}>{twoFAError}</div>}
+                      <div style={{display: 'flex', gap: '8px'}}>
+                        <input type="password" value={twoFADisablePass} onChange={e => setTwoFADisablePass(e.target.value)}
+                          placeholder="Current password"
+                          onKeyDown={e => e.key === 'Enter' && disable2FA()}
+                          style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none'}} />
+                        <button onClick={disable2FA} disabled={!twoFADisablePass.trim() || twoFADisabling}
+                          style={{background: twoFADisabling ? '#94a3b8' : '#dc2626', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: twoFADisabling ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const}}>
+                          {twoFADisabling ? 'Disabling…' : 'Confirm disable'}
+                        </button>
+                        <button onClick={() => { setShowDisableForm(false); setTwoFADisablePass(''); setTwoFAError('') }}
+                          style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : !twoFASetup ? (
+                <div>
+                  <p style={{fontSize: '13px', color: '#64748b', marginBottom: '12px'}}>Two-Factor Authentication is not enabled.</p>
+                  <button onClick={start2FASetup} disabled={twoFALoading}
+                    style={{background: twoFALoading ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '9px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: twoFALoading ? 'not-allowed' : 'pointer'}}>
+                    {twoFALoading ? 'Loading…' : 'Enable 2FA'}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <p style={{fontSize: '13px', color: '#0f172a', fontWeight: 600, marginBottom: '8px'}}>
+                    Scan this QR code with Google Authenticator then enter the 6-digit code below
+                  </p>
+                  <div style={{display: 'flex', justifyContent: 'center', margin: '16px 0'}}>
+                    <img src={twoFASetup.qrCode} alt="QR code" style={{width: '180px', height: '180px', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px'}} />
+                  </div>
+                  <p style={{fontSize: '11px', color: '#94a3b8', textAlign: 'center', marginBottom: '16px'}}>
+                    Can't scan? Manual key: <code style={{background: '#f8f9fc', padding: '2px 6px', borderRadius: '4px', fontSize: '11px'}}>{twoFASetup.secret}</code>
+                  </p>
+                  {twoFAError && <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '12px', padding: '8px 12px', borderRadius: '6px', marginBottom: '8px'}}>{twoFAError}</div>}
+                  <div style={{display: 'flex', gap: '8px'}}>
+                    <input type="text" inputMode="numeric" maxLength={6} value={twoFACode}
+                      onChange={e => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      onKeyDown={e => e.key === 'Enter' && verify2FASetup()}
+                      placeholder="000000"
+                      style={{flex: 1, border: '2px solid #0a1f4e', borderRadius: '6px', padding: '9px 12px', fontSize: '18px', letterSpacing: '0.4em', textAlign: 'center', outline: 'none'}} />
+                    <button onClick={verify2FASetup} disabled={twoFACode.length !== 6 || twoFALoading}
+                      style={{background: (twoFACode.length !== 6 || twoFALoading) ? '#94a3b8' : '#c8a84b', color: (twoFACode.length !== 6 || twoFALoading) ? '#fff' : '#0a1f4e', border: 'none', padding: '9px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: (twoFACode.length !== 6 || twoFALoading) ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const}}>
+                      {twoFALoading ? 'Verifying…' : 'Verify and enable'}
+                    </button>
+                    <button onClick={() => { setTwoFASetup(null); setTwoFACode(''); setTwoFAError('') }}
+                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '9px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Real-time MPESA Notifications */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Real-time MPESA Notifications</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+                Receive instant payment notifications via the Safaricom Daraja API. Payments are recorded automatically the moment a parent pays.
+              </p>
+
+              {!school?.paybill ? (
+                <div style={{background: '#fef9ec', border: '1px solid #f0d878', borderRadius: '6px', padding: '12px 14px', fontSize: '13px', color: '#92681a'}}>
+                  No paybill number configured. Add your MPESA Paybill number to school settings first.
+                </div>
+              ) : !process.env.NEXT_PUBLIC_DARAJA_ENABLED && typeof window !== 'undefined' ? (
+                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '14px', fontSize: '13px', color: '#64748b'}}>
+                  Contact FeeTracker support to enable real-time MPESA notifications. When enabled, payments will be recorded automatically the moment a parent pays.
+                </div>
+              ) : (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9'}}>
+                    <span style={{fontSize: '13px', color: '#64748b'}}>Paybill number</span>
+                    <span style={{fontSize: '13px', fontWeight: 700, color: '#0f172a'}}>{school?.paybill}</span>
+                  </div>
+
+                  {darajaResult?.success ? (
+                    <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '12px 14px', fontSize: '13px', color: '#166534', fontWeight: 600}}>
+                      ✓ Real-time MPESA notifications are active. Payments will now be recorded automatically.
+                    </div>
+                  ) : darajaResult?.error ? (
+                    <div style={{background: '#fcebeb', border: '1px solid #fecaca', borderRadius: '6px', padding: '12px 14px', fontSize: '13px', color: '#a32d2d'}}>
+                      {darajaResult.error}
+                    </div>
+                  ) : null}
+
+                  <button onClick={registerDaraja} disabled={darajaRegistering}
+                    style={{background: darajaRegistering ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: darajaRegistering ? 'not-allowed' : 'pointer', width: 'fit-content'}}>
+                    {darajaRegistering ? 'Activating…' : darajaResult?.success ? 'Re-register URLs' : 'Activate real-time notifications'}
+                  </button>
+
+                  <div style={{background: '#f0f4f9', border: '1px solid #d4ddf0', borderRadius: '6px', padding: '12px 14px', fontSize: '12px', color: '#475569'}}>
+                    <strong>Instructions for parents:</strong> Tell parents to use their child&apos;s admission number as the account number when paying.<br />
+                    Example: Paybill <strong>{school?.paybill}</strong>, Account: <strong>ADM1234</strong>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Session security */}

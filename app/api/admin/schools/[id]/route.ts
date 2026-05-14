@@ -36,7 +36,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: 'School not found' }, { status: 404 })
     }
 
-    return NextResponse.json(school)
+    const lastDarajaPayment = await prisma.payment.findFirst({
+      where: { schoolId: Number(id), source: 'daraja' },
+      orderBy: { paidAt: 'desc' },
+      select: { paidAt: true, amount: true, senderName: true },
+    })
+
+    return NextResponse.json({
+      ...school,
+      darajaEnabled: !!process.env.DARAJA_CONSUMER_KEY,
+      lastDarajaPayment: lastDarajaPayment
+        ? { paidAt: lastDarajaPayment.paidAt.toISOString(), amount: lastDarajaPayment.amount, senderName: lastDarajaPayment.senderName }
+        : null,
+    })
   } catch (err) {
     console.error('admin school detail error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })

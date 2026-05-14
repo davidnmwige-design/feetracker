@@ -6,6 +6,27 @@ import { logAudit } from '@/lib/audit'
 import { sendEmail } from '@/lib/email'
 import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
 
+export async function GET(req: Request) {
+  if (!checkRateLimit(getIp(req))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+  const session = await auth()
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, name: true, email: true, twoFactorEnabled: true },
+    })
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    return NextResponse.json(user)
+  } catch (err) {
+    console.error('account GET error:', err)
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  }
+}
+
 export async function DELETE(req: Request) {
   if (!checkRateLimit(getIp(req))) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })

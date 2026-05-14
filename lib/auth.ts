@@ -34,7 +34,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         logAudit({ userId: user.id, action: 'LOGIN_SUCCESS', details: `Email: ${user.email}` }).catch(() => {})
-        return { id: String(user.id), name: user.name, email: user.email, sessionVersion: user.sessionVersion }
+        return { id: String(user.id), name: user.name, email: user.email, sessionVersion: user.sessionVersion, twoFactorEnabled: user.twoFactorEnabled }
       }
     })
   ],
@@ -46,9 +46,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // Initial sign-in: embed sessionVersion in token
         token.sessionVersion = (user as any).sessionVersion ?? 1
         token.userId = (user as any).id
+        token.twoFactorEnabled = (user as any).twoFactorEnabled ?? false
       } else if (token.email && token.sessionVersion !== undefined) {
         // Only validate sessionVersion for tokens that already carry it.
         // Old tokens without sessionVersion are allowed through for backwards
@@ -70,7 +70,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (!token) return session
-      return session
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: String((token as any).userId || ''),
+          twoFactorEnabled: Boolean((token as any).twoFactorEnabled),
+        },
+      }
     },
   },
   secret: process.env.NEXTAUTH_SECRET

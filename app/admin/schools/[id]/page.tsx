@@ -137,6 +137,30 @@ export default function SchoolDetail() {
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="font-medium text-gray-900 mb-4">Integration Status</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Paybill number</span>
+                <span className="text-sm font-medium">{school.paybill || '—'}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">Daraja API</span>
+                <span className={`text-sm font-semibold ${(school as any).darajaEnabled ? 'text-green-700' : 'text-gray-400'}`}>
+                  {(school as any).darajaEnabled ? 'Configured ✓' : 'Not configured'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-sm text-gray-500">Last Daraja payment</span>
+                <span className="text-sm font-medium">
+                  {(school as any).lastDarajaPayment
+                    ? new Date((school as any).lastDarajaPayment.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : 'Never'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="font-medium text-gray-900 mb-4">Subscription and usage</h2>
             <div className="space-y-3">
               <div className="flex justify-between py-1.5 border-b border-gray-50">

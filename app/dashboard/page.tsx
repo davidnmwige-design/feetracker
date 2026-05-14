@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { sendEmail } from '@/lib/email'
+import LivePaymentsFeed from '@/components/LivePaymentsFeed'
 
 export const revalidate = 0
 
@@ -69,13 +70,6 @@ export default async function Dashboard() {
   const outstanding = totalExpected - totalCollected
   const zeroPayment = students.filter(s => s.payments.length === 0).length
 
-  const recentPayments = await prisma.payment.findMany({
-    where: { student: { schoolId: school.id } },
-    take: 10,
-    orderBy: { paidAt: 'desc' },
-    include: { student: true }
-  })
-
   const collectionRate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0
 
   return (
@@ -121,40 +115,7 @@ export default async function Dashboard() {
           ))}
         </div>
 
-        <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
-          <div style={{padding: '14px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-            <h2 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a'}}>Recent payments</h2>
-          </div>
-          <div className="dash-table-wrap" style={{overflowX: 'auto', width: '100%'}}>
-          <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '560px'}}>
-            <thead>
-              <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9'}}>
-                {['Time', 'From', 'Amount', 'Matched to', 'Status'].map(h => (
-                  <th key={h} style={{padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px'}}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {recentPayments.length === 0 && (
-                <tr><td colSpan={5} style={{padding: '20px', textAlign: 'center' as const, color: '#94a3b8'}}>No payments yet. Upload an MPESA statement to get started.</td></tr>
-              )}
-              {recentPayments.map(payment => (
-                <tr key={payment.id} style={{borderBottom: '1px solid #f8fafc'}}>
-                  <td style={{padding: '10px 14px', color: '#64748b'}}>{new Date(payment.paidAt).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</td>
-                  <td style={{padding: '10px 14px'}}>{payment.senderName || '—'}</td>
-                  <td style={{padding: '10px 14px', fontWeight: 600}}>KES {payment.amount.toLocaleString()}</td>
-                  <td style={{padding: '10px 14px', color: '#64748b'}}>{payment.student ? payment.student.name + ' · ' + payment.student.class : '—'}</td>
-                  <td style={{padding: '10px 14px'}}>
-                    <span style={{background: payment.matched ? '#e1f5ee' : '#fcebeb', color: payment.matched ? '#166534' : '#a32d2d', fontSize: '10px', padding: '3px 8px', borderRadius: '999px', fontWeight: 600}}>
-                      {payment.matched ? 'Matched' : 'Review'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </div>
+        <LivePaymentsFeed />
       </div>
     </div>
   )
