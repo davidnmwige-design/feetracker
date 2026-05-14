@@ -60,153 +60,99 @@ export default function Reports() {
       const { jsPDF } = await import('jspdf')
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-      // ── A4 measurements ───────────────────────────────────────────────
-      const PW = 210          // page width
-      const L = 12            // left margin
-      const R = 198           // right edge (210 - 12)
-      const W_TABLE = 186     // usable width = R - L
-      // Content area: 15mm top margin, 10mm footer, 15mm bottom margin
-      // Usable page height: 297 - 15 - 10 - 15 = 257mm → content max y = 272
-      const Y_MAX = 272
+      // ── Constants ─────────────────────────────────────────────────────
+      const PW = 210
+      const L  = 12
       const today = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
-      const term = school.currentTerm || ''
-      const classLabel = selectedClass === 'All' ? '' : ` — ${selectedClass}`
+      const term  = school.currentTerm || ''
 
-      // ── Column widths (sum = 186mm) ───────────────────────────────────
-      const CW = { no: 10, name: 58, admNo: 26, feeReq: 28, paid: 26, balance: 26, status: 12 }
-      // Absolute x positions for each column's left edge
-      const X = {
-        no:      L,
-        name:    L + CW.no,
-        admNo:   L + CW.no + CW.name,
-        feeReq:  L + CW.no + CW.name + CW.admNo,
-        paid:    L + CW.no + CW.name + CW.admNo + CW.feeReq,
-        balance: L + CW.no + CW.name + CW.admNo + CW.feeReq + CW.paid,
-        status:  L + CW.no + CW.name + CW.admNo + CW.feeReq + CW.paid + CW.balance,
+      // Column widths (sum = 186mm exactly)
+      const cols = { no: 10, name: 60, admNo: 22, feeReq: 26, paid: 26, balance: 24, status: 18 }
+      // Column x positions (left edge of each column, from left margin 12)
+      const x = { no: 12, name: 22, admNo: 82, feeReq: 104, paid: 130, balance: 156, status: 180 }
+
+      function truncate(text: string, maxChars: number): string {
+        if (!text) return ''
+        return text.length > maxChars ? text.substring(0, maxChars - 2) + '..' : text
       }
 
-      // Summary from filtered
-      const tExp = filtered.reduce((s, st) => s + st.feeRequired, 0)
+      // Summary from filtered students
+      const tStudents  = filtered.length
+      const tExp  = filtered.reduce((s, st) => s + st.feeRequired, 0)
       const tColl = filtered.reduce((s, st) => s + (st.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0), 0)
-      const tOut = tExp - tColl
       const tRate = tExp > 0 ? Math.round((tColl / tExp) * 100) : 0
 
-      // ── Page 1 header ─────────────────────────────────────────────────
-      doc.setFillColor(10, 31, 78)
-      doc.rect(0, 0, PW, 38, 'F')
-      doc.setFillColor(200, 168, 75)
-      doc.rect(0, 38, PW, 2, 'F')
+      // ── PAGE 1 — COVER PAGE ──────────────────────────────────────────
+      // School name
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(10, 31, 78)
+      doc.text(school.name, PW / 2, 60, { align: 'center' })
 
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(200, 168, 75)
-      doc.text(school.name.toUpperCase(), PW / 2, 13, { align: 'center' })
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(170, 195, 225)
-      doc.setCharSpace(2)
-      doc.text(('FEE COLLECTION REPORT' + (classLabel ? classLabel.toUpperCase() : '')), PW / 2, 22, { align: 'center' })
-      doc.setCharSpace(0)
-      doc.setFontSize(8.5); doc.text(term, PW / 2, 31, { align: 'center' })
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(148, 163, 184)
-      doc.text('Generated: ' + today, R, 9, { align: 'right' })
+      // Report title
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(14); doc.setTextColor(100, 116, 139)
+      doc.text('FEE COLLECTION REPORT', PW / 2, 75, { align: 'center' })
 
-      // ── Summary boxes ─────────────────────────────────────────────────
-      const boxW = (W_TABLE - 6) / 4   // 4 boxes with 3×2mm gaps
-      const boxY = 44; const boxH = 18
+      // Term
+      doc.setFontSize(12)
+      doc.text(term, PW / 2, 85, { align: 'center' })
+
+      // Date generated
+      doc.setFontSize(10)
+      doc.text('Generated: ' + today, PW / 2, 93, { align: 'center' })
+
+      // Horizontal line
+      doc.setDrawColor(200, 210, 230); doc.setLineWidth(0.5)
+      doc.line(L, 100, PW - 12, 100)
+
+      // Summary stats — 2×2 grid, centered
+      const statBoxW = 70; const statBoxH = 28; const statGap = 10
+      const statGridW = statBoxW * 2 + statGap
+      const statStartX = (PW - statGridW) / 2
+      const statStartY = 115
       ;[
-        { label: 'Total Expected',  value: 'KES ' + tExp.toLocaleString() },
-        { label: 'Total Collected', value: 'KES ' + tColl.toLocaleString() },
-        { label: 'Outstanding',     value: 'KES ' + tOut.toLocaleString() },
-        { label: 'Collection Rate', value: tRate + '%' },
-      ].forEach((box, i) => {
-        const bx = L + i * (boxW + 2)
-        doc.setFillColor(248, 249, 252); doc.setDrawColor(220, 228, 240); doc.setLineWidth(0.25)
-        doc.rect(bx, boxY, boxW, boxH, 'FD')
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(100, 116, 139)
-        doc.text(box.label.toUpperCase(), bx + boxW / 2, boxY + 5.5, { align: 'center' })
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(10, 31, 78)
-        doc.text(box.value, bx + boxW / 2, boxY + 13, { align: 'center' })
+        { label: 'Total Students',   value: String(tStudents) },
+        { label: 'Collection Rate',  value: tRate + '%' },
+        { label: 'Total Expected',   value: 'KES ' + tExp.toLocaleString() },
+        { label: 'Total Collected',  value: 'KES ' + tColl.toLocaleString() },
+      ].forEach((stat, i) => {
+        const col = i % 2; const row = Math.floor(i / 2)
+        const bx = statStartX + col * (statBoxW + statGap)
+        const by = statStartY + row * (statBoxH + statGap)
+        doc.setFillColor(248, 249, 252); doc.setDrawColor(220, 228, 240); doc.setLineWidth(0.3)
+        doc.rect(bx, by, statBoxW, statBoxH, 'FD')
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100, 116, 139)
+        doc.text(stat.label.toUpperCase(), bx + statBoxW / 2, by + 9, { align: 'center' })
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(10, 31, 78)
+        doc.text(stat.value, bx + statBoxW / 2, by + 20, { align: 'center' })
       })
 
-      let y = boxY + boxH + 6   // table starts at ~68mm on page 1
-
-      // ── Helpers ───────────────────────────────────────────────────────
-      function drawTableHeader() {
-        doc.setFillColor(10, 31, 78)
-        doc.rect(L, y, W_TABLE, 7, 'F')
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(200, 168, 75)
-        doc.text('#',        X.no + CW.no / 2,           y + 4.8, { align: 'center' })
-        doc.text('NAME',     X.name + 1,                  y + 4.8)
-        doc.text('ADM NO',   X.admNo + 1,                 y + 4.8)
-        doc.text('FEE REQ',  X.feeReq + CW.feeReq - 1,   y + 4.8, { align: 'right' })
-        doc.text('PAID',     X.paid + CW.paid - 1,        y + 4.8, { align: 'right' })
-        doc.text('BALANCE',  X.balance + CW.balance - 1,  y + 4.8, { align: 'right' })
-        doc.text('STATUS',   X.status + CW.status / 2,    y + 4.8, { align: 'center' })
-        y += 7
+      if (selectedClass !== 'All') {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 116, 139)
+        doc.text('Filtered by class: ' + selectedClass, PW / 2, statStartY + 2 * (statBoxH + statGap) + 12, { align: 'center' })
       }
 
-      function checkPageBreak(needed = 7) {
-        if (y + needed > Y_MAX) {
-          doc.addPage()
-          y = 15
-          drawTableHeader()
-        }
-      }
+      // "Generated by FeeTracker" at bottom of cover
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(148, 163, 184)
+      doc.text('Generated by FeeTracker', PW / 2, 270, { align: 'center' })
 
-      function drawStudentRow(student: any, rowNum: number, even: boolean) {
-        const paid = (student.payments || []).reduce((s: number, p: any) => s + p.amount, 0)
-        const bal = student.feeRequired - paid
-        const status = bal <= 0 ? 'Paid' : paid > 0 ? 'Partial' : 'Unpaid'
-        const ROW_H = 6.5
-
-        // Alternating row background
-        doc.setFillColor(even ? 255 : 250, even ? 255 : 250, even ? 255 : 252)
-        doc.rect(L, y, W_TABLE, ROW_H, 'F')
-        // Row divider
-        doc.setDrawColor(238, 241, 247); doc.setLineWidth(0.15)
-        doc.line(L, y + ROW_H, R, y + ROW_H)
-
-        const ty = y + 4.4
-
-        // # (row number)
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(180, 190, 210)
-        doc.text(String(rowNum), X.no + CW.no / 2, ty, { align: 'center' })
-
-        // Name (truncated to column width)
-        doc.setFontSize(7.5); doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'normal')
-        const nameTrunc = doc.splitTextToSize(student.name || '', CW.name - 2)[0] as string
-        doc.text(nameTrunc, X.name + 1, ty)
-
-        // Adm No
-        doc.setTextColor(71, 85, 105)
-        doc.text(student.admNo || '—', X.admNo + 1, ty)
-
-        // Fee Req (right-aligned)
-        doc.setTextColor(100, 116, 139)
-        doc.text(student.feeRequired.toLocaleString(), X.feeReq + CW.feeReq - 1, ty, { align: 'right' })
-
-        // Paid (right-aligned, navy)
-        doc.setTextColor(10, 31, 78)
-        doc.text(paid.toLocaleString(), X.paid + CW.paid - 1, ty, { align: 'right' })
-
-        // Balance (right-aligned, coloured)
-        doc.setFont('helvetica', bal > 0 ? 'bold' : 'normal')
-        doc.setTextColor(bal > 0 ? 226 : 10, bal > 0 ? 75 : 124, bal > 0 ? 74 : 78)
-        doc.text(bal.toLocaleString(), X.balance + CW.balance - 1, ty, { align: 'right' })
-
-        // Status pill
-        const sc = status === 'Paid' ? [225, 245, 238] as const : status === 'Partial' ? [254, 249, 236] as const : [252, 235, 235] as const
-        const tc = status === 'Paid' ? [22, 101, 52]  as const : status === 'Partial' ? [146, 104, 26] as const : [163, 45, 45]  as const
-        const pillW = 10; const pillH = 3.5
-        doc.setFillColor(sc[0], sc[1], sc[2])
-        doc.roundedRect(X.status + (CW.status - pillW) / 2, y + 1.5, pillW, pillH, 0.8, 0.8, 'F')
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(5.8); doc.setTextColor(tc[0], tc[1], tc[2])
-        doc.text(status, X.status + CW.status / 2, y + 4.2, { align: 'center' })
-
-        y += ROW_H
-      }
-
-      // ── Render class groups ───────────────────────────────────────────
+      // ── DATA PAGES — ONE CLASS PER PAGE ─────────────────────────────
       const classGroups: string[] = selectedClass === 'All'
         ? ([...new Set(filtered.map((s: any) => s.class).filter(Boolean))].sort() as string[])
         : [selectedClass]
+
+      // Column headers helper (returns new y after drawing)
+      function drawColHeaders(startY: number): number {
+        doc.setFillColor(240, 243, 248)
+        doc.rect(L, startY, 186, 7, 'F')
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(100, 116, 139)
+        doc.text('#',            x.no + cols.no / 2,            startY + 5, { align: 'center' })
+        doc.text('STUDENT NAME', x.name + 1,                    startY + 5)
+        doc.text('ADM NO',       x.admNo + 1,                   startY + 5)
+        doc.text('FEE REQUIRED', x.feeReq + cols.feeReq - 2,    startY + 5, { align: 'right' })
+        doc.text('AMOUNT PAID',  x.paid + cols.paid - 2,         startY + 5, { align: 'right' })
+        doc.text('BALANCE',      x.balance + cols.balance - 2,   startY + 5, { align: 'right' })
+        doc.text('STATUS',       x.status + cols.status / 2,     startY + 5, { align: 'center' })
+        return startY + 7
+      }
 
       for (const cls of classGroups) {
         const classStudents = filtered.filter((s: any) => s.class === cls)
@@ -216,44 +162,110 @@ export default function Reports() {
         const clsColl = classStudents.reduce((s: number, st: any) => s + (st.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0), 0)
         const clsRate = clsExp > 0 ? Math.round(clsColl / clsExp * 100) : 0
 
-        checkPageBreak(20)
+        // Each class starts on its own new page
+        doc.addPage()
+        let cy = 15
 
-        // Class heading row (only when showing all classes)
-        if (selectedClass === 'All') {
-          doc.setFillColor(232, 236, 248)
-          doc.rect(L, y, W_TABLE, 7, 'F')
-          doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(10, 31, 78)
-          doc.text(`${cls.toUpperCase()}  —  ${classStudents.length} students`, L + 2, y + 4.8)
-          doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(71, 85, 105)
-          doc.text(
-            `Expected: ${clsExp.toLocaleString()}  ·  Collected: ${clsColl.toLocaleString()}  ·  Rate: ${clsRate}%`,
-            R - 1, y + 4.8, { align: 'right' }
-          )
-          y += 7
-        }
+        // Class header bar (navy, white text)
+        doc.setFillColor(10, 31, 78)
+        doc.rect(L, cy, 186, 10, 'F')
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255)
+        doc.text(`${cls}  —  ${classStudents.length} students`, x.name, cy + 7)
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8)
+        doc.text(
+          `Expected: KES ${clsExp.toLocaleString()}  ·  Collected: KES ${clsColl.toLocaleString()}  ·  Rate: ${clsRate}%`,
+          PW - 13, cy + 7, { align: 'right' }
+        )
+        cy += 10
 
-        drawTableHeader()
+        cy = drawColHeaders(cy)
 
+        // Student rows
         classStudents.forEach((student: any, i: number) => {
-          checkPageBreak(7)
-          drawStudentRow(student, i + 1, i % 2 === 0)
+          // Page break: if next row would go past usable height
+          if (cy + 7 > 272) {
+            doc.addPage()
+            cy = 15
+            cy = drawColHeaders(cy)
+          }
+
+          const paid = (student.payments || []).reduce((s: number, p: any) => s + p.amount, 0)
+          const bal  = student.feeRequired - paid
+          const status = bal <= 0 ? 'Paid' : paid > 0 ? 'Partial' : 'Unpaid'
+
+          // Alternating row background
+          const even = i % 2 === 0
+          doc.setFillColor(even ? 255 : 248, even ? 255 : 249, even ? 255 : 252)
+          doc.rect(L, cy, 186, 7, 'F')
+
+          const ty = cy + 5
+
+          // No. — center aligned
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(148, 163, 184)
+          doc.text(String(i + 1), x.no + cols.no / 2, ty, { align: 'center' })
+
+          // Name — left aligned, truncated to 28 chars
+          doc.setTextColor(15, 23, 42)
+          doc.text(truncate(student.name || '', 28), x.name, ty)
+
+          // Adm No — left aligned, truncated to 11 chars
+          doc.setTextColor(100, 116, 139)
+          doc.text(truncate(student.admNo || '—', 11), x.admNo, ty)
+
+          // Fee Required — right aligned
+          doc.setTextColor(100, 116, 139)
+          doc.text(student.feeRequired.toLocaleString(), x.feeReq + cols.feeReq - 2, ty, { align: 'right' })
+
+          // Amount Paid — right aligned
+          doc.setTextColor(10, 31, 78)
+          doc.text(paid.toLocaleString(), x.paid + cols.paid - 2, ty, { align: 'right' })
+
+          // Balance — right aligned, coloured
+          doc.setFont('helvetica', bal > 0 ? 'bold' : 'normal')
+          doc.setTextColor(
+            bal > 0 ? 163 : 10,
+            bal > 0 ? 45  : 124,
+            bal > 0 ? 45  : 78
+          )
+          doc.text(bal.toLocaleString(), x.balance + cols.balance - 2, ty, { align: 'right' })
+
+          // Status — center aligned, coloured text
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5)
+          if (status === 'Paid')    doc.setTextColor(15, 110, 86)
+          else if (status === 'Partial') doc.setTextColor(133, 79, 11)
+          else                      doc.setTextColor(163, 45, 45)
+          doc.text(status, x.status + cols.status / 2, ty, { align: 'center' })
+
+          cy += 7
         })
 
-        // Subtotal separator
-        doc.setDrawColor(200, 210, 230); doc.setLineWidth(0.3)
-        doc.line(L, y, R, y)
-        y += selectedClass === 'All' ? 5 : 3
+        // Subtotal row (navy bg, white text) at end of class
+        if (cy + 8 > 272) {
+          doc.addPage()
+          cy = 15
+        }
+        doc.setFillColor(10, 31, 78)
+        doc.rect(L, cy, 186, 8, 'F')
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(255, 255, 255)
+        doc.text(`${cls} TOTAL  —  ${classStudents.length} students`, x.name, cy + 5.5)
+        doc.setTextColor(184, 134, 11)
+        doc.text(clsExp.toLocaleString(),  x.feeReq + cols.feeReq - 2,   cy + 5.5, { align: 'right' })
+        doc.setTextColor(255, 255, 255)
+        doc.text(clsColl.toLocaleString(), x.paid + cols.paid - 2,         cy + 5.5, { align: 'right' })
+        doc.text((clsExp - clsColl).toLocaleString(), x.balance + cols.balance - 2, cy + 5.5, { align: 'right' })
+        doc.text(clsRate + '%',            x.status + cols.status / 2,     cy + 5.5, { align: 'center' })
       }
 
-      // ── Footer on every page ──────────────────────────────────────────
-      const pageCount = (doc as any).internal.getNumberOfPages()
-      for (let p = 1; p <= pageCount; p++) {
+      // ── FOOTER ON EVERY PAGE ─────────────────────────────────────────
+      const totalPages = (doc as any).internal.getNumberOfPages()
+      for (let p = 1; p <= totalPages; p++) {
         doc.setPage(p)
-        doc.setFillColor(10, 31, 78)
-        doc.rect(0, 287, PW, 10, 'F')
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(148, 163, 184)
-        doc.text(`${school.name}  ·  ${term}${classLabel}  ·  Generated by FeeTracker`, PW / 2, 293.5, { align: 'center' })
-        doc.text(`Page ${p} of ${pageCount}`, R, 293.5, { align: 'right' })
+        doc.setDrawColor(200, 210, 230); doc.setLineWidth(0.3)
+        doc.line(L, 284, PW - 12, 284)
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100, 116, 139)
+        doc.text(school.name,             L,        290)
+        doc.text(`Page ${p} of ${totalPages}`, PW / 2, 290, { align: 'center' })
+        doc.text('Generated by FeeTracker', PW - 12, 290, { align: 'right' })
       }
 
       const filename = selectedClass === 'All'
@@ -267,7 +279,6 @@ export default function Reports() {
   }
 
   // ── Display class label helpers ───────────────────────────────────────
-  const classTag = selectedClass === 'All' ? 'All classes' : selectedClass
   const displayClasses = selectedClass === 'All'
     ? uniqueClasses
     : uniqueClasses.filter(c => c === selectedClass)
