@@ -207,6 +207,9 @@ function getInitialCategories(student: any): {name: string; amount: number}[] {
 }
 
 export default function Students() {
+  useEffect(() => {
+    fetch('/api/auth/check-2fa').then(r => r.json()).then(d => { if (!d.verified) window.location.href = '/verify-2fa' })
+  }, [])
   const router = useRouter()
   const [students, setStudents] = useState<any[]>([])
   const [file, setFile] = useState<File | null>(null)

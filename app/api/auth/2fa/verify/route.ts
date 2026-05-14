@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { create2faCookieValue, COOKIE_NAME } from '@/lib/twofa'
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -38,13 +37,15 @@ export async function POST(req: Request) {
 
   await prisma.oTPCode.update({ where: { id: otpRecord.id }, data: { used: true } })
 
-  const cookieValue = await create2faCookieValue(user.id, process.env.NEXTAUTH_SECRET!)
+  const expiry = Date.now() + 24 * 60 * 60 * 1000
+  const cookieValue = `${user.id}:${expiry}:valid`
+
   const response = NextResponse.json({ success: true })
-  response.cookies.set(COOKIE_NAME, cookieValue, {
+  response.cookies.set('ft_2fa', cookieValue, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 24 * 60 * 60,
+    maxAge: 86400,
     path: '/',
   })
   return response

@@ -3,6 +3,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 
 export default function Unmatched() {
+  useEffect(() => {
+    fetch('/api/auth/check-2fa').then(r => r.json()).then(d => { if (!d.verified) window.location.href = '/verify-2fa' })
+  }, [])
   const [payments, setPayments] = useState<any[]>([])
   const [students, setStudents] = useState<any[]>([])
   const [searchTerms, setSearchTerms] = useState<Record<number, string>>({})

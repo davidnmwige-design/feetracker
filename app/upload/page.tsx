@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 const BANK_OPTIONS = [
@@ -49,6 +49,9 @@ const BANK_OPTIONS = [
 ]
 
 export default function Upload() {
+  useEffect(() => {
+    fetch('/api/auth/check-2fa').then(r => r.json()).then(d => { if (!d.verified) window.location.href = '/verify-2fa' })
+  }, [])
   const [file, setFile] = useState<File | null>(null)
   const [bankType, setBankType] = useState('mpesa')
   const [loading, setLoading] = useState(false)

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
-import { verify2faCookie, COOKIE_NAME } from '@/lib/twofa'
 
 const PROTECTED_PREFIXES = ['/dashboard', '/students', '/upload', '/reminders', '/settings', '/reports', '/unmatched', '/invoices', '/setup']
 
@@ -29,18 +28,6 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
-  }
-
-  const twoFactorEnabled = Boolean((token as any).twoFactorEnabled)
-  if (twoFactorEnabled) {
-    const userId = Number((token as any).userId)
-    const cookie = req.cookies.get(COOKIE_NAME)?.value
-    const verified = await verify2faCookie(cookie, userId, process.env.NEXTAUTH_SECRET!)
-    if (!verified) {
-      const url = req.nextUrl.clone()
-      url.pathname = '/verify-2fa'
-      return NextResponse.redirect(url)
-    }
   }
 
   return NextResponse.next()

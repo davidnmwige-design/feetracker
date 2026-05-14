@@ -221,6 +221,9 @@ function StatusBadge({ status }: { status: string }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function Invoices() {
+  useEffect(() => {
+    fetch('/api/auth/check-2fa').then(r => r.json()).then(d => { if (!d.verified) window.location.href = '/verify-2fa' })
+  }, [])
   const [students, setStudents] = useState<any[]>([])
   const [school, setSchool] = useState<any>(null)
   const [invoices, setInvoices] = useState<Record<number, any>>({}) // studentId → invoice

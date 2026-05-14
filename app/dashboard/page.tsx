@@ -4,10 +4,12 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { sendEmail } from '@/lib/email'
 import LivePaymentsFeed from '@/components/LivePaymentsFeed'
+import { require2FA } from '@/lib/check2fa'
 
 export const revalidate = 0
 
 export default async function Dashboard() {
+  await require2FA()
   const session = await auth()
   if (!session?.user?.email) redirect('/login')
 

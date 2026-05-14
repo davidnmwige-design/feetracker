@@ -31,6 +31,9 @@ const PLAN_UPGRADES: Record<string, Array<{ name: string; maxStudents: number | 
 }
 
 export default function Settings() {
+  useEffect(() => {
+    fetch('/api/auth/check-2fa').then(r => r.json()).then(d => { if (!d.verified) window.location.href = '/verify-2fa' })
+  }, [])
   const router = useRouter()
   const [terms, setTerms] = useState<any[]>([])
   const [school, setSchool] = useState<any>(null)

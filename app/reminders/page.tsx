@@ -73,6 +73,9 @@ function reminderEmailHtml({
 }
 
 export default function Reminders() {
+  useEffect(() => {
+    fetch('/api/auth/check-2fa').then(r => r.json()).then(d => { if (!d.verified) window.location.href = '/verify-2fa' })
+  }, [])
   const [students, setStudents] = useState<any[]>([])
   const [school, setSchool] = useState<any>(null)
   const [loading, setLoading] = useState(true)
