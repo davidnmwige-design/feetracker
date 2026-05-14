@@ -42,6 +42,13 @@ export default function Settings() {
   const [starting, setStarting] = useState(false)
   const [selectedTerm, setSelectedTerm] = useState('')
 
+  // School details edit state
+  const [editingSchool, setEditingSchool] = useState(false)
+  const [editSchool, setEditSchool] = useState({ name: '', paybill: '', accountNumberFormat: '', currentTerm: '', whatsappNumber: '', replyToEmail: '', emailSignature: '' })
+  const [schoolSaving, setSchoolSaving] = useState(false)
+  const [schoolSaveSuccess, setSchoolSaveSuccess] = useState(false)
+  const [schoolSaveError, setSchoolSaveError] = useState('')
+
   const [acctFmt, setAcctFmt] = useState('')
   const [acctFmtSaving, setAcctFmtSaving] = useState(false)
   const [acctFmtSaved, setAcctFmtSaved] = useState(false)
@@ -135,6 +142,49 @@ export default function Settings() {
     setTwoFAEnabled(meData?.twoFactorEnabled ?? false)
     setUserEmail(meData?.email || '')
     setLoading(false)
+  }
+
+  function startEditSchool() {
+    setEditSchool({
+      name: school?.name || '',
+      paybill: school?.paybill || '',
+      accountNumberFormat: school?.accountNumberFormat || '',
+      currentTerm: school?.currentTerm || '',
+      whatsappNumber: school?.whatsappNumber || '',
+      replyToEmail: school?.replyToEmail || '',
+      emailSignature: school?.emailSignature || '',
+    })
+    setSchoolSaveError('')
+    setEditingSchool(true)
+  }
+
+  async function saveSchoolDetails() {
+    if (schoolSaving) return
+    setSchoolSaving(true)
+    setSchoolSaveError('')
+    try {
+      const res = await fetch('/api/school', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editSchool),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSchoolSaveError(data.error || 'Failed to save changes')
+      } else {
+        setSchool((prev: any) => prev ? { ...prev, ...editSchool } : prev)
+        setAcctFmt(editSchool.accountNumberFormat)
+        setWhatsappNumber(editSchool.whatsappNumber)
+        setReplyToEmail(editSchool.replyToEmail)
+        setEmailSignature(editSchool.emailSignature)
+        setEditingSchool(false)
+        setSchoolSaveSuccess(true)
+        setTimeout(() => setSchoolSaveSuccess(false), 4000)
+      }
+    } catch {
+      setSchoolSaveError('Something went wrong. Please try again.')
+    }
+    setSchoolSaving(false)
   }
 
   async function saveAcctFmt() {
@@ -572,19 +622,97 @@ export default function Settings() {
         ) : (
           <>
             <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>School details</h2>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px'}}>
+                <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0}}>School details</h2>
+                {!editingSchool && (
+                  <button onClick={startEditSchool}
+                    style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+                    ✏ Edit
+                  </button>
+                )}
+              </div>
               <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>Your school information</p>
-              {[
-                {label: 'School name', value: school?.name},
-                {label: 'MPESA Paybill', value: school?.paybill || '—'},
-                {label: 'Current term', value: school?.currentTerm},
-                {label: 'Plan', value: currentPlan + ' (' + studentCount + ' / ' + planDetails.maxStudents + ' students)'},
-              ].map((row, i, arr) => (
-                <div key={row.label} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none'}}>
-                  <span style={{fontSize: '13px', color: '#64748b'}}>{row.label}</span>
-                  <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{row.value}</span>
+
+              {schoolSaveSuccess && (
+                <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', color: '#166534', fontSize: '13px', padding: '10px 12px', borderRadius: '6px', marginBottom: '14px'}}>
+                  School details updated successfully.
                 </div>
-              ))}
+              )}
+
+              {!editingSchool ? (
+                <div>
+                  {[
+                    {label: 'School name', value: school?.name},
+                    {label: 'MPESA Paybill / Till', value: school?.paybill || '—'},
+                    {label: 'Account number format', value: school?.accountNumberFormat || '—'},
+                    {label: 'Current term', value: school?.currentTerm},
+                    {label: 'WhatsApp number', value: school?.whatsappNumber || '—'},
+                    {label: 'Reply-to email', value: school?.replyToEmail || '—'},
+                    {label: 'Plan', value: planDetails.maxStudents !== null ? `${currentPlan} (${studentCount} / ${planDetails.maxStudents} students)` : `${currentPlan} (${studentCount} students)`},
+                  ].map((row, i, arr) => (
+                    <div key={row.label} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none'}}>
+                      <span style={{fontSize: '13px', color: '#64748b'}}>{row.label}</span>
+                      <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', textAlign: 'right', maxWidth: '60%'}}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
+                  {schoolSaveError && (
+                    <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '13px', padding: '10px 12px', borderRadius: '6px'}}>
+                      {schoolSaveError}
+                    </div>
+                  )}
+                  {([
+                    {label: 'School name', key: 'name', type: 'text', placeholder: "e.g. St. Mary's Academy"},
+                    {label: 'MPESA Paybill / Till number', key: 'paybill', type: 'text', placeholder: 'e.g. 123456'},
+                    {label: 'Account number format', key: 'accountNumberFormat', type: 'text', placeholder: "e.g. Your child's admission number e.g. ADM1234"},
+                    {label: 'School WhatsApp number', key: 'whatsappNumber', type: 'tel', placeholder: 'e.g. 0722000000'},
+                    {label: 'School email address (reply-to)', key: 'replyToEmail', type: 'email', placeholder: 'e.g. info@stmarys.ac.ke'},
+                  ] as {label: string; key: keyof typeof editSchool; type: string; placeholder: string}[]).map(field => (
+                    <div key={field.key}>
+                      <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '5px'}}>{field.label}</label>
+                      <input
+                        type={field.type}
+                        value={editSchool[field.key]}
+                        onChange={e => setEditSchool(prev => ({...prev, [field.key]: e.target.value}))}
+                        placeholder={field.placeholder}
+                        style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
+                      />
+                    </div>
+                  ))}
+                  <div>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '5px'}}>Current term</label>
+                    <select
+                      value={editSchool.currentTerm}
+                      onChange={e => setEditSchool(prev => ({...prev, currentTerm: e.target.value}))}
+                      style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: '#fff', boxSizing: 'border-box' as const}}
+                    >
+                      {TERMS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '5px'}}>Email signature</label>
+                    <textarea
+                      value={editSchool.emailSignature}
+                      onChange={e => setEditSchool(prev => ({...prev, emailSignature: e.target.value}))}
+                      placeholder="e.g. Bursary Office | St. Mary's Academy | Tel: 0712 345 678"
+                      rows={2}
+                      style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', resize: 'vertical' as const, boxSizing: 'border-box' as const}}
+                    />
+                  </div>
+                  <div style={{display: 'flex', gap: '8px', paddingTop: '4px'}}>
+                    <button onClick={saveSchoolDetails} disabled={schoolSaving}
+                      style={{background: schoolSaving ? '#94a3b8' : '#c8a84b', color: schoolSaving ? '#fff' : '#0a1f4e', border: 'none', padding: '9px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: schoolSaving ? 'not-allowed' : 'pointer'}}>
+                      {schoolSaving ? 'Saving…' : 'Save changes'}
+                    </button>
+                    <button onClick={() => { setEditingSchool(false); setSchoolSaveError('') }}
+                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Payment settings */}

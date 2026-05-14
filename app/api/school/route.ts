@@ -58,7 +58,7 @@ export async function PATCH(req: Request) {
 
     const body = await req.json()
     const data: Record<string, unknown> = {}
-    const strings = ['paybill', 'accountNumberFormat', 'replyToEmail', 'emailSignature', 'whatsappNumber', 'penaltyType']
+    const strings = ['name', 'paybill', 'accountNumberFormat', 'currentTerm', 'replyToEmail', 'emailSignature', 'whatsappNumber', 'penaltyType']
     const booleans = ['penaltyEnabled']
     const numbers = ['penaltyAmount', 'penaltyDueDate']
     for (const key of strings) {
