@@ -49,10 +49,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         console.log('[JWT callback] user present, id:', user.id, 'email:', user.email)
         token.userId = user.id
         try {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: Number(user.id) },
-            select: { twoFactorEnabled: true, sessionVersion: true },
-          })
+          // Try by numeric id first; fall back to email in case id is missing/non-numeric
+          let dbUser: { id: number; twoFactorEnabled: boolean; sessionVersion: number } | null = null
+          const numId = Number(user.id)
+          if (!isNaN(numId) && numId > 0) {
+            dbUser = await prisma.user.findUnique({
+              where: { id: numId },
+              select: { id: true, twoFactorEnabled: true, sessionVersion: true },
+            })
+          }
+          if (!dbUser && user.email) {
+            dbUser = await prisma.user.findUnique({
+              where: { email: user.email },
+              select: { id: true, twoFactorEnabled: true, sessionVersion: true },
+            })
+            if (dbUser) token.userId = String(dbUser.id)
+          }
           console.log('[JWT callback] dbUser fetched:', dbUser)
           token.twoFactorEnabled = dbUser?.twoFactorEnabled ?? false
           token.sessionVersion = dbUser?.sessionVersion ?? 1
