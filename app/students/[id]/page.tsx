@@ -474,12 +474,12 @@ export default function StudentDetail() {
 
       <div className="det-content" style={{padding: '24px 32px', maxWidth: '800px'}}>
 
-        {/* ── EDIT FORM ── */}
+        {/* -- EDIT FORM -- */}
         {editMode && (
           <div style={{background: '#fff', borderRadius: '8px', border: '2px solid #c8a84b', padding: '24px', marginBottom: '16px'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
               <h2 style={{fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0}}>Edit student details</h2>
-              <button onClick={() => setEditMode(false)} style={{background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '2px'}}>✕</button>
+              <button onClick={() => setEditMode(false)} style={{background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '2px'}}>x</button>
             </div>
 
             {editError && (
@@ -558,7 +558,7 @@ export default function StudentDetail() {
           </div>
         )}
 
-        {/* ── VIEW MODE: Student Profile + Parent sections ── */}
+        {/* -- VIEW MODE: Student Profile + Parent sections -- */}
         {!editMode && (
           <>
             {/* Student Profile */}
@@ -630,7 +630,7 @@ export default function StudentDetail() {
             <h2 style={sectionTitle}>Financial records</h2>
             <button onClick={editingFees ? () => setEditingFees(false) : startEditFees}
               style={{fontSize: '12px', background: editingFees ? 'none' : '#c8a84b', border: editingFees ? '1px solid #e2e8f0' : 'none', padding: '6px 14px', borderRadius: '5px', cursor: 'pointer', color: editingFees ? '#64748b' : '#0a1f4e', fontWeight: 700}}>
-              {editingFees ? 'Cancel' : '✏ Edit fees'}
+              {editingFees ? 'Cancel' : 'Edit fees'}
             </button>
           </div>
           <p style={sectionSubtitle}>Fee summary for {student.school?.currentTerm}</p>
@@ -667,7 +667,7 @@ export default function StudentDetail() {
                       placeholder="Amount"
                       style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none'}} />
                     <button onClick={() => setFeeEdits(prev => prev.filter((_, j) => j !== i))}
-                      style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '16px', padding: '0 4px'}}>✕</button>
+                      style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '16px', padding: '0 4px'}}>x</button>
                   </div>
                 ))}
               </div>

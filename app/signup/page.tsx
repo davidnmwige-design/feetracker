@@ -6,7 +6,7 @@ import Link from 'next/link'
 function PasswordRule({ met, label }: { met: boolean; label: string }) {
   return (
     <div style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: met ? '#0a7c4e' : '#94a3b8'}}>
-      <span style={{fontWeight: 700}}>{met ? '✓' : '✗'}</span>
+      <span style={{fontWeight: 700}}>{met ? 'Yes' : 'No'}</span>
       <span>{label}</span>
     </div>
   )
@@ -159,8 +159,8 @@ export default function Signup() {
               {confirmPassword.length > 0 && (
                 <div style={{marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px'}}>
                   {passwordsMatch
-                    ? <><span style={{color: '#0a7c4e', fontWeight: 700}}>✓</span><span style={{color: '#0a7c4e'}}>Passwords match</span></>
-                    : <><span style={{color: '#e24b4a', fontWeight: 700}}>✗</span><span style={{color: '#e24b4a'}}>Passwords do not match</span></>
+                    ? <><span style={{color: '#0a7c4e'}}>Passwords match</span></>
+                    : <><span style={{color: '#e24b4a'}}>Passwords do not match</span></>
                   }
                 </div>
               )}

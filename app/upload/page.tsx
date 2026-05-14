@@ -82,7 +82,7 @@ export default function Upload() {
             />
             {file ? (
               <div>
-                <div style={{fontSize: '28px', marginBottom: '8px'}}>{isPdf ? '📄' : '📊'}</div>
+                <div style={{fontSize: '28px', marginBottom: '8px'}}>{isPdf ? 'PDF' : 'Sheet'}</div>
                 <p style={{fontWeight: 700, color: '#0a1f4e', fontSize: '14px', margin: '0 0 4px'}}>{file.name}</p>
                 <p style={{fontSize: '12px', color: '#94a3b8'}}>{(file.size / 1024).toFixed(1)} KB · {isPdf ? 'PDF bank statement' : 'Spreadsheet'}</p>
                 <button onClick={e => { e.stopPropagation(); setFile(null) }}
@@ -92,7 +92,7 @@ export default function Upload() {
               </div>
             ) : (
               <div>
-                <div style={{fontSize: '32px', marginBottom: '12px'}}>📁</div>
+                <div style={{fontSize: '32px', marginBottom: '12px'}}></div>
                 <p style={{color: '#0a1f4e', fontSize: '14px', fontWeight: 600, margin: '0 0 6px'}}>Click to select your statement</p>
                 <p style={{fontSize: '12px', color: '#94a3b8', margin: 0}}>Supports .xlsx, .xls, .csv, .pdf · Max 20MB</p>
                 <p style={{fontSize: '11px', color: '#c8a84b', margin: '6px 0 0', fontWeight: 600}}>Works with any Kenyan bank</p>

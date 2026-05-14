@@ -40,7 +40,7 @@ export default function AdminForecast() {
       <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '24px' }}>
         <p style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>Next quarter estimated revenue</p>
         <p style={{ fontSize: '32px', fontWeight: 700, color: '#0a1f4e', margin: 0 }}>KES {data.nextQuarterForecast.toLocaleString()}</p>
-        <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0' }}>Based on current MRR × 3 months with 5% growth</p>
+        <p style={{ fontSize: '12px', color: '#94a3b8', margin: '4px 0 0' }}>Based on current MRR x 3 months with 5% growth</p>
       </div>
 
       {/* MRR history chart */}

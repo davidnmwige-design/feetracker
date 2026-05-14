@@ -656,7 +656,7 @@ export default function Students() {
                           <td style={{padding: '4px 4px', textAlign: 'center'}} onClick={e => e.stopPropagation()}>
                             <button onClick={() => isFeeEdit ? closeFeeEditor() : openFeeEditor(student)} title="Edit fee categories"
                               style={{background: isFeeEdit ? '#c8a84b' : 'none', border: isFeeEdit ? 'none' : '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', cursor: 'pointer', fontSize: '12px', color: isFeeEdit ? '#0a1f4e' : '#94a3b8', fontWeight: isFeeEdit ? 700 : 400, lineHeight: 1}}>
-                              ✏
+                              Edit
                             </button>
                           </td>
                           <td style={{padding: '9px 10px', color: '#0a1f4e', fontWeight: 600, whiteSpace: 'nowrap'}}>KES {paid.toLocaleString()}</td>
@@ -692,7 +692,7 @@ export default function Students() {
                                 </button>
                                 <button onClick={() => openEmailModal(student)}
                                   style={{fontSize: '11px', color: sentEmails.has(student.id) ? '#0a7c3e' : '#0a1f4e', background: 'none', border: '1px solid ' + (sentEmails.has(student.id) ? '#0a7c3e' : '#0a1f4e'), padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap'}}>
-                                  {sentEmails.has(student.id) ? '✓ Sent' : 'Send via email'}
+                                  {sentEmails.has(student.id) ? 'Sent' : 'Send via email'}
                                 </button>
                               </div>
                             )}
@@ -726,7 +726,7 @@ export default function Students() {
                                       />
                                       <button onClick={() => setFeeEditRows(prev => prev.filter((_, j) => j !== i))}
                                         style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '14px', padding: '0 4px', flexShrink: 0}}>
-                                        ✕
+                                        x
                                       </button>
                                     </div>
                                   ))}
@@ -837,7 +837,7 @@ export default function Students() {
                       style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', minWidth: '80px'}} />
                     {addCategories.length > 1 && (
                       <button onClick={() => setAddCategories(p => p.filter((_, j) => j !== i))}
-                        style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '14px', padding: '0 4px'}}>✕</button>
+                        style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '14px', padding: '0 4px'}}>x</button>
                     )}
                   </div>
                 ))}
@@ -876,7 +876,7 @@ export default function Students() {
               <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0}}>Bulk fee update</h3>
               {!bulkSaving && (
                 <button onClick={() => { setBulkModal(false); setBulkResult(null); setBulkSuccess(false) }}
-                  style={{background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '2px'}}>✕</button>
+                  style={{background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '2px'}}>x</button>
               )}
             </div>
 
@@ -975,7 +975,7 @@ export default function Students() {
             {/* Result */}
             {bulkResult && (
               <div style={{background: bulkSuccess ? '#e1f5ee' : '#fcebeb', border: `1px solid ${bulkSuccess ? '#bbf7d0' : '#fecaca'}`, borderRadius: '6px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', color: bulkSuccess ? '#166534' : '#a32d2d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px'}}>
-                <span style={{fontSize: '16px'}}>{bulkSuccess ? '✓' : '✕'}</span>
+                <span style={{fontSize: '16px'}}>{bulkSuccess ? 'Done' : 'Error'}</span>
                 {bulkResult}
               </div>
             )}

@@ -62,6 +62,7 @@ export default function Settings() {
 
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [teamLoading, setTeamLoading] = useState(false)
+  const [showInviteForm, setShowInviteForm] = useState(false)
   const [inviteName, setInviteName] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('accountant')
@@ -193,11 +194,14 @@ export default function Settings() {
     try {
       const res = await fetch('/api/team', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: inviteName.trim(), email: inviteEmail.trim(), role: inviteRole }) })
       const data = await res.json()
-      if (!res.ok) { setInviteError(data.error || 'Failed to invite'); } else {
+      if (!res.ok) {
+        setInviteError(data.error || 'Failed to invite')
+      } else {
         setTeamMembers(prev => [...prev, data])
-        setInviteSuccess('Invitation sent! They will receive an email with login details.')
-        setInviteName(''); setInviteEmail('')
-        setTimeout(() => setInviteSuccess(''), 5000)
+        setInviteSuccess('Invitation sent. They will receive an email with their login details.')
+        setInviteName(''); setInviteEmail(''); setInviteRole('accountant')
+        setShowInviteForm(false)
+        setTimeout(() => setInviteSuccess(''), 6000)
       }
     } catch { setInviteError('Something went wrong') }
     setInviting(false)
@@ -496,7 +500,7 @@ export default function Settings() {
     doc.text('AMOUNT', w - 24, tableY + 5.5, { align: 'right' })
 
     const items: [string, number][] = [
-      [invPlanName + ' Plan — ' + cycleLabel + ' subscription (' + studentCount + ' students × KES 200/yr)', invBillingAmt],
+      [invPlanName + ' Plan — ' + cycleLabel + ' subscription (' + studentCount + ' students x KES 200/yr)', invBillingAmt],
     ]
     if (isFirstInvoice) {
       items.push(['One-time platform setup fee', invSetupFee])
@@ -571,7 +575,7 @@ export default function Settings() {
     const isFirstInvoice = terms.length <= 1
     const total = waBillingAmt + (isFirstInvoice ? waSetupFee : 0)
 
-    const msg = `*Elimu Pay Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${waPlanName} (${studentCount} students × KES 200/yr)\n\n*Breakdown:*\n• ${waCycleLabel}: KES ${waBillingAmt.toLocaleString()}${isFirstInvoice ? `\n• One-time setup fee: KES ${waSetupFee.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@elimupay.co.ke`
+    const msg = `*Elimu Pay Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${waPlanName} (${studentCount} students x KES 200/yr)\n\n*Breakdown:*\n- ${waCycleLabel}: KES ${waBillingAmt.toLocaleString()}${isFirstInvoice ? `\n- One-time setup fee: KES ${waSetupFee.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@elimupay.co.ke`
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank')
   }
 
@@ -631,7 +635,7 @@ export default function Settings() {
                 {!editingSchool && (
                   <button onClick={startEditSchool}
                     style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
-                    ✏ Edit
+                    Edit
                   </button>
                 )}
               </div>
@@ -750,7 +754,7 @@ export default function Settings() {
                     border: 'none', cursor: acctFmtSaving ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const,
                   }}
                 >
-                  {acctFmtSaved ? '✓ Saved' : acctFmtSaving ? 'Saving…' : 'Save'}
+                  {acctFmtSaved ? 'Saved' : acctFmtSaving ? 'Saving…' : 'Save'}
                 </button>
               </div>
             </div>
@@ -775,7 +779,7 @@ export default function Settings() {
                   disabled={whatsappSaving}
                   style={{background: whatsappSaved ? '#0a7c3e' : '#c8a84b', color: whatsappSaved ? '#fff' : '#0a1f4e', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: whatsappSaving ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const}}
                 >
-                  {whatsappSaved ? '✓ Saved' : whatsappSaving ? 'Saving…' : 'Save'}
+                  {whatsappSaved ? 'Saved' : whatsappSaving ? 'Saving…' : 'Save'}
                 </button>
               </div>
             </div>
@@ -837,7 +841,7 @@ export default function Settings() {
                   disabled={penaltySaving}
                   style={{background: penaltySaved ? '#0a7c3e' : '#c8a84b', color: penaltySaved ? '#fff' : '#0a1f4e', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: penaltySaving ? 'not-allowed' : 'pointer', width: 'fit-content'}}
                 >
-                  {penaltySaved ? '✓ Saved' : penaltySaving ? 'Saving…' : 'Save penalty settings'}
+                  {penaltySaved ? 'Saved' : penaltySaving ? 'Saving…' : 'Save penalty settings'}
                 </button>
               </div>
             </div>
@@ -883,7 +887,7 @@ export default function Settings() {
                     border: 'none', cursor: emailSettingsSaving ? 'not-allowed' : 'pointer', width: 'fit-content',
                   }}
                 >
-                  {emailSettingsSaved ? '✓ Saved' : emailSettingsSaving ? 'Saving…' : 'Save email settings'}
+                  {emailSettingsSaved ? 'Saved' : emailSettingsSaving ? 'Saving…' : 'Save email settings'}
                 </button>
               </div>
             </div>
@@ -900,7 +904,7 @@ export default function Settings() {
                   <span style={{fontWeight: 700, color: '#0f172a'}}>{studentCount}</span>
                 </div>
                 <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
-                  <span style={{color: '#64748b'}}>Annual rate (KES 200 × {studentCount})</span>
+                  <span style={{color: '#64748b'}}>Annual rate (KES 200 x {studentCount})</span>
                   <span style={{fontWeight: 700, color: '#0f172a'}}>KES {annualTotal.toLocaleString()}/year</span>
                 </div>
                 <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
@@ -948,7 +952,7 @@ export default function Settings() {
                 disabled={savingCycle}
                 style={{background: cycleSaved ? '#16a34a' : '#0a1f4e', color: '#fff', padding: '9px 18px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: savingCycle ? 'not-allowed' : 'pointer'}}
               >
-                {cycleSaved ? 'Saved ✓' : savingCycle ? 'Saving…' : 'Change billing cycle'}
+                {cycleSaved ? 'Saved' : savingCycle ? 'Saving…' : 'Change billing cycle'}
               </button>
             </div>
 
@@ -1031,7 +1035,7 @@ export default function Settings() {
               {twoFAEnabled ? (
                 <div>
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px'}}>
-                    <span style={{background: '#e1f5ee', color: '#166534', fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px'}}>✓ Enabled</span>
+                    <span style={{background: '#e1f5ee', color: '#166534', fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px'}}>Enabled</span>
                     <span style={{fontSize: '13px', color: '#0f172a', fontWeight: 600}}>Two-Factor Authentication is active</span>
                   </div>
                   <p style={{fontSize: '13px', color: '#64748b', marginBottom: '16px'}}>
@@ -1120,7 +1124,7 @@ export default function Settings() {
 
                   {darajaResult?.success ? (
                     <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '12px 14px', fontSize: '13px', color: '#166534', fontWeight: 600}}>
-                      ✓ Real-time MPESA notifications are active. Payments will now be recorded automatically.
+                      Real-time MPESA notifications are active. Payments will now be recorded automatically.
                     </div>
                   ) : darajaResult?.error ? (
                     <div style={{background: '#fcebeb', border: '1px solid #fecaca', borderRadius: '6px', padding: '12px 14px', fontSize: '13px', color: '#a32d2d'}}>
@@ -1158,41 +1162,119 @@ export default function Settings() {
 
             {/* Team members */}
             <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Team members</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
-                Invite staff members to access this school account. Roles: Admin (full), Accountant (upload + reminders), Principal (view only), Viewer (read-only dashboard).
-              </p>
-              {teamLoading ? <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading…</p> : (
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px'}}>
+                <div>
+                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Team members</h2>
+                  <p style={{fontSize: '12px', color: '#94a3b8', margin: 0}}>Staff with access to this school account</p>
+                </div>
+                {!showInviteForm && (
+                  <button
+                    onClick={() => { setShowInviteForm(true); setInviteError(''); setInviteSuccess('') }}
+                    style={{background: '#0a1f4e', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'}}
+                  >
+                    Invite member
+                  </button>
+                )}
+              </div>
+
+              {inviteSuccess && (
+                <div style={{background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', fontSize: '12px', color: '#166534'}}>
+                  {inviteSuccess}
+                </div>
+              )}
+
+              {teamLoading ? (
+                <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading…</p>
+              ) : (
                 <>
+                  {teamMembers.length === 0 && !showInviteForm && (
+                    <p style={{fontSize: '13px', color: '#94a3b8', marginBottom: '16px'}}>No team members yet. Invite a colleague to get started.</p>
+                  )}
                   {teamMembers.length > 0 && (
                     <div style={{marginBottom: '16px', border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden'}}>
-                      {teamMembers.map((m, i) => (
-                        <div key={m.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < teamMembers.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '12px'}}>
-                          <div>
-                            <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', margin: 0}}>{m.user?.name}</p>
-                            <p style={{fontSize: '11px', color: '#94a3b8', margin: '2px 0 0'}}>{m.user?.email} · <strong>{m.role}</strong></p>
+                      {teamMembers.map((m, i) => {
+                        const roleColors: Record<string, { bg: string; color: string }> = {
+                          admin:       { bg: '#0a1f4e', color: '#fff'     },
+                          accountant:  { bg: '#dbeafe', color: '#1e40af'  },
+                          principal:   { bg: '#fef3c7', color: '#92400e'  },
+                          viewer:      { bg: '#f1f5f9', color: '#475569'  },
+                        }
+                        const roleDesc: Record<string, string> = {
+                          admin:      'Full access — can manage students, upload statements, invite team',
+                          accountant: 'Can upload statements, send reminders and invoices',
+                          principal:  'Can view dashboard, students and reports',
+                          viewer:     'Read-only access to the dashboard',
+                        }
+                        const rs = roleColors[m.role] || roleColors.viewer
+                        return (
+                          <div key={m.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderBottom: i < teamMembers.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '12px'}}>
+                            <div style={{flex: 1, minWidth: 0}}>
+                              <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px'}}>
+                                <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{m.user?.name}</span>
+                                <span style={{background: rs.bg, color: rs.color, fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', textTransform: 'capitalize', whiteSpace: 'nowrap'}}>{m.role}</span>
+                              </div>
+                              <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 2px'}}>{m.user?.email}</p>
+                              <p style={{fontSize: '11px', color: '#64748b', margin: 0}}>{roleDesc[m.role] || ''}</p>
+                            </div>
+                            <button
+                              onClick={() => removeMember(m.id)}
+                              style={{fontSize: '11px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: '5px', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0}}
+                            >
+                              Remove
+                            </button>
                           </div>
-                          <button onClick={() => removeMember(m.id)} style={{fontSize: '11px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: '5px', cursor: 'pointer'}}>Remove</button>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
-                  <p style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', marginBottom: '10px'}}>Invite a team member</p>
-                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                    <input type="text" value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="Full name" style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' as const}} />
-                    <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="Email address" style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' as const}} />
-                    <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}>
-                      <option value="admin">Admin — full access</option>
-                      <option value="accountant">Accountant — upload + send reminders</option>
-                      <option value="principal">Principal — view dashboard + reports</option>
-                      <option value="viewer">Viewer — read-only</option>
-                    </select>
-                    {inviteError && <p style={{fontSize: '12px', color: '#e24b4a', margin: 0}}>{inviteError}</p>}
-                    {inviteSuccess && <p style={{fontSize: '12px', color: '#0a7c3e', margin: 0}}>{inviteSuccess}</p>}
-                    <button onClick={inviteMember} disabled={inviting || !inviteName.trim() || !inviteEmail.trim()} style={{background: inviting ? '#94a3b8' : '#0a1f4e', color: '#fff', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: inviting ? 'not-allowed' : 'pointer', width: 'fit-content'}}>
-                      {inviting ? 'Sending invite…' : 'Send invitation'}
-                    </button>
-                  </div>
+
+                  {showInviteForm && (
+                    <div style={{border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px'}}>
+                      <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '12px'}}>Invite a team member</p>
+                      <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                        <input
+                          type="text"
+                          value={inviteName}
+                          onChange={e => setInviteName(e.target.value)}
+                          placeholder="Full name"
+                          style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box'}}
+                        />
+                        <input
+                          type="email"
+                          value={inviteEmail}
+                          onChange={e => setInviteEmail(e.target.value)}
+                          placeholder="Email address"
+                          style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box'}}
+                        />
+                        <select
+                          value={inviteRole}
+                          onChange={e => setInviteRole(e.target.value)}
+                          style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}
+                        >
+                          <option value="admin">Admin — full access</option>
+                          <option value="accountant">Accountant — upload + send reminders</option>
+                          <option value="principal">Principal — view dashboard + reports</option>
+                          <option value="viewer">Viewer — read-only</option>
+                        </select>
+                        {inviteError && <p style={{fontSize: '12px', color: '#e24b4a', margin: 0}}>{inviteError}</p>}
+                        <div style={{display: 'flex', gap: '8px'}}>
+                          <button
+                            onClick={inviteMember}
+                            disabled={inviting || !inviteName.trim() || !inviteEmail.trim()}
+                            style={{background: (inviting || !inviteName.trim() || !inviteEmail.trim()) ? '#94a3b8' : '#0a1f4e', color: '#fff', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: (inviting || !inviteName.trim() || !inviteEmail.trim()) ? 'not-allowed' : 'pointer'}}
+                          >
+                            {inviting ? 'Sending…' : 'Send invitation'}
+                          </button>
+                          <button
+                            onClick={() => { setShowInviteForm(false); setInviteError(''); setInviteName(''); setInviteEmail('') }}
+                            style={{background: '#f8f9fc', color: '#64748b', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', border: '1px solid #e2e8f0', cursor: 'pointer'}}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -1237,7 +1319,7 @@ export default function Settings() {
             {upgradeSuccess ? (
               <>
                 <div style={{textAlign: 'center', padding: '8px 0 16px'}}>
-                  <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '22px'}}>✓</div>
+                  <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '22px'}}>Done</div>
                   <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0a7c3e', marginBottom: '8px'}}>Request Submitted!</h3>
                   <p style={{fontSize: '13px', color: '#64748b', lineHeight: 1.6}}>
                     {requestedPlan === 'Enterprise'

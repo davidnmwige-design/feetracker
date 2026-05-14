@@ -134,10 +134,10 @@ export default function AdminDashboard() {
       <div style={{ marginBottom: '16px' }}>
         <p style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Today's activity</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-          <TodayCard icon="🏫" value={todayStats?.newSchools ?? 0} label="New signups" />
-          <TodayCard icon="💳" value={todayStats?.paymentsToday ?? 0} label="Payments processed" />
-          <TodayCard icon="📤" value={todayStats?.uploadsToday ?? 0} label="Statements uploaded" />
-          <TodayCard icon="📄" value={todayStats?.invoicesToday ?? 0} label="Invoices sent" />
+          <TodayCard icon="" value={todayStats?.newSchools ?? 0} label="New signups" />
+          <TodayCard icon="" value={todayStats?.paymentsToday ?? 0} label="Payments processed" />
+          <TodayCard icon="" value={todayStats?.uploadsToday ?? 0} label="Statements uploaded" />
+          <TodayCard icon="" value={todayStats?.invoicesToday ?? 0} label="Invoices sent" />
         </div>
       </div>
 
@@ -161,19 +161,19 @@ export default function AdminDashboard() {
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button onClick={() => setAnnouncementModal(true)}
             style={{ background: '#0a1f4e', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-            ✉ Send announcement
+            Send announcement
           </button>
           <Link href="/admin/billing"
             style={{ background: pendingUpgrades > 0 ? '#fef3c7' : '#f8f9fc', color: pendingUpgrades > 0 ? '#92400e' : '#475569', border: `1px solid ${pendingUpgrades > 0 ? '#fcd34d' : '#e2e8f0'}`, padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
-            {pendingUpgrades > 0 ? `⚠ ${pendingUpgrades} pending upgrades` : '◈ View upgrades'}
+            {pendingUpgrades > 0 ? `Warning: ${pendingUpgrades} pending upgrades` : 'View upgrades'}
           </Link>
           <Link href="/admin/onboarding"
             style={{ background: '#f8f9fc', color: '#475569', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
-            ✓ Onboarding tracker
+            Onboarding tracker
           </Link>
           <button onClick={handleExport} disabled={exportLoading}
             style={{ background: '#f8f9fc', color: '#475569', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
-            {exportLoading ? 'Exporting…' : '↓ Export all data'}
+            {exportLoading ? 'Exporting…' : 'Export all data'}
           </button>
         </div>
       </div>

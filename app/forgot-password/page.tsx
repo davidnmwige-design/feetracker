@@ -31,7 +31,6 @@ export default function ForgotPassword() {
           {sent ? (
             <div style={{textAlign: 'center'}}>
               <div style={{width: '48px', height: '48px', background: '#e1f5ee', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '22px'}}>
-                ✓
               </div>
               <h2 style={{fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '8px'}}>Reset link sent</h2>
               <p style={{fontSize: '13px', color: '#64748b', lineHeight: '1.6', marginBottom: '20px'}}>

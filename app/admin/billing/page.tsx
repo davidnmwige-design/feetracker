@@ -167,7 +167,7 @@ export default function AdminBilling() {
           </h2>
           <button onClick={() => setOverdueOnly(v => !v)}
             style={{ background: overdueOnly ? '#dc2626' : '#f8f9fc', color: overdueOnly ? '#fff' : '#64748b', border: `1px solid ${overdueOnly ? '#dc2626' : '#e2e8f0'}`, padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
-            {overdueOnly ? '✕ Clear filter' : `⚠ Show overdue only (${overdueSchools.length})`}
+            {overdueOnly ? 'Clear filter' : `Show overdue only (${overdueSchools.length})`}
           </button>
         </div>
         <div style={{ overflowX: 'auto' }}>
@@ -210,7 +210,7 @@ export default function AdminBilling() {
                     <td style={{ padding: '10px 14px' }}>{studentCount}</td>
                     <td style={{ padding: '10px 14px', fontWeight: 600 }}>
                       <div>KES {billingAmt.toLocaleString()}<span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 400 }}>{cycleLabel[cycle]}</span></div>
-                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>{studentCount} × 200 = KES {annualTotal.toLocaleString()}/yr</div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>{studentCount} x 200 = KES {annualTotal.toLocaleString()}/yr</div>
                     </td>
                     <td style={{ padding: '10px 14px', fontSize: '12px', color: '#475569' }}>
                       <div>{allPaid.length} invoice{allPaid.length !== 1 ? 's' : ''}</div>
@@ -220,7 +220,7 @@ export default function AdminBilling() {
                     <td style={{ padding: '10px 14px' }}>
                       <button onClick={() => togglePaid(school)} disabled={isMarking}
                         style={{ background: isPaid ? '#dcfce7' : '#fee2e2', color: isPaid ? '#166534' : '#dc2626', border: `1px solid ${isPaid ? '#bbf7d0' : '#fecaca'}`, padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
-                        {isMarking ? '…' : isPaid ? 'Paid ✓' : 'Mark paid'}
+                        {isMarking ? '…' : isPaid ? 'Paid' : 'Mark paid'}
                       </button>
                       {isPaid && record?.paidAt && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px' }}>{new Date(record.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}</div>}
                     </td>

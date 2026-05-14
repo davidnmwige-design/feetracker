@@ -6,10 +6,10 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker.co.ke'
 
 export const metadata: Metadata = {
   title: 'Elimu Pay - School Fee Management',
-  description: 'Elimu Pay - Smart school fee management for Kenyan schools. Automate MPESA payments, send instant parent notifications, and track fee collection in real time.',
+  description: 'Elimu Pay - Smart school fee management. Automate fee collection, match payments automatically, and notify parents in real time.',
   openGraph: {
     title: 'Elimu Pay - School Fee Management',
-    description: 'Elimu Pay - Smart school fee management for Kenyan schools. Automate MPESA payments, send instant parent notifications, and track fee collection in real time.',
+    description: 'Elimu Pay - Smart school fee management. Automate fee collection, match payments automatically, and notify parents in real time.',
     url: APP_URL,
     siteName: 'Elimu Pay',
     images: [{ url: `${APP_URL}/og-image.png`, width: 1200, height: 630, alt: 'Elimu Pay' }],
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Elimu Pay - School Fee Management',
-    description: 'Elimu Pay - Smart school fee management for Kenyan schools. Automate MPESA payments, send instant parent notifications, and track fee collection in real time.',
+    description: 'Elimu Pay - Smart school fee management. Automate fee collection, match payments automatically, and notify parents in real time.',
     images: [`${APP_URL}/og-image.png`],
   },
 }
@@ -62,14 +62,13 @@ export default function Home() {
 
       <div className="land-hero" style={{background: '#0a1f4e', color: '#fff', padding: '56px 32px', textAlign: 'center'}}>
         <div style={{display: 'inline-block', background: 'rgba(200,168,75,0.15)', color: '#c8a84b', border: '1px solid rgba(200,168,75,0.3)', fontSize: '10px', padding: '5px 14px', borderRadius: '4px', marginBottom: '20px', letterSpacing: '1px', textTransform: 'uppercase' as const}}>
-          Smart fee management for Kenyan schools
+          Smart fee management for schools
         </div>
         <h1 style={{fontSize: '36px', fontWeight: 700, lineHeight: 1.15, marginBottom: '16px', letterSpacing: '-1px', fontFamily: 'Georgia, serif', color: '#fff', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto'}}>
-          Stop chasing fee payments.<br />
-          <span style={{color: '#c8a84b'}}>Let Elimu Pay do it.</span>
+          Stop chasing fee payments.
         </h1>
-        <p style={{fontSize: '13px', color: '#94a3c8', maxWidth: '480px', margin: '0 auto 28px', lineHeight: 1.7}}>
-          Upload your MPESA statement. Every payment is matched automatically. Parents get notified instantly. Your school saves time and money every term.
+        <p style={{fontSize: '15px', color: '#94a3c8', maxWidth: '480px', margin: '0 auto 28px', lineHeight: 1.7}}>
+          Elimu Pay matches every payment to the right student automatically. Parents get notified instantly. Your bursar saves hours every term.
         </p>
         <div style={{display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' as const}}>
           <Link href="/signup" style={{background: '#c8a84b', color: '#0a1f4e', padding: '12px 28px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none'}}>

@@ -25,7 +25,7 @@ export interface ParseResult {
   transactions: ParsedTransaction[]
 }
 
-// ─── Column detection ──────────────────────────────────────────────────────
+// --- Column detection ------------------------------------------------------
 
 const DATE_KEYS = ['transaction date', 'trans date', 'date', 'txn date', 'posting date', 'value date']
 const DESC_KEYS = ['description', 'narration', 'particulars', 'details', 'transaction details', 'payment details']
@@ -57,7 +57,7 @@ function findCol(header: string[], keywords: string[]): number {
   return -1
 }
 
-// ─── Amount cleaning ──────────────────────────────────────────────────────
+// --- Amount cleaning ------------------------------------------------------
 
 function parseAmount(raw: string | number | undefined): number {
   if (raw == null || raw === '' || raw === '-' || raw === '—') return 0
@@ -65,7 +65,7 @@ function parseAmount(raw: string | number | undefined): number {
   return isNaN(n) ? 0 : n
 }
 
-// ─── Skip row detection ───────────────────────────────────────────────────
+// --- Skip row detection ---------------------------------------------------
 
 const SKIP_TERMS = [
   'opening balance', 'closing balance', 'balance b/f', 'balance c/f',
@@ -82,7 +82,7 @@ function shouldSkipRow(desc: string, debitAmt: number, creditAmt: number): boole
   return false
 }
 
-// ─── Sender name extraction from description ─────────────────────────────
+// --- Sender name extraction from description -----------------------------
 
 export function extractSenderName(description: string): { name: string; reference: string; isActivity: boolean } {
   const desc = description.trim()
@@ -148,7 +148,7 @@ function isLikelyName(s: string): boolean {
   return /^[A-Za-z\s'.,-]+$/.test(s) && s.split(' ').filter(Boolean).length >= 1
 }
 
-// ─── Admission number extraction ──────────────────────────────────────────
+// --- Admission number extraction ------------------------------------------
 
 export function extractAdmissionNumber(ref: string, desc: string): string {
   const combined = `${ref} ${desc}`.toUpperCase()
@@ -161,7 +161,7 @@ export function extractAdmissionNumber(ref: string, desc: string): string {
   return ''
 }
 
-// ─── Detect bank format ───────────────────────────────────────────────────
+// --- Detect bank format ---------------------------------------------------
 
 function detectBankFormat(headers: string[]): string {
   const h = headers.map(normalise).join(' ')
@@ -174,7 +174,7 @@ function detectBankFormat(headers: string[]): string {
   return 'Generic Bank Statement'
 }
 
-// ─── Main table parser (operates on 2D string array) ─────────────────────
+// --- Main table parser (operates on 2D string array) ---------------------
 
 export function parseTable(rows2d: string[][]): ParseResult {
   let headerRowIdx = -1
@@ -252,7 +252,7 @@ export function parseTable(rows2d: string[][]): ParseResult {
   }
 }
 
-// ─── Student matching ─────────────────────────────────────────────────────
+// --- Student matching -----------------------------------------------------
 
 export interface StudentRecord {
   id: number
@@ -363,7 +363,7 @@ function matchSingle(tx: ParsedTransaction, students: StudentRecord[]): Partial<
   return { confidence: 'unmatched' }
 }
 
-// ─── Text-based parsing (for PDF extracted text) ──────────────────────────
+// --- Text-based parsing (for PDF extracted text) --------------------------
 
 export function parseTextStatement(text: string): ParseResult {
   // Split into lines, then try to reconstruct a 2D table
@@ -385,7 +385,7 @@ export function parseTextStatement(text: string): ParseResult {
   return parseTable(rows2d)
 }
 
-// ─── Excel/CSV row parser ──────────────────────────────────────────────────
+// --- Excel/CSV row parser --------------------------------------------------
 
 export function parseJsonRows(rows: Record<string, unknown>[]): ParseResult {
   if (!rows.length) return { formatDetected: 'Empty file', totalRows: 0, skippedRows: 0, processedRows: 0, transactions: [] }

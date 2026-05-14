@@ -46,8 +46,8 @@ export default function PricingSection() {
               border: 'none', cursor: 'pointer', transition: 'all 0.15s',
             }}>
               {CYCLE_LABELS[c]}
-              {c === 'term'   && <span style={{ marginLeft: '4px', fontSize: '10px' }}>−2.5%</span>}
-              {c === 'annual' && <span style={{ marginLeft: '4px', fontSize: '10px' }}>−5%</span>}
+              {c === 'term'   && <span style={{ marginLeft: '4px', fontSize: '10px' }}>-2.5%</span>}
+              {c === 'annual' && <span style={{ marginLeft: '4px', fontSize: '10px' }}>-5%</span>}
             </button>
           ))}
         </div>
@@ -77,7 +77,7 @@ export default function PricingSection() {
                 <div style={{ fontSize: '22px', fontWeight: 700, color: isFeatured ? '#0a1f4e' : '#c8a84b' }}>KES {amount.toLocaleString()}</div>
                 <div style={{ fontSize: '11px', color: isFeatured ? '#64748b' : '#94a3c8' }}>{CYCLE_SUFFIX[cycle]}</div>
                 <div style={{ fontSize: '10px', color: isFeatured ? '#94a3b8' : 'rgba(148,163,200,0.7)', margin: '4px 0 2px' }}>
-                  KES 200 × {plan.students} students/year
+                  KES 200 x {plan.students} students/year
                 </div>
 
                 {savings > 0 ? (

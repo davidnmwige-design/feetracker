@@ -12,7 +12,6 @@ export default function TrialExpired() {
 
           <div style={{padding: '36px 32px', textAlign: 'center'}}>
             <div style={{width: '56px', height: '56px', background: '#fef9ec', border: '2px solid #c8a84b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '24px'}}>
-              ⏳
             </div>
 
             <h2 style={{fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '12px', fontFamily: 'Georgia, serif'}}>

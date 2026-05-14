@@ -371,7 +371,7 @@ export default function Reminders() {
               </div>
             )}
             <button onClick={saveSchedule} disabled={scheduleSaving} style={{marginTop: '14px', background: scheduleSaved ? '#0a7c3e' : '#c8a84b', color: scheduleSaved ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: scheduleSaving ? 'not-allowed' : 'pointer'}}>
-              {scheduleSaved ? '✓ Saved' : scheduleSaving ? 'Saving…' : 'Save schedule'}
+              {scheduleSaved ? 'Saved' : scheduleSaving ? 'Saving…' : 'Save schedule'}
             </button>
           </div>
         )}
@@ -457,7 +457,7 @@ export default function Reminders() {
                     </a>
                   )}
                   {wasSent ? (
-                    <span style={{fontSize: '12px', color: '#0a7c3e', fontWeight: 700, padding: '6px 0'}}>✓ Email sent</span>
+                    <span style={{fontSize: '12px', color: '#0a7c3e', fontWeight: 700, padding: '6px 0'}}>Email sent</span>
                   ) : (
                     <button
                       onClick={() => isFormOpen ? setEmailFormId(null) : openEmailForm(student)}
@@ -529,7 +529,7 @@ export default function Reminders() {
                     style={{width: '220px', border: '1px solid #e2e8f0', borderRadius: '5px', padding: '6px 9px', fontSize: '12px', outline: 'none', flexShrink: 0}}
                   />
                   {emailSentIds.has(student.id) && (
-                    <span style={{fontSize: '11px', color: '#0a7c3e', fontWeight: 700, whiteSpace: 'nowrap' as const, flexShrink: 0}}>✓ Sent</span>
+                    <span style={{fontSize: '11px', color: '#0a7c3e', fontWeight: 700, whiteSpace: 'nowrap' as const, flexShrink: 0}}>Sent</span>
                   )}
                 </div>
               ))}
@@ -538,7 +538,7 @@ export default function Reminders() {
             <div style={{padding: '16px 24px', borderTop: '1px solid #f1f5f9', flexShrink: 0}}>
               {bulkResult && (
                 <p style={{fontSize: '13px', color: bulkResult.sent > 0 ? '#0a7c3e' : '#64748b', marginBottom: '12px', fontWeight: 600}}>
-                  {bulkResult.sent > 0 ? `✓ ${bulkResult.sent} email${bulkResult.sent > 1 ? 's' : ''} sent` : ''}
+                  {bulkResult.sent > 0 ? `${bulkResult.sent} email${bulkResult.sent > 1 ? 's' : ''} sent` : ''}
                   {bulkResult.skipped > 0 ? `${bulkResult.sent > 0 ? ' · ' : ''}${bulkResult.skipped} skipped (no email)` : ''}
                 </p>
               )}

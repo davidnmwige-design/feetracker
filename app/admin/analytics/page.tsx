@@ -164,7 +164,7 @@ export default function AdminAnalytics() {
               </div>
               {schoolGrowth !== null && (
                 <span style={{ fontSize: '12px', fontWeight: 700, color: schoolGrowth >= 0 ? '#0a7c4e' : '#e24b4a', background: schoolGrowth >= 0 ? '#e1f5ee' : '#fcebeb', padding: '4px 8px', borderRadius: '4px' }}>
-                  {schoolGrowth >= 0 ? '↑' : '↓'} {Math.abs(schoolGrowth)}%
+                  {schoolGrowth >= 0 ? '+' : '-'}{Math.abs(schoolGrowth)}%
                 </span>
               )}
             </div>

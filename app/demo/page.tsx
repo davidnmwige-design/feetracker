@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-// ── Data ──────────────────────────────────────────────────────────────────────
+// -- Data ----------------------------------------------------------------------
 
 const SCHOOL = { name: 'Westlands Academy', term: 'Term 2 2026', paybill: '522522', accountNumberFormat: "Your child's admission number e.g. ADM0001" }
 
@@ -41,7 +41,7 @@ const REMINDERS = STUDENTS.filter(s => s.paid < s.fee).map(s => ({
 
 const CERT_STUDENT = STUDENTS[0] // Brian Kamau — fully paid
 
-// ── Shared components ─────────────────────────────────────────────────────────
+// -- Shared components ---------------------------------------------------------
 
 function Badge({ paid, fee }: { paid: number; fee: number }) {
   const b = fee - paid
@@ -61,7 +61,7 @@ function CTA() {
   )
 }
 
-// ── Tab 1: Dashboard ──────────────────────────────────────────────────────────
+// -- Tab 1: Dashboard ----------------------------------------------------------
 
 const TOTAL_FEE  = STUDENTS.reduce((s, st) => s + st.fee,  0)
 const TOTAL_PAID = STUDENTS.reduce((s, st) => s + st.paid, 0)
@@ -123,7 +123,7 @@ function TabDashboard() {
   )
 }
 
-// ── Tab 2: Students ───────────────────────────────────────────────────────────
+// -- Tab 2: Students -----------------------------------------------------------
 
 function TabStudents() {
   const [search, setSearch] = useState('')
@@ -195,7 +195,7 @@ function TabStudents() {
   )
 }
 
-// ── Tab 3: Upload MPESA ───────────────────────────────────────────────────────
+// -- Tab 3: Upload MPESA -------------------------------------------------------
 
 function TabUpload() {
   const [stage, setStage] = useState<'idle' | 'loading' | 'done'>('idle')
@@ -309,7 +309,7 @@ function TabUpload() {
   )
 }
 
-// ── Tab 4: Reminders ──────────────────────────────────────────────────────────
+// -- Tab 4: Reminders ----------------------------------------------------------
 
 function TabReminders() {
   const [sent, setSent] = useState<Record<string, boolean>>({})
@@ -341,7 +341,7 @@ function TabReminders() {
         </p>
         {allSent ? (
           <span style={{ background: '#e1f5ee', color: '#0a7c4e', fontSize: '12px', padding: '7px 16px', borderRadius: '6px', fontWeight: 600 }}>
-            ✓ All {REMINDERS.length} reminders sent
+            All {REMINDERS.length} reminders sent
           </span>
         ) : (
           <button onClick={sendAll} style={{ background: '#0a1f4e', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
@@ -369,7 +369,7 @@ function TabReminders() {
                 {r.msg}
               </div>
               {sent[r.name]
-                ? <span style={{ fontSize: '12px', color: '#0a7c4e', fontWeight: 600 }}>✓ Reminder sent to {r.parent}</span>
+                ? <span style={{ fontSize: '12px', color: '#0a7c4e', fontWeight: 600 }}>Reminder sent to {r.parent}</span>
                 : (
                   <a
                     href={`https://wa.me/${r.waPhone}?text=${encodeURIComponent(r.msg)}`}
@@ -390,7 +390,7 @@ function TabReminders() {
   )
 }
 
-// ── Tab 5: Certificate ────────────────────────────────────────────────────────
+// -- Tab 5: Certificate --------------------------------------------------------
 
 function TabCertificate() {
   const [generating, setGenerating] = useState(false)
@@ -604,7 +604,7 @@ function TabCertificate() {
   )
 }
 
-// ── Tab 6: Invoices ───────────────────────────────────────────────────────────
+// -- Tab 6: Invoices -----------------------------------------------------------
 
 const DEMO_INVOICES = [
   { name: 'Brian Kamau',   admNo: 'WA/001', cls: 'Form 2 North', parent: 'Mary Kamau',    phone: '0722111001', tuition: 35000, sports: 5000, clubs: 3000, other: 2000, paid: 45000, status: 'paid' },
@@ -704,7 +704,7 @@ function TabInvoices() {
                           onClick={() => handleSend(s.admNo, 'email')}
                           style={{ fontSize: '11px', background: '#0a1f4e', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontWeight: 600 }}
                         >
-                          ✉ Email
+                          Email
                         </button>
                         <button
                           onClick={() => handleSend(s.admNo, 'wa')}
@@ -810,7 +810,7 @@ function TabInvoices() {
   )
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+// -- Main ----------------------------------------------------------------------
 
 type Tab = 'dashboard' | 'students' | 'upload' | 'reminders' | 'certificate' | 'invoices'
 

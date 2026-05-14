@@ -143,7 +143,7 @@ export default function SchoolDetail() {
               <div className="flex justify-between py-1.5 border-b border-gray-50">
                 <span className="text-sm text-gray-500">Daraja API</span>
                 <span className={`text-sm font-semibold ${(school as any).darajaEnabled ? 'text-green-700' : 'text-gray-400'}`}>
-                  {(school as any).darajaEnabled ? 'Configured ✓' : 'Not configured'}
+                  {(school as any).darajaEnabled ? 'Configured' : 'Not configured'}
                 </span>
               </div>
               <div className="flex justify-between py-1.5">
@@ -166,7 +166,7 @@ export default function SchoolDetail() {
               </div>
               <div className="flex justify-between py-1.5 border-b border-gray-50">
                 <span className="text-sm text-gray-500">Annual subscription</span>
-                <span className="text-sm font-medium">{studentCount} × KES 200 = KES {annualFee.toLocaleString()}/yr</span>
+                <span className="text-sm font-medium">{studentCount} x KES 200 = KES {annualFee.toLocaleString()}/yr</span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-gray-50">
                 <span className="text-sm text-gray-500">Billing cycle</span>
@@ -317,7 +317,7 @@ export default function SchoolDetail() {
                     className="text-gray-300 hover:text-red-400 text-xs flex-shrink-0 mt-1"
                     title="Delete note"
                   >
-                    ✕
+                    x
                   </button>
                 </div>
               ))}

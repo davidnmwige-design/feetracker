@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       select: { id: true, name: true, admNo: true, parentName: true, parent2Name: true, parentPhone: true },
     })
 
-    // ── Parse the file ────────────────────────────────────────────────────
+    // -- Parse the file ----------------------------------------------------
     let parseResult
 
     if (/\.pdf$/i.test(file.name)) {
@@ -68,10 +68,10 @@ export async function POST(req: Request) {
       parseResult = parseJsonRows(rows)
     }
 
-    // ── Match transactions to students ────────────────────────────────────
+    // -- Match transactions to students ------------------------------------
     const matched = matchTransactions(parseResult.transactions, students)
 
-    // ── Persist payments ──────────────────────────────────────────────────
+    // -- Persist payments --------------------------------------------------
     const confidenceCounts = { high: 0, medium: 0, low: 0 }
     let unmatchedCount = 0
     const notifications: { msg: string; phone: string }[] = []

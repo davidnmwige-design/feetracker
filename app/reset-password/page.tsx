@@ -15,7 +15,7 @@ function checkPassword(p: string) {
 function PasswordRule({ met, label }: { met: boolean; label: string }) {
   return (
     <div style={{ fontSize: '11px', color: met ? '#0a7c4e' : '#94a3b8', display: 'flex', gap: '5px' }}>
-      <span>{met ? '✓' : '✗'}</span>
+      <span>{met ? 'Yes' : 'No'}</span>
       <span>{label}</span>
     </div>
   )
@@ -71,7 +71,7 @@ function ResetPasswordForm() {
     <div style={{ padding: '32px' }}>
       {done ? (
         <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '48px', height: '48px', background: '#e1f5ee', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '22px' }}>✓</div>
+          <div style={{ width: '48px', height: '48px', background: '#e1f5ee', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '22px' }}>Done</div>
           <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Password updated</h2>
           <p style={{ fontSize: '13px', color: '#64748b' }}>Redirecting you to sign in...</p>
         </div>

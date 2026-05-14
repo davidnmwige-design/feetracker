@@ -8,32 +8,32 @@ const NAV_GROUPS = [
   {
     label: 'OVERVIEW',
     items: [
-      { href: '/admin/dashboard',  label: 'Dashboard',     icon: '▦' },
-      { href: '/admin/analytics',  label: 'Analytics',     icon: '◫' },
-      { href: '/admin/forecast',   label: 'Forecast',      icon: '↗' },
+      { href: '/admin/dashboard',  label: 'Dashboard',     icon: '' },
+      { href: '/admin/analytics',  label: 'Analytics',     icon: '' },
+      { href: '/admin/forecast',   label: 'Forecast',      icon: '' },
     ],
   },
   {
     label: 'SCHOOLS',
     items: [
-      { href: '/admin/schools',    label: 'All Schools',   icon: '⊡' },
-      { href: '/admin/onboarding', label: 'Onboarding',    icon: '✓' },
-      { href: '/admin/billing',    label: 'Billing',       icon: '◈' },
-      { href: '/admin/flags',      label: 'Support Flags', icon: '⚑' },
+      { href: '/admin/schools',    label: 'All Schools',   icon: '' },
+      { href: '/admin/onboarding', label: 'Onboarding',    icon: '' },
+      { href: '/admin/billing',    label: 'Billing',       icon: '' },
+      { href: '/admin/flags',      label: 'Support Flags', icon: '' },
     ],
   },
   {
     label: 'COMMUNICATIONS',
     items: [
-      { href: '/admin/communications', label: 'Announcements', icon: '✉' },
-      { href: '/admin/activity',       label: 'Activity Feed',  icon: '◎' },
-      { href: '/admin/audit',          label: 'Audit Log',      icon: '≡' },
+      { href: '/admin/communications', label: 'Announcements', icon: '' },
+      { href: '/admin/activity',       label: 'Activity Feed',  icon: '' },
+      { href: '/admin/audit',          label: 'Audit Log',      icon: '' },
     ],
   },
   {
     label: 'SETTINGS',
     items: [
-      { href: '/admin/settings',   label: 'Admin Settings', icon: '⚙' },
+      { href: '/admin/settings',   label: 'Admin Settings', icon: '' },
     ],
   },
 ]
@@ -140,7 +140,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button className="admin-mobile-btn" onClick={() => setSidebarOpen(true)}
               style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '18px', padding: 0 }}>
-              ☰
+              Menu
             </button>
             <span style={{ fontSize: '14px', fontWeight: 700, color: '#050f2c' }}>Elimu Pay Admin</span>
           </div>

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-// ── PDF builder ───────────────────────────────────────────────────────────────
+// -- PDF builder ---------------------------------------------------------------
 
 async function buildInvoicePdf(school: any, student: any, totalPaid: number, feeCategories?: { name: string; amount: number }[]) {
   const { jsPDF } = await import('jspdf')
@@ -151,7 +151,7 @@ async function buildInvoicePdf(school: any, student: any, totalPaid: number, fee
   return doc
 }
 
-// ── Invoice email HTML ────────────────────────────────────────────────────────
+// -- Invoice email HTML --------------------------------------------------------
 
 function invoiceEmailHtml({
   schoolName, parentName, studentName, term, totalDue, dueDateStr,
@@ -202,7 +202,7 @@ function invoiceEmailHtml({
   `
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
+// -- Status badge --------------------------------------------------------------
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, { bg: string; color: string }> = {
@@ -218,7 +218,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// -- Main page -----------------------------------------------------------------
 
 export default function Invoices() {
   useEffect(() => {
@@ -357,15 +357,15 @@ export default function Invoices() {
     const lines = [`Dear ${student.parentName || 'Parent'}, here is the fee invoice for ${student.name} (${cls}) for ${term}:`]
     const cats = student.feeCategories as { name: string; amount: number }[] | undefined
     if (cats && cats.length > 0) {
-      cats.forEach(c => { if (c.amount > 0) lines.push(`• ${c.name}: KES ${c.amount.toLocaleString()}`) })
+      cats.forEach(c => { if (c.amount > 0) lines.push(`- ${c.name}: KES ${c.amount.toLocaleString()}`) })
     } else {
-      if (student.tuitionFee > 0) lines.push(`• Tuition: KES ${student.tuitionFee.toLocaleString()}`)
-      if (student.sportsFee > 0) lines.push(`• Sports: KES ${student.sportsFee.toLocaleString()}`)
-      if (student.clubsFee > 0) lines.push(`• Clubs: KES ${student.clubsFee.toLocaleString()}`)
-      if (student.otherFee > 0) lines.push(`• Other: KES ${student.otherFee.toLocaleString()}`)
+      if (student.tuitionFee > 0) lines.push(`- Tuition: KES ${student.tuitionFee.toLocaleString()}`)
+      if (student.sportsFee > 0) lines.push(`- Sports: KES ${student.sportsFee.toLocaleString()}`)
+      if (student.clubsFee > 0) lines.push(`- Clubs: KES ${student.clubsFee.toLocaleString()}`)
+      if (student.otherFee > 0) lines.push(`- Other: KES ${student.otherFee.toLocaleString()}`)
     }
-    lines.push(`• Amount paid: KES ${totalPaid.toLocaleString()}`)
-    lines.push(`• *TOTAL DUE: KES ${totalDue.toLocaleString()}*`)
+    lines.push(`- Amount paid: KES ${totalPaid.toLocaleString()}`)
+    lines.push(`- *TOTAL DUE: KES ${totalDue.toLocaleString()}*`)
     if (school.paybill) {
       const acctFmt = school.accountNumberFormat ? ` | Account: ${school.accountNumberFormat}` : ''
       lines.push(`\n*HOW TO PAY:* MPESA Paybill ${school.paybill}${acctFmt} | Amount: KES ${totalDue.toLocaleString()} | Due: ${dueDateStr}`)
@@ -470,7 +470,7 @@ export default function Invoices() {
                 Sending invoices… {bulkState.done} / {bulkState.total}
               </p>
             ) : (
-              <p style={{ fontSize: '13px', color: '#166534', margin: 0 }}>✓ Done. {bulkState.summary}</p>
+              <p style={{ fontSize: '13px', color: '#166534', margin: 0 }}>Done. {bulkState.summary}</p>
             )}
             {!bulkState.running && (
               <button onClick={() => setBulkState(null)} style={{ marginTop: '8px', fontSize: '12px', color: '#475569', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Dismiss</button>
@@ -555,7 +555,7 @@ export default function Invoices() {
                         <td style={{ padding: '10px 14px', color: totalDue > 0 ? '#dc2626' : '#166534', fontWeight: 600, whiteSpace: 'nowrap' }}>KES {totalDue.toLocaleString()}</td>
                         <td style={{ padding: '10px 14px' }}>
                           {wasSent ? (
-                            <span style={{ background: '#dbeafe', color: '#1e40af', fontSize: '10px', padding: '3px 9px', borderRadius: '999px', fontWeight: 700 }}>Sent ✓</span>
+                            <span style={{ background: '#dbeafe', color: '#1e40af', fontSize: '10px', padding: '3px 9px', borderRadius: '999px', fontWeight: 700 }}>Sent</span>
                           ) : (
                             <StatusBadge status={status} />
                           )}
@@ -568,7 +568,7 @@ export default function Invoices() {
                                 disabled={isSending}
                                 style={{ fontSize: '11px', background: isSending ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: isSending ? 'not-allowed' : 'pointer', fontWeight: 600, whiteSpace: 'nowrap' as const }}
                               >
-                                {isSending ? '…' : '✉ Email'}
+                                {isSending ? '…' : 'Email'}
                               </button>
                             ) : (
                               <span style={{ fontSize: '11px', color: '#94a3b8', padding: '5px 0' }}>No email</span>

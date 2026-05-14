@@ -29,7 +29,7 @@ function OnboardingBar({ steps, completed }: { steps: Record<string, boolean>; c
       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
         {Object.entries(steps).map(([key, done]) => (
           <span key={key} style={{ fontSize: '9px', padding: '2px 5px', borderRadius: '3px', background: done ? '#dcfce7' : '#fee2e2', color: done ? '#166534' : '#dc2626', fontWeight: 600 }}>
-            {done ? '✓' : '✗'} {labels[key]}
+            {labels[key]}
           </span>
         ))}
       </div>
@@ -165,9 +165,9 @@ export default function AdminSchools() {
                   </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <a href={`mailto:${school.user?.email}`} title="Send email"
-                      style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px 8px', fontSize: '13px', textDecoration: 'none' }}>✉</a>
+                      style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px 8px', fontSize: '13px', textDecoration: 'none' }}>Email</a>
                     <a href={`https://wa.me/?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer" title="WhatsApp"
-                      style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '5px 8px', fontSize: '13px', textDecoration: 'none' }}>💬</a>
+                      style={{ background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '5px 8px', fontSize: '13px', textDecoration: 'none' }}>WhatsApp</a>
                   </div>
                 </div>
 

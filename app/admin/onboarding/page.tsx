@@ -35,7 +35,7 @@ export default function AdminOnboarding() {
         body: JSON.stringify({ schoolId }),
       })
       const data = await res.json()
-      setReminderResult(prev => ({ ...prev, [schoolId]: res.ok ? '✓ Reminder sent' : (data.error || 'Failed') }))
+      setReminderResult(prev => ({ ...prev, [schoolId]: res.ok ? 'Reminder sent' : (data.error || 'Failed') }))
     } catch { setReminderResult(prev => ({ ...prev, [schoolId]: 'Failed' })) }
     setSendingReminder(prev => ({ ...prev, [schoolId]: false }))
   }
@@ -110,7 +110,7 @@ export default function AdminOnboarding() {
                           color: done ? '#166534' : '#94a3b8',
                           fontWeight: done ? 700 : 400,
                         }}>
-                          {done ? '✓' : '○'} {STEP_LABELS[key]}
+                          {done ? 'Done' : 'Pending'}: {STEP_LABELS[key]}
                         </span>
                       ))}
                     </div>

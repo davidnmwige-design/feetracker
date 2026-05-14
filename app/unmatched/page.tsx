@@ -156,7 +156,7 @@ export default function Unmatched() {
 
         {!loading && payments.length === 0 && (
           <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '56px', textAlign: 'center' }}>
-            <div style={{ fontSize: '32px', marginBottom: '12px' }}>✓</div>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }}>Done</div>
             <p style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>All clear</p>
             <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>All payments have been matched to students.</p>
           </div>
@@ -237,7 +237,7 @@ export default function Unmatched() {
                             </div>
                             {suggestion && (
                               <div style={{ marginTop: '6px', background: 'rgba(200,168,75,0.18)', borderRadius: '5px', padding: '5px 10px', fontSize: '11px', color: '#fef3c7', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                <span>💡</span>
+                                <span>Suggestion:</span>
                                 <span>Could this be <strong>{suggestion.name}</strong> ({suggestion.class})?</span>
                                 <button
                                   onMouseDown={e => { e.preventDefault(); selectStudent(payment.id, suggestion) }}
@@ -346,7 +346,7 @@ export default function Unmatched() {
                             onClick={() => clearSelection(payment.id)}
                             style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '16px', padding: '2px', lineHeight: 1 }}
                           >
-                            ✕
+                            x
                           </button>
                         </div>
                         <button
@@ -369,7 +369,7 @@ export default function Unmatched() {
                               Saving…
                             </>
                           ) : (
-                            `✓ Confirm — assign KES ${payment.amount.toLocaleString()} to ${sel.name}`
+                            `Confirm — assign KES ${payment.amount.toLocaleString()} to ${sel.name}`
                           )}
                         </button>
                       </div>

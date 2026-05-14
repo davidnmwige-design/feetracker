@@ -38,7 +38,9 @@
       "Bash(npm uninstall *)",
       "Bash(Remove-Item *)",
       "Bash(dir /b)",
-      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\('name:', p['name'], 'version:', p['version'], 'main:', p.get\\('main',''\\)\\)\")"
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\('name:', p['name'], 'version:', p['version'], 'main:', p.get\\('main',''\\)\\)\")",
+      "Bash(sort -t: -k2)",
+      "Bash(powershell -Command \"Get-ChildItem -Recurse -Include *.tsx,*.ts -Exclude node_modules,.next | Select-String -Pattern '[☀-⟿⬀-⯿︀-️ἀ0-῿F⌚-⌛⏩-⏳⏸-⏺▪-▫▶◀◻-◾☔-☕♈-♓♿⚓⚡⚪-⚫⚽-⚾⛄-⛅⛎⛔⛪⛲-⛳⛵⛺⛽✂✅✈-✍✏✒✔✖✝✡✨✳-✴❄❇❌❎❓-❕❗❣-❤➕-➗➡➰➿⤴-⤵⬅-⬇⬛-⬜⭐⭕〰〽㊗㊙]' | Select-Object Filename, LineNumber, Line | Format-Table -AutoSize\")"
     ]
   }
 }

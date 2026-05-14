@@ -135,7 +135,6 @@ export default function Verify2FA() {
         <div style={{ padding: '32px' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <div style={{ width: '48px', height: '48px', background: '#f0f4ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '22px' }}>
-              ✉
             </div>
             <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px' }}>Check your email</h2>
             {sending ? (

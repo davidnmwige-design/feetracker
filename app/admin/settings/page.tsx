@@ -176,7 +176,7 @@ export default function AdminSettings() {
         </div>
         <button onClick={saveSettings} disabled={saving}
           style={{ background: saving ? '#94a3b8' : '#c8a84b', color: saving ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-          {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save company details'}
+          {saved ? 'Saved' : saving ? 'Saving…' : 'Save company details'}
         </button>
       </Section>
 
@@ -195,7 +195,7 @@ export default function AdminSettings() {
         </div>
         <button onClick={saveSettings} disabled={saving}
           style={{ background: saving ? '#94a3b8' : '#c8a84b', color: saving ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-          {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save invoice settings'}
+          {saved ? 'Saved' : saving ? 'Saving…' : 'Save invoice settings'}
         </button>
       </Section>
 
@@ -208,7 +208,7 @@ export default function AdminSettings() {
         </Field>
         <button onClick={saveSettings} disabled={saving}
           style={{ background: saving ? '#94a3b8' : '#c8a84b', color: saving ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-          {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save signature'}
+          {saved ? 'Saved' : saving ? 'Saving…' : 'Save signature'}
         </button>
       </Section>
 
@@ -270,7 +270,7 @@ export default function AdminSettings() {
 
         <button onClick={saveSettings} disabled={saving}
           style={{ background: saving ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '9px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-          {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save settings'}
+          {saved ? 'Saved' : saving ? 'Saving…' : 'Save settings'}
         </button>
       </Section>
 
