@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { sendEmail } from '@/lib/email'
 
@@ -8,14 +8,28 @@ function maskEmail(email: string): string {
   return local[0] + '***@' + domain
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  // Two modes:
+  // 1. Settings page (user already logged in) — identify via session
+  // 2. Login 2FA flow (user not yet logged in) — email provided in request body
+  let userEmail: string | null = null
+
   const session = await auth()
-  if (!session?.user?.email) {
+  if (session?.user?.email) {
+    userEmail = session.user.email
+  } else {
+    const body = await req.json().catch(() => ({}))
+    if (typeof body?.email === 'string' && body.email) {
+      userEmail = body.email
+    }
+  }
+
+  if (!userEmail) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { email: userEmail },
     select: { id: true, email: true, name: true },
   })
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })

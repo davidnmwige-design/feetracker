@@ -1,10 +1,12 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { signOut } from 'next-auth/react'
+import { signIn, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 export default function Verify2FA() {
   const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -12,19 +14,39 @@ export default function Verify2FA() {
   const [sending, setSending] = useState(true)
   const [sendError, setSendError] = useState('')
   const [cooldown, setCooldown] = useState(0)
+  const [ready, setReady] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    sendOtp()
+    const storedEmail = sessionStorage.getItem('ep_2fa_email')
+    const storedPassword = sessionStorage.getItem('ep_2fa_password')
+
+    if (!storedEmail || !storedPassword) {
+      // No credentials in sessionStorage — go back to login
+      router.replace('/login')
+      return
+    }
+
+    setEmail(storedEmail)
+    setPassword(storedPassword)
+    setReady(true)
+    sendOtp(storedEmail)
+
     return () => { if (cooldownRef.current) clearInterval(cooldownRef.current) }
   }, [])
 
-  async function sendOtp() {
+  async function sendOtp(emailArg?: string) {
+    const target = emailArg ?? email
+    if (!target) return
     setSending(true)
     setSendError('')
     try {
-      const res = await fetch('/api/auth/2fa/send-otp', { method: 'POST' })
+      const res = await fetch('/api/auth/2fa/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: target }),
+      })
       const data = await res.json()
       if (res.ok) {
         setMaskedEmail(data.maskedEmail || '')
@@ -44,10 +66,7 @@ export default function Verify2FA() {
     if (cooldownRef.current) clearInterval(cooldownRef.current)
     cooldownRef.current = setInterval(() => {
       setCooldown(prev => {
-        if (prev <= 1) {
-          clearInterval(cooldownRef.current!)
-          return 0
-        }
+        if (prev <= 1) { clearInterval(cooldownRef.current!); return 0 }
         return prev - 1
       })
     }, 1000)
@@ -57,33 +76,59 @@ export default function Verify2FA() {
     if (code.length !== 6 || loading) return
     setLoading(true)
     setError('')
+
     try {
-      const res = await fetch('/api/auth/2fa/verify', {
+      // Step 1: verify OTP + validate credentials server-side, sets ft_2fa cookie
+      const verifyRes = await fetch('/api/auth/2fa/verify-and-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ email, password, code }),
       })
-      const data = await res.json()
-      if (res.ok) {
-        router.push('/dashboard')
-        router.refresh()
-      } else {
-        setError(data.error || 'Invalid code. Please try again.')
+      const verifyData = await verifyRes.json()
+
+      if (!verifyRes.ok) {
+        setError(verifyData.error || 'Invalid code. Please try again.')
         setCode('')
         inputRef.current?.focus()
+        setLoading(false)
+        return
       }
+
+      // Step 2: OTP verified — now create the NextAuth session
+      const signInResult = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (signInResult?.error) {
+        setError('Sign in failed. Please return to the login page and try again.')
+        setLoading(false)
+        return
+      }
+
+      // Step 3: clean up and navigate
+      sessionStorage.removeItem('ep_2fa_email')
+      sessionStorage.removeItem('ep_2fa_password')
+      router.push('/dashboard')
+      router.refresh()
     } catch {
       setError('Something went wrong. Please try again.')
+      setLoading(false)
     }
-    setLoading(false)
   }
+
+  // While checking sessionStorage / redirecting, render nothing
+  if (!ready) return null
 
   return (
     <div style={{ background: '#f8f9fc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif', padding: '16px' }}>
       <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', width: '100%', maxWidth: '400px', overflow: 'hidden' }}>
 
         <div style={{ background: '#0a1f4e', padding: '28px 32px', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0 }}><span style={{ color: '#fff' }}>Elimu</span><span style={{ color: '#c8a84b' }}> Pay</span></h1>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0 }}>
+            <span style={{ color: '#fff' }}>Elimu</span><span style={{ color: '#c8a84b' }}> Pay</span>
+          </h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>Two-factor authentication</p>
         </div>
 
@@ -149,7 +194,7 @@ export default function Verify2FA() {
               <span style={{ fontSize: '13px', color: '#94a3b8' }}>Resend in {cooldown}s</span>
             ) : (
               <button
-                onClick={sendOtp}
+                onClick={() => sendOtp()}
                 disabled={sending}
                 style={{ background: 'none', border: 'none', color: '#0a1f4e', fontSize: '13px', cursor: sending ? 'not-allowed' : 'pointer', textDecoration: 'underline', fontWeight: 600 }}
               >
@@ -160,7 +205,11 @@ export default function Verify2FA() {
 
           <div style={{ textAlign: 'center' }}>
             <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
+              onClick={() => {
+                sessionStorage.removeItem('ep_2fa_email')
+                sessionStorage.removeItem('ep_2fa_password')
+                signOut({ callbackUrl: '/login' })
+              }}
               style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline' }}
             >
               Use a different account

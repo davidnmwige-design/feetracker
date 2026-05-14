@@ -15,22 +15,41 @@ function LoginForm() {
   const [form, setForm] = useState({ email: '', password: '' })
 
   async function handleSubmit() {
+    if (!form.email || !form.password) return
     setLoading(true)
     setError('')
 
-    const result = await signIn('credentials', {
-      email: form.email,
-      password: form.password,
-      redirect: false
-    })
+    try {
+      // Check if this user has 2FA enabled before attempting sign-in
+      const check = await fetch(`/api/auth/check-2fa-required?email=${encodeURIComponent(form.email)}`)
+      const { required } = await check.json()
 
-    if (result?.error) {
-      setError('Invalid email or password')
+      if (required) {
+        // Don't create a session yet — store credentials and redirect to 2FA page
+        sessionStorage.setItem('ep_2fa_email', form.email)
+        sessionStorage.setItem('ep_2fa_password', form.password)
+        router.push('/verify-2fa')
+        return
+      }
+
+      // No 2FA — complete login normally
+      const result = await signIn('credentials', {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError('Invalid email or password')
+        return
+      }
+
+      router.push('/dashboard')
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    router.push('/dashboard')
   }
 
   return (
@@ -63,6 +82,7 @@ function LoginForm() {
                 placeholder="your@email.com"
                 value={form.email}
                 onChange={e => setForm({ ...form, email: e.target.value })}
+                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
               />
             </div>
 
@@ -76,6 +96,7 @@ function LoginForm() {
                   placeholder="Your password"
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
+                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                 />
                 <button
                   type="button"
