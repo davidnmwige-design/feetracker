@@ -54,10 +54,10 @@ export default function TrialExpired() {
                 WhatsApp us to subscribe
               </a>
               <a
-                href="mailto:support@feetracker.co.ke?subject=Elimu%20Pay%20Subscription"
+                href="mailto:support@elimupay.co.ke?subject=Elimu%20Pay%20Subscription"
                 style={{display: 'block', background: '#0a1f4e', color: '#fff', padding: '12px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none', textAlign: 'center'}}
               >
-                Email us at support@feetracker.co.ke
+                Email us at support@elimupay.co.ke
               </a>
               <Link
                 href="/login"

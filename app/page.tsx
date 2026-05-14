@@ -218,7 +218,7 @@ export default function Home() {
               },
               {
                 q: 'What if I need help getting started?',
-                a: 'We offer hands-on onboarding for every new school. Once you sign up, reach us on WhatsApp at +254 746 353 411 or email support@feetracker.co.ke and we will walk you through setup step by step.',
+                a: 'We offer hands-on onboarding for every new school. Once you sign up, reach us on WhatsApp at +254 746 353 411 or email support@elimupay.co.ke and we will walk you through setup step by step.',
               },
             ].map((item, i, arr) => (
               <div key={item.q} style={{padding: '20px 0', borderBottom: i < arr.length - 1 ? '1px solid #e2e8f0' : 'none'}}>
@@ -245,7 +245,7 @@ export default function Home() {
       <div className="land-footer" style={{background: '#0a1f4e', padding: '28px 32px', textAlign: 'center' as const}}>
         <div style={{display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' as const, marginBottom: '14px'}}>
           <Link href="/demo" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>Demo</Link>
-          <a href="mailto:support@feetracker.co.ke" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>support@feetracker.co.ke</a>
+          <a href="mailto:support@elimupay.co.ke" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>support@elimupay.co.ke</a>
           <a href="https://wa.me/254746353411" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}} target="_blank" rel="noopener noreferrer">WhatsApp +254 746 353 411</a>
           <Link href="/privacy" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>Privacy Policy</Link>
         </div>

@@ -307,7 +307,7 @@ export default function Settings() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'feetracker-export.xlsx'
+      a.download = 'elimupay-export.xlsx'
       a.click()
       URL.revokeObjectURL(url)
     } finally {
@@ -455,7 +455,7 @@ export default function Settings() {
     doc.setFontSize(9)
     doc.setTextColor(180, 190, 210)
     doc.text('Fee management platform for Kenyan schools', 20, 26)
-    doc.text('support@feetracker.co.ke', 20, 32)
+    doc.text('support@elimupay.co.ke', 20, 32)
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(14)
@@ -560,14 +560,14 @@ export default function Settings() {
     doc.setFontSize(9)
     doc.setTextColor(100, 116, 139)
     doc.text('Payment due by: ' + dueDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }), 20, instrY + 24)
-    doc.text('Questions? Email support@feetracker.co.ke or WhatsApp +254 700 000 000', 20, instrY + 32)
+    doc.text('Questions? Email support@elimupay.co.ke or WhatsApp +254 700 000 000', 20, instrY + 32)
 
     doc.setFillColor(10, 31, 78)
     doc.rect(0, 275, w, 22, 'F')
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(8)
     doc.setTextColor(148, 163, 184)
-    doc.text('Elimu Pay · Nairobi, Kenya · support@feetracker.co.ke', w / 2, 284, { align: 'center' })
+    doc.text('Elimu Pay · Nairobi, Kenya · support@elimupay.co.ke', w / 2, 284, { align: 'center' })
     doc.text('Thank you for choosing Elimu Pay to manage your school fees.', w / 2, 290, { align: 'center' })
 
     doc.save('EllimuPay_Invoice_' + invoiceNum + '.pdf')
@@ -585,7 +585,7 @@ export default function Settings() {
     const total = plan.monthly + (isFirstInvoice ? plan.setup : 0)
 
     const planCapDesc = plan.maxStudents !== null ? `up to ${plan.maxStudents} students` : 'unlimited students'
-    const msg = `*Elimu Pay Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${plan.name} (${planCapDesc})\n\n*Breakdown:*\n• ${plan.name} monthly subscription: KES ${plan.monthly.toLocaleString()}${isFirstInvoice ? `\n• One-time setup fee: KES ${plan.setup.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@feetracker.co.ke`
+    const msg = `*Elimu Pay Invoice*\n\nInvoice: ${invoiceNum}\nDate: ${today.toLocaleDateString('en-KE')}\nDue: ${dueDate.toLocaleDateString('en-KE')}\n\nBill to: ${school.name}\nPlan: ${plan.name} (${planCapDesc})\n\n*Breakdown:*\n• ${plan.name} monthly subscription: KES ${plan.monthly.toLocaleString()}${isFirstInvoice ? `\n• One-time setup fee: KES ${plan.setup.toLocaleString()}` : ''}\n\n*Total due: KES ${total.toLocaleString()}*\n\n*Pay via M-Pesa:*\nPaybill: 400200\nAccount: ${invoiceNum}\n\nQuestions? Reply to this message or email support@elimupay.co.ke`
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank')
   }
 

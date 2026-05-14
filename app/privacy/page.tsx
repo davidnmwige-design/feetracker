@@ -21,7 +21,7 @@ export default function Privacy() {
           <section>
             <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>1. Who We Are</h2>
             <p style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
-              Elimu Pay is a school fee management platform built for private schools in Kenya. We help school administrators upload MPESA statements, automatically match fee payments to students, and communicate with parents via WhatsApp. Our platform is operated by Elimu Pay Kenya. For any questions about this policy, contact us at <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>.
+              Elimu Pay is a school fee management platform built for private schools in Kenya. We help school administrators upload MPESA statements, automatically match fee payments to students, and communicate with parents via WhatsApp. Our platform is operated by Elimu Pay Kenya. For any questions about this policy, contact us at <a href="mailto:support@elimupay.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@elimupay.co.ke</a>.
             </p>
           </section>
 
@@ -118,7 +118,7 @@ export default function Privacy() {
                 <li><strong>Export all your data</strong> (students, payments, invoices) as an Excel file from Settings at any time</li>
                 <li>Sign out of all devices at once from Settings → Session security</li>
               </ul>
-              <p style={{marginTop: '12px'}}>For other data rights requests, contact us at <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>.</p>
+              <p style={{marginTop: '12px'}}>For other data rights requests, contact us at <a href="mailto:support@elimupay.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@elimupay.co.ke</a>.</p>
             </div>
           </section>
 
@@ -128,7 +128,7 @@ export default function Privacy() {
               <p>If you have any questions about this Privacy Policy or how your data is handled, please reach us at:</p>
               <div style={{marginTop: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px'}}>
                 <p style={{margin: 0, fontWeight: 600, color: '#0f172a'}}>Elimu Pay Kenya</p>
-                <p style={{margin: '4px 0 0'}}>Email: <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a></p>
+                <p style={{margin: '4px 0 0'}}>Email: <a href="mailto:support@elimupay.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@elimupay.co.ke</a></p>
                 <p style={{margin: '4px 0 0'}}>WhatsApp: <a href="https://wa.me/254746353411" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}} target="_blank" rel="noopener noreferrer">+254 746 353 411</a></p>
                 <p style={{margin: '4px 0 0'}}>Location: Nairobi, Kenya</p>
               </div>

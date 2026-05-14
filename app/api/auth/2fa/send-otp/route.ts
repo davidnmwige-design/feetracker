@@ -43,7 +43,7 @@ export async function POST() {
         <p style="color:#94a3b8;font-size:13px;margin:0">This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
       </div>
       <div style="padding:16px;background:#f8f9fc;text-align:center">
-        <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@feetracker.co.ke</p>
+        <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@elimupay.co.ke</p>
       </div>
     </div>
   `

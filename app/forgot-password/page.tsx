@@ -39,7 +39,7 @@ export default function ForgotPassword() {
               </p>
               <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '20px'}}>
                 Don't see it? Check your spam folder, or contact us at{' '}
-                <a href="mailto:support@feetracker.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@feetracker.co.ke</a>
+                <a href="mailto:support@elimupay.co.ke" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>support@elimupay.co.ke</a>
               </p>
               <Link href="/login" style={{display: 'block', textAlign: 'center', background: '#0a1f4e', color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none'}}>
                 Back to sign in

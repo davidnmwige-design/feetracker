@@ -24,7 +24,7 @@ function reminderHtml({
   return `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
     <div style="background:#0a1f4e;padding:20px 24px;text-align:center">
       <h1 style="color:#c8a84b;margin:0;font-family:Georgia,serif;font-size:20px">${schoolName}</h1>
-      <p style="color:#94a3c8;margin:6px 0 0;font-size:11px">POWERED BY FEETRACKER</p>
+      <p style="color:#94a3c8;margin:6px 0 0;font-size:11px">POWERED BY ELIMU PAY</p>
     </div>
     <div style="padding:28px;background:#fff;border:1px solid #e2e8f0">
       <h2 style="color:#0f172a;font-size:17px;margin:0 0 8px">Fee Payment Reminder</h2>
@@ -143,7 +143,7 @@ export async function GET(req: Request) {
 
     const adminHtml = `<div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto">
       <div style="background:#050f2c;padding:20px 24px">
-        <h1 style="color:#c8a84b;font-size:16px;margin:0;font-weight:700">FEETRACKER</h1>
+        <h1 style="color:#c8a84b;font-size:16px;margin:0;font-weight:700">ELIMU PAY</h1>
         <p style="color:#94a3b8;font-size:11px;margin:4px 0 0;letter-spacing:1px;text-transform:uppercase">Scheduled reminder time</p>
       </div>
       <div style="padding:24px;background:#fff;border:1px solid #e2e8f0">

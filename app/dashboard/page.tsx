@@ -39,7 +39,7 @@ export default async function Dashboard() {
           subject: `Trial expiring soon: ${school.name}`,
           html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
             <div style="background:#050f2c;padding:20px 24px">
-              <h1 style="color:#c8a84b;font-size:16px;margin:0;font-weight:700;letter-spacing:1px">FEETRACKER</h1>
+              <h1 style="color:#c8a84b;font-size:16px;margin:0;font-weight:700;letter-spacing:1px">ELIMU PAY</h1>
               <p style="color:#94a3b8;font-size:11px;margin:4px 0 0;letter-spacing:1px;text-transform:uppercase">Trial expiry alert</p>
             </div>
             <div style="padding:24px;background:#fff;border:1px solid #e2e8f0">
