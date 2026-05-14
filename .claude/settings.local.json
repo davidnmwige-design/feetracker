@@ -35,7 +35,8 @@
       "Bash(ping -n 35 127.0.0.1)",
       "Bash(ping -n 50 127.0.0.1)",
       "Bash(curl -sv https://feetracker-seven.vercel.app/login)",
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "Bash(Remove-Item *)"
     ]
   }
 }

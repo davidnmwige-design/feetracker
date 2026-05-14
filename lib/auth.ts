@@ -46,10 +46,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        console.log('[JWT callback] user present, id:', user.id, 'email:', user.email)
         token.userId = user.id
         try {
           // Try by numeric id first; fall back to email in case id is missing/non-numeric
+          // (next-auth v5 beta does not guarantee user.id is forwarded unchanged)
           let dbUser: { id: number; twoFactorEnabled: boolean; sessionVersion: number } | null = null
           const numId = Number(user.id)
           if (!isNaN(numId) && numId > 0) {
@@ -65,11 +65,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             })
             if (dbUser) token.userId = String(dbUser.id)
           }
-          console.log('[JWT callback] dbUser fetched:', dbUser)
           token.twoFactorEnabled = dbUser?.twoFactorEnabled ?? false
           token.sessionVersion = dbUser?.sessionVersion ?? 1
-        } catch (err) {
-          console.error('[JWT callback] DB fetch failed:', err)
+        } catch {
           token.twoFactorEnabled = false
           token.sessionVersion = 1
         }
