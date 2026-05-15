@@ -29,12 +29,12 @@ export default function Reports() {
   const filtered = selectedClass === 'All' ? students : students.filter(s => s.class === selectedClass)
 
   // Stats computed from filtered set
-  const totalExpected = filtered.reduce((s, st) => s + st.feeRequired, 0)
+  const totalExpected = filtered.reduce((s, st) => s + (st.effectiveFee ?? st.feeRequired), 0)
   const totalCollected = filtered.reduce((s, st) => s + (st.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0), 0)
   const totalBalance = totalExpected - totalCollected
   const rate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0
-  const fullyPaid = filtered.filter(s => s.feeRequired - (s.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0) <= 0).length
-  const partialPaid = filtered.filter(s => { const p = (s.payments || []).reduce((sum: number, pay: any) => sum + pay.amount, 0); return p > 0 && p < s.feeRequired }).length
+  const fullyPaid = filtered.filter(s => (s.effectiveFee ?? s.feeRequired) - (s.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0) <= 0).length
+  const partialPaid = filtered.filter(s => { const p = (s.payments || []).reduce((sum: number, pay: any) => sum + pay.amount, 0); return p > 0 && p < (s.effectiveFee ?? s.feeRequired) }).length
   const unpaid = filtered.filter(s => (s.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0) === 0).length
 
   async function downloadReport() {
@@ -82,7 +82,7 @@ export default function Reports() {
 
       // Summary from filtered students
       const tStudents  = filtered.length
-      const tExp  = filtered.reduce((s, st) => s + st.feeRequired, 0)
+      const tExp  = filtered.reduce((s, st) => s + (st.effectiveFee ?? st.feeRequired), 0)
       const tColl = filtered.reduce((s, st) => s + (st.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0), 0)
       const tRate = tExp > 0 ? Math.round((tColl / tExp) * 100) : 0
 
@@ -162,7 +162,7 @@ export default function Reports() {
         const classStudents = filtered.filter((s: any) => s.class === cls)
         if (!classStudents.length) continue
 
-        const clsExp  = classStudents.reduce((s: number, st: any) => s + st.feeRequired, 0)
+        const clsExp  = classStudents.reduce((s: number, st: any) => s + (st.effectiveFee ?? st.feeRequired), 0)
         const clsColl = classStudents.reduce((s: number, st: any) => s + (st.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0), 0)
         const clsRate = clsExp > 0 ? Math.round(clsColl / clsExp * 100) : 0
 
@@ -194,7 +194,7 @@ export default function Reports() {
           }
 
           const paid = (student.payments || []).reduce((s: number, p: any) => s + p.amount, 0)
-          const bal  = student.feeRequired - paid
+          const bal  = (student.effectiveFee ?? student.feeRequired) - paid
           const status = bal <= 0 ? 'Paid' : paid > 0 ? 'Partial' : 'Unpaid'
 
           // Alternating row background
@@ -399,7 +399,7 @@ export default function Reports() {
             {/* Class breakdown tables */}
             {displayClasses.map(cls => {
               const classStudents = filtered.filter(s => s.class === cls)
-              const clsExpected  = classStudents.reduce((s, st) => s + st.feeRequired, 0)
+              const clsExpected  = classStudents.reduce((s, st) => s + (st.effectiveFee ?? st.feeRequired), 0)
               const clsCollected = classStudents.reduce((s, st) => s + (st.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0), 0)
               const clsRate      = clsExpected > 0 ? Math.round(clsCollected / clsExpected * 100) : 0
               return (
@@ -428,7 +428,7 @@ export default function Reports() {
                       <tbody>
                         {classStudents.map(student => {
                           const paid = (student.payments || []).reduce((s: number, p: any) => s + p.amount, 0)
-                          const bal  = student.feeRequired - paid
+                          const bal  = (student.effectiveFee ?? student.feeRequired) - paid
                           const status = bal <= 0 ? 'Paid' : paid > 0 ? 'Partial' : 'Unpaid'
                           const st = status === 'Paid' ? { bg: '#e1f5ee', c: '#166534' } : status === 'Partial' ? { bg: '#fef9ec', c: '#92681a' } : { bg: '#fcebeb', c: '#a32d2d' }
                           return (

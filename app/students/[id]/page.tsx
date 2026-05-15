@@ -199,6 +199,17 @@ export default function StudentDetail() {
   const [feeEdits, setFeeEdits] = useState<{name: string; amount: number}[]>([])
   const [savingFees, setSavingFees] = useState(false)
 
+  // Bursary state
+  const [bursary, setBursary] = useState<any>(null)
+  const [bursaryLoading, setBursaryLoading] = useState(true)
+  const [showBursaryForm, setShowBursaryForm] = useState(false)
+  const [bursaryForm, setBursaryForm] = useState({
+    type: 'partial', description: '', discountType: 'percentage',
+    discountValue: '', approvedBy: '', endDate: '',
+  })
+  const [bursarySaving, setBursarySaving] = useState(false)
+  const [bursaryError, setBursaryError] = useState('')
+
   const [certModal, setCertModal] = useState(false)
   const [certEmail, setCertEmail] = useState('')
   const [certSending, setCertSending] = useState(false)
@@ -228,7 +239,54 @@ export default function StudentDetail() {
       .catch(() => { setNotFound(true); setLoading(false) })
     fetch('/api/fee-categories?studentId=' + id)
       .then(r => r.json()).then(d => setFeeCategories(Array.isArray(d) ? d : []))
+    fetch('/api/bursaries/student/' + id)
+      .then(r => r.json()).then(d => { setBursary(d || null); setBursaryLoading(false) })
+      .catch(() => setBursaryLoading(false))
   }, [id])
+
+  function getEffectiveFee(feeRequired: number, burs: any) {
+    if (!burs || !burs.active) return feeRequired
+    if (burs.endDate && new Date(burs.endDate) < new Date()) return feeRequired
+    if (burs.discountType === 'percentage') return Math.max(0, feeRequired * (1 - burs.discountValue / 100))
+    return Math.max(0, feeRequired - burs.discountValue)
+  }
+
+  async function saveBursary() {
+    setBursarySaving(true); setBursaryError('')
+    try {
+      const endpoint = bursary ? `/api/bursaries/${bursary.id}` : '/api/bursaries'
+      const method = bursary ? 'PATCH' : 'POST'
+      const res = await fetch(endpoint, {
+        method, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...bursaryForm, studentId: Number(id), discountValue: parseFloat(bursaryForm.discountValue) || 0, active: true }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setBursaryError(data.error || 'Failed to save'); } else {
+        setBursary(data); setShowBursaryForm(false)
+      }
+    } catch { setBursaryError('Something went wrong') }
+    setBursarySaving(false)
+  }
+
+  async function removeBursary() {
+    if (!bursary) return
+    if (!confirm('Remove this bursary?')) return
+    await fetch(`/api/bursaries/${bursary.id}`, { method: 'DELETE' })
+    setBursary(null)
+  }
+
+  function openBursaryForm() {
+    setBursaryForm({
+      type: bursary?.type || 'partial',
+      description: bursary?.description || '',
+      discountType: bursary?.discountType || 'percentage',
+      discountValue: bursary ? String(bursary.discountValue) : '',
+      approvedBy: bursary?.approvedBy || '',
+      endDate: bursary?.endDate ? bursary.endDate.slice(0, 10) : '',
+    })
+    setBursaryError('')
+    setShowBursaryForm(true)
+  }
 
   function openEditMode() {
     setEditForm({
@@ -410,7 +468,8 @@ export default function StudentDetail() {
   )
 
   const paid = student.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
-  const balance = student.feeRequired - paid
+  const effectiveFeeRequired = getEffectiveFee(student.feeRequired, bursary)
+  const balance = effectiveFeeRequired - paid
   const cleared = balance <= 0
 
   const school = student.school
@@ -424,7 +483,7 @@ export default function StudentDetail() {
     : 0
   const totalWithPenalty = balance + penaltyAmt
   const partial = paid > 0 && !cleared
-  const progressPct = student.feeRequired > 0 ? Math.min((paid / student.feeRequired) * 100, 100) : 0
+  const progressPct = effectiveFeeRequired > 0 ? Math.min((paid / effectiveFeeRequired) * 100, 100) : 0
   const statusLabel = cleared ? 'Paid' : partial ? 'Partial' : 'Unpaid'
   const statusBg = cleared ? '#e1f5ee' : partial ? '#fef9ec' : '#fcebeb'
   const statusColor = cleared ? '#0a7c3e' : partial ? '#92681a' : '#a32d2d'
@@ -746,6 +805,129 @@ export default function StudentDetail() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
+
+        {/* Bursary / Scholarship */}
+        <div style={sectionStyle}>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px'}}>
+            <div>
+              <h2 style={sectionTitle}>Bursary / Scholarship</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', margin: 0}}>Fee discount or waiver on record</p>
+            </div>
+            {!showBursaryForm && !bursaryLoading && (
+              <button onClick={openBursaryForm}
+                style={{background: '#0a1f4e', color: '#fff', padding: '7px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer'}}>
+                {bursary ? 'Edit' : 'Add bursary'}
+              </button>
+            )}
+          </div>
+
+          {bursaryLoading ? (
+            <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading...</p>
+          ) : showBursaryForm ? (
+            <div style={{background: '#f8f9fc', borderRadius: '8px', padding: '16px', border: '1px solid #e2e8f0'}}>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px'}}>
+                <div>
+                  <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>Type</label>
+                  <select value={bursaryForm.type} onChange={e => setBursaryForm(f => ({...f, type: e.target.value}))}
+                    style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                    <option value="full">Full bursary</option>
+                    <option value="partial">Partial bursary</option>
+                    <option value="scholarship">Scholarship</option>
+                    <option value="staff_child">Staff child</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>Approved by</label>
+                  <input value={bursaryForm.approvedBy} onChange={e => setBursaryForm(f => ({...f, approvedBy: e.target.value}))}
+                    placeholder="Name of approver" style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                </div>
+                <div style={{gridColumn: '1 / -1'}}>
+                  <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>Description</label>
+                  <input value={bursaryForm.description} onChange={e => setBursaryForm(f => ({...f, description: e.target.value}))}
+                    placeholder="e.g. Government bursary, School scholarship" style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                </div>
+                <div>
+                  <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>Discount type</label>
+                  <select value={bursaryForm.discountType} onChange={e => setBursaryForm(f => ({...f, discountType: e.target.value}))}
+                    style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed amount (KES)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>
+                    Discount value {bursaryForm.discountType === 'percentage' ? '(%)' : '(KES)'}
+                  </label>
+                  <input type="number" value={bursaryForm.discountValue} onChange={e => setBursaryForm(f => ({...f, discountValue: e.target.value}))}
+                    placeholder={bursaryForm.discountType === 'percentage' ? 'e.g. 50' : 'e.g. 10000'}
+                    style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                </div>
+                <div>
+                  <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>End date (optional)</label>
+                  <input type="date" value={bursaryForm.endDate} onChange={e => setBursaryForm(f => ({...f, endDate: e.target.value}))}
+                    style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                </div>
+              </div>
+              {bursaryError && <p style={{fontSize: '12px', color: '#e24b4a', margin: '0 0 10px'}}>{bursaryError}</p>}
+              <div style={{display: 'flex', gap: '8px'}}>
+                <button onClick={saveBursary} disabled={bursarySaving}
+                  style={{background: bursarySaving ? '#94a3b8' : '#0a1f4e', color: '#fff', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: bursarySaving ? 'not-allowed' : 'pointer'}}>
+                  {bursarySaving ? 'Saving...' : 'Save bursary'}
+                </button>
+                <button onClick={() => setShowBursaryForm(false)}
+                  style={{background: '#f8f9fc', color: '#64748b', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', border: '1px solid #e2e8f0', cursor: 'pointer'}}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : bursary ? (
+            <div>
+              {/* Fee breakdown with bursary */}
+              <div style={{background: '#fefce8', border: '1px solid #fef08a', borderRadius: '8px', padding: '14px 16px', marginBottom: '14px'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px'}}>
+                  <span style={{color: '#64748b'}}>Original fee</span>
+                  <span style={{color: '#0f172a'}}>KES {student.feeRequired.toLocaleString()}</span>
+                </div>
+                <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px'}}>
+                  <span style={{color: '#64748b'}}>
+                    Bursary discount ({bursary.discountType === 'percentage' ? `${bursary.discountValue}%` : `KES ${bursary.discountValue.toLocaleString()}`})
+                  </span>
+                  <span style={{color: '#16a34a', fontWeight: 600}}>
+                    -{bursary.discountType === 'percentage'
+                      ? `KES ${Math.round(student.feeRequired * bursary.discountValue / 100).toLocaleString()}`
+                      : `KES ${bursary.discountValue.toLocaleString()}`}
+                  </span>
+                </div>
+                <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderTop: '1px solid #fef08a', paddingTop: '8px'}}>
+                  <span style={{fontWeight: 700, color: '#0f172a'}}>Effective fee required</span>
+                  <span style={{fontWeight: 700, color: '#c8a84b', fontSize: '15px'}}>KES {effectiveFeeRequired.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px', marginBottom: '12px'}}>
+                {[
+                  ['Type', bursary.type.replace('_', ' ')],
+                  ['Approved by', bursary.approvedBy || '—'],
+                  ['Description', bursary.description || '—'],
+                  ['Status', bursary.active && (!bursary.endDate || new Date(bursary.endDate) > new Date()) ? 'Active' : 'Expired'],
+                  ['End date', bursary.endDate ? new Date(bursary.endDate).toLocaleDateString('en-KE') : 'Ongoing'],
+                ].map(([label, value]) => (
+                  <div key={label} style={{background: '#f8f9fc', borderRadius: '6px', padding: '8px 10px'}}>
+                    <p style={{fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 2px'}}>{label}</p>
+                    <p style={{fontSize: '13px', color: '#0f172a', margin: 0, textTransform: 'capitalize'}}>{value}</p>
+                  </div>
+                ))}
+              </div>
+              <button onClick={removeBursary}
+                style={{fontSize: '12px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer'}}>
+                Remove bursary
+              </button>
+            </div>
+          ) : (
+            <p style={{fontSize: '13px', color: '#94a3b8'}}>No bursary or scholarship on file for this student.</p>
           )}
         </div>
 

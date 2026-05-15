@@ -6,6 +6,8 @@ import { sendEmail } from '@/lib/email'
 import LivePaymentsFeed from '@/components/LivePaymentsFeed'
 import { require2FA } from '@/lib/check2fa'
 import { resolveSchool } from '@/lib/schoolContext'
+import { getEffectiveFee } from '@/lib/feeCalculations'
+import OnboardingChecklist from '@/components/OnboardingChecklist'
 
 export const revalidate = 0
 
@@ -67,10 +69,10 @@ export default async function Dashboard() {
 
   const students = await prisma.student.findMany({
     where: { schoolId: school.id },
-    include: { payments: true }
+    include: { payments: true, bursary: true }
   })
 
-  const totalExpected = students.reduce((sum, s) => sum + s.feeRequired, 0)
+  const totalExpected = students.reduce((sum, s) => sum + getEffectiveFee(s.feeRequired, s.bursary), 0)
   const totalCollected = students.reduce((sum, s) =>
     sum + s.payments.reduce((p, pay) => p + pay.amount, 0), 0)
   const outstanding = totalExpected - totalCollected
@@ -111,6 +113,7 @@ export default async function Dashboard() {
       </div>
 
       <div className="dash-content" style={{padding: '24px 32px'}}>
+        <OnboardingChecklist />
         <div className="dash-stats" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px'}}>
           {[
             {label: 'Expected', value: 'KES ' + totalExpected.toLocaleString(), color: '#0f172a'},

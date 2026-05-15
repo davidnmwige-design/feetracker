@@ -16,7 +16,7 @@ async function buildInvoicePdf(school: any, student: any, totalPaid: number, fee
   const todayStr = today.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
   const dueDateStr = dueDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
   const invoiceNo = `INV-${today.getFullYear()}-${(student.admNo || 'STU').replace(/\//g, '-')}`
-  const totalDue = Math.max(0, student.feeRequired - totalPaid)
+  const totalDue = Math.max(0, (student.effectiveFee ?? student.feeRequired) - totalPaid)
 
   // Navy header
   doc.setFillColor(10, 31, 78); doc.rect(0, 0, W, 42, 'F')
@@ -262,7 +262,7 @@ export default function Invoices() {
   }
 
   function getTotalDue(student: any) {
-    return Math.max(0, student.feeRequired - getTotalPaid(student))
+    return Math.max(0, (student.effectiveFee ?? student.feeRequired) - getTotalPaid(student))
   }
 
   function getStatus(student: any): string {
@@ -271,12 +271,13 @@ export default function Invoices() {
 
   function buildBreakdown(student: any, totalPaid: number) {
     const cats = student.feeCategories as { name: string; amount: number }[] | undefined
+    const effectiveFee = student.effectiveFee ?? student.feeRequired
     if (cats && cats.length > 0) {
       return {
         categories: cats,
         totalFee: student.feeRequired,
         totalPaid,
-        totalDue: Math.max(0, student.feeRequired - totalPaid),
+        totalDue: Math.max(0, effectiveFee - totalPaid),
       }
     }
     return {
@@ -286,7 +287,7 @@ export default function Invoices() {
       otherFee: student.otherFee,
       totalFee: student.feeRequired,
       totalPaid,
-      totalDue: Math.max(0, student.feeRequired - totalPaid),
+      totalDue: Math.max(0, effectiveFee - totalPaid),
     }
   }
 

@@ -7,6 +7,7 @@ import { encrypt, decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
+import { getEffectiveFee } from '@/lib/feeCalculations'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
 
     const students = await prisma.student.findMany({
       where: { schoolId: ctx.school.id },
-      include: { payments: true, feeCategories: true },
+      include: { payments: true, feeCategories: true, bursary: true },
       orderBy: { name: 'asc' }
     })
 
@@ -35,6 +36,7 @@ export async function GET(req: Request) {
       ...s,
       parentEmail: s.parentEmail ? decrypt(s.parentEmail) : s.parentEmail,
       parent2Email: s.parent2Email ? decrypt(s.parent2Email) : s.parent2Email,
+      effectiveFee: getEffectiveFee(s.feeRequired, s.bursary),
     }))
 
     return NextResponse.json(decrypted)

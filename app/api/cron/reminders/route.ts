@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email'
 import { decrypt } from '@/lib/encrypt'
+import { getEffectiveFee } from '@/lib/feeCalculations'
 
 function buildWaPhone(phone: string) {
   return '254' + phone.replace(/\s/g, '').replace(/^0/, '').replace(/^254/, '')
@@ -65,7 +66,7 @@ export async function GET(req: Request) {
     include: {
       school: {
         include: {
-          students: { include: { payments: true } },
+          students: { include: { payments: true, bursary: true } },
           user: true,
         }
       }
@@ -96,7 +97,7 @@ export async function GET(req: Request) {
 
     const studentsWithBalance = school.students.filter(s => {
       const paid = s.payments.reduce((sum, p) => sum + p.amount, 0)
-      return s.feeRequired - paid > 0
+      return getEffectiveFee(s.feeRequired, s.bursary) - paid > 0
     })
 
     if (studentsWithBalance.length === 0) {
@@ -112,7 +113,7 @@ export async function GET(req: Request) {
     }
     const rows: StudentRow[] = studentsWithBalance.map(s => {
       const paid = s.payments.reduce((sum, p) => sum + p.amount, 0)
-      const balance = s.feeRequired - paid
+      const balance = getEffectiveFee(s.feeRequired, s.bursary) - paid
       const cls = `${s.class}${s.stream ? ' ' + s.stream : ''}`
       const waMsg = buildWaMessage(s.name, cls, balance, school.name, school.paybill, school.accountNumberFormat)
       const waPhone = s.parentPhone ? buildWaPhone(s.parentPhone) : ''

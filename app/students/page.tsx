@@ -641,7 +641,7 @@ export default function Students() {
                 <tbody>
                   {filtered.map(student => {
                     const paid = student.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
-                    const balance = student.feeRequired - paid
+                    const balance = (student.effectiveFee ?? student.feeRequired) - paid
                     const cleared = balance <= 0
                     const isEditingEmail = editingEmail?.id === student.id
                     const isFeeEdit = feeEditId === student.id

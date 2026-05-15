@@ -148,7 +148,7 @@ export default function Reminders() {
   }
 
   function getBalance(student: any) {
-    return student.feeRequired - getPaid(student)
+    return (student.effectiveFee ?? student.feeRequired) - getPaid(student)
   }
 
   function getMessage(student: any) {
@@ -416,7 +416,7 @@ export default function Reminders() {
           {withBalance.map(student => {
             const balance = getBalance(student)
             const paid = getPaid(student)
-            const percent = Math.round((paid / student.feeRequired) * 100)
+            const percent = Math.round((paid / (student.effectiveFee ?? student.feeRequired)) * 100)
             const msg = getMessage(student)
             const waPhone = student.parentPhone ? '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '') : ''
             const waLink = waPhone ? 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg) : ''

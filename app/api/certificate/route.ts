@@ -5,6 +5,7 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { logAudit } from '@/lib/audit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
+import { getEffectiveFee } from '@/lib/feeCalculations'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -33,20 +34,20 @@ export async function GET(req: Request) {
 
     const student = await prisma.student.findUnique({
       where: { id: studentId },
-      include: { payments: true, school: true }
+      include: { payments: true, school: true, bursary: true }
     })
 
     if (!student) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 })
     }
 
-    // Ensure student belongs to the authenticated user's school
     if (student.schoolId !== ctx.school.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0)
-    const balance = student.feeRequired - totalPaid
+    const effectiveFee = getEffectiveFee(student.feeRequired, student.bursary)
+    const balance = effectiveFee - totalPaid
 
     logAudit({ userId: ctx.userId, schoolId: ctx.school.id, action: 'CERTIFICATE_GENERATED', details: `Student: ${student.name} (${student.admNo})`, ipAddress: getIp(req) }).catch(() => {})
 
@@ -56,7 +57,7 @@ export async function GET(req: Request) {
         admNo: student.admNo,
         class: student.class,
         stream: student.stream,
-        feeRequired: student.feeRequired,
+        feeRequired: effectiveFee,
         totalPaid,
         balance,
         cleared: balance <= 0

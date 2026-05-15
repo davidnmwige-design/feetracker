@@ -119,8 +119,24 @@ model Student {
   payments     Payment[]
   invoices     Invoice[]
   feeCategories FeeCategory[]
+  bursary      Bursary?
 
   @@unique([admNo, schoolId])
+}
+
+model Bursary {
+  id            Int       @id @default(autoincrement())
+  studentId     Int       @unique
+  type          String    // 'full', 'partial', 'scholarship', 'staff_child', 'other'
+  description   String?
+  discountType  String    // 'percentage' or 'fixed'
+  discountValue Float
+  approvedBy    String?
+  startDate     DateTime  @default(now())
+  endDate       DateTime?
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model FeeCategory {

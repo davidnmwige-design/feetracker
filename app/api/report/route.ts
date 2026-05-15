@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
+import { getEffectiveFee } from '@/lib/feeCalculations'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -31,13 +32,14 @@ export async function GET(req: Request) {
 
     const students = await prisma.student.findMany({
       where,
-      include: { payments: true },
+      include: { payments: true, bursary: true },
       orderBy: { name: 'asc' }
     })
 
     const rows = students.map(student => {
+      const effectiveFee = getEffectiveFee(student.feeRequired, student.bursary)
       const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0)
-      const balance = student.feeRequired - totalPaid
+      const balance = effectiveFee - totalPaid
       const status = balance <= 0 ? 'Paid' : totalPaid > 0 ? 'Partial' : 'Unpaid'
       return {
         'Adm No': student.admNo,
@@ -46,14 +48,14 @@ export async function GET(req: Request) {
         'Stream': student.stream || '',
         'Parent Name': student.parentName || '',
         'Parent Phone': student.parentPhone || '',
-        'Fee Required': student.feeRequired,
+        'Fee Required': effectiveFee,
         'Total Paid': totalPaid,
         'Balance': balance,
         'Status': status
       }
     })
 
-    const totalExpected = students.reduce((sum, s) => sum + s.feeRequired, 0)
+    const totalExpected = students.reduce((sum, s) => sum + getEffectiveFee(s.feeRequired, s.bursary), 0)
     const totalCollected = students.reduce((sum, s) => sum + s.payments.reduce((p, pay) => p + pay.amount, 0), 0)
 
     rows.push({
