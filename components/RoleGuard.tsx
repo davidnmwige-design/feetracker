@@ -15,16 +15,22 @@ export default function RoleGuard({ requiredPermission, children }: RoleGuardPro
   const { role, loading } = useRole()
   const router = useRouter()
 
-  const perms = ROLE_PERMISSIONS[role]
-  const allowed = perms?.[requiredPermission] as boolean | undefined
-
   useEffect(() => {
-    if (!loading && !allowed) {
-      router.replace('/dashboard')
+    if (!loading && role !== 'owner') {
+      const perms = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS]
+      if (perms && !perms[requiredPermission]) {
+        router.replace('/dashboard')
+      }
     }
-  }, [loading, allowed, router])
+  }, [role, loading, requiredPermission, router])
 
-  if (loading) return null
-  if (!allowed) return null
+  // While loading: show children (fail open — better UX, avoids blank flash)
+  if (loading) return <>{children}</>
+
+  // Owner always sees everything
+  if (role === 'owner') return <>{children}</>
+
+  const perms = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS]
+  if (!perms || !perms[requiredPermission]) return null
   return <>{children}</>
 }

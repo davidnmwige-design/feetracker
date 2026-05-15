@@ -1207,25 +1207,25 @@ export default function Settings() {
                   {teamMembers.length > 0 && (
                     <div style={{marginBottom: '16px', border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden'}}>
                       {teamMembers.map((m, i) => {
-                        const roleColors: Record<string, { bg: string; color: string }> = {
-                          admin:       { bg: '#0a1f4e', color: '#fff'     },
-                          accountant:  { bg: '#dbeafe', color: '#1e40af'  },
-                          principal:   { bg: '#fef3c7', color: '#92400e'  },
-                          viewer:      { bg: '#f1f5f9', color: '#475569'  },
+                        const roleStyles: Record<string, { bg: string; color: string; label: string }> = {
+                          admin:       { bg: '#c8a84b', color: '#0a1f4e', label: 'Admin'       },
+                          accountant:  { bg: '#dbeafe', color: '#1e40af', label: 'Accountant'  },
+                          principal:   { bg: '#fef3c7', color: '#92400e', label: 'Principal'   },
+                          viewer:      { bg: '#f1f5f9', color: '#475569', label: 'Viewer'      },
                         }
                         const roleDesc: Record<string, string> = {
-                          admin:      'Full access — can manage students, upload statements, invite team',
+                          admin:      'Full access — manage students, upload statements, invite team',
                           accountant: 'Can upload statements, send reminders and invoices',
                           principal:  'Can view dashboard, students and reports',
                           viewer:     'Read-only access to the dashboard',
                         }
-                        const rs = roleColors[m.role] || roleColors.viewer
+                        const rs = roleStyles[m.role] || roleStyles.viewer
                         return (
                           <div key={m.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderBottom: i < teamMembers.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '12px'}}>
                             <div style={{flex: 1, minWidth: 0}}>
                               <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px'}}>
                                 <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{m.user?.name}</span>
-                                <span style={{background: rs.bg, color: rs.color, fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', textTransform: 'capitalize', whiteSpace: 'nowrap'}}>{m.role}</span>
+                                <span style={{background: rs.bg, color: rs.color, fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap'}}>{rs.label}</span>
                               </div>
                               <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 2px'}}>{m.user?.email}</p>
                               <p style={{fontSize: '11px', color: '#64748b', margin: 0}}>{roleDesc[m.role] || ''}</p>
