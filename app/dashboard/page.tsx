@@ -97,12 +97,16 @@ export default async function Dashboard() {
         </div>
         <div className="dash-header-actions" style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
           <span style={{background: '#c8a84b', color: '#0a1f4e', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700}}>{collectionRate}% collected</span>
-          <Link href="/students" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
-            Students
-          </Link>
-          <Link href="/upload" style={{background: '#c8a84b', color: '#0a1f4e', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, textDecoration: 'none'}}>
-            Upload Statement
-          </Link>
+          {(ctx.role === 'admin' || ctx.role === 'accountant') && (
+            <Link href="/students" style={{border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', textDecoration: 'none'}}>
+              Students
+            </Link>
+          )}
+          {(ctx.role === 'admin' || ctx.role === 'accountant') && (
+            <Link href="/upload" style={{background: '#c8a84b', color: '#0a1f4e', padding: '8px 16px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, textDecoration: 'none'}}>
+              Upload Statement
+            </Link>
+          )}
         </div>
       </div>
 

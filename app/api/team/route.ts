@@ -100,34 +100,44 @@ export async function POST(req: Request) {
       <p style="color:#dc2626;font-size:13px;margin:0 0 20px;font-weight:600">Please sign in and change your password immediately.</p>`
     : `<p style="color:#64748b;font-size:13px;margin:0 0 20px">Sign in with your existing Elimu Pay account using <strong>${email}</strong>.</p>`
 
-  sendEmail({
-    to: email,
-    subject: `You have been invited to join ${ctx.school.name} on Elimu Pay`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
-      <div style="background:#0a1f4e;padding:24px 32px;text-align:center">
-        <h1 style="margin:0;font-family:Georgia,serif;font-size:24px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
-        <p style="color:#94a3c8;margin:8px 0 0;font-size:12px">School Fee Management</p>
+  const emailHtml = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
+    <div style="background:#0a1f4e;padding:24px 32px;text-align:center">
+      <h1 style="margin:0;font-family:Georgia,serif;font-size:24px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
+      <p style="color:#94a3c8;margin:8px 0 0;font-size:12px">School Fee Management</p>
+    </div>
+    <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
+      <h2 style="color:#0f172a;font-size:20px;margin:0 0 8px">You have been invited to ${ctx.school.name}</h2>
+      <p style="color:#64748b;font-size:14px;line-height:1.7;margin:0 0 20px">
+        Hi ${name},<br><br>
+        <strong>${inviterName}</strong> has invited you to join <strong>${ctx.school.name}</strong> on Elimu Pay.
+      </p>
+      <div style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:8px;padding:16px 20px;margin:0 0 20px">
+        <p style="margin:0 0 4px;font-size:13px;color:#475569"><strong>Your role:</strong> <span style="text-transform:capitalize;color:#0a1f4e;font-weight:700">${role}</span></p>
+        <p style="margin:0;font-size:13px;color:#64748b">${roleDesc}</p>
       </div>
-      <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
-        <h2 style="color:#0f172a;font-size:20px;margin:0 0 8px">You have been invited</h2>
-        <p style="color:#64748b;font-size:14px;line-height:1.7;margin:0 0 20px">
-          Hi ${name},<br><br>
-          <strong>${inviterName}</strong> has invited you to join <strong>${ctx.school.name}</strong> on Elimu Pay.
-        </p>
-        <div style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:8px;padding:16px 20px;margin:0 0 20px">
-          <p style="margin:0 0 4px;font-size:13px;color:#475569"><strong>Your role:</strong> <span style="text-transform:capitalize;color:#0a1f4e;font-weight:700">${role}</span></p>
-          <p style="margin:0;font-size:13px;color:#64748b">${roleDesc}</p>
-        </div>
-        ${credentialsBlock}
-        <a href="${loginUrl}" style="display:block;text-align:center;background:#0a1f4e;color:#fff;padding:14px 24px;border-radius:6px;font-size:14px;font-weight:700;text-decoration:none">Sign in to Elimu Pay</a>
-      </div>
-      <div style="padding:16px;background:#f8f9fc;text-align:center;border:1px solid #e2e8f0;border-top:none">
-        <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@elimupay.co.ke</p>
-      </div>
-    </div>`,
-  }).catch(err => console.error('team invite email error:', err))
+      ${credentialsBlock}
+      <a href="${loginUrl}" style="display:block;text-align:center;background:#0a1f4e;color:#fff;padding:14px 24px;border-radius:6px;font-size:14px;font-weight:700;text-decoration:none">Sign in to Elimu Pay</a>
+    </div>
+    <div style="padding:16px;background:#f8f9fc;text-align:center;border:1px solid #e2e8f0;border-top:none">
+      <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@elimupay.co.ke</p>
+    </div>
+  </div>`
 
-  return NextResponse.json(member)
+  // Try to send email but don't block the response on failure
+  let emailSent = false
+  try {
+    await sendEmail({ to: email, subject: `You have been invited to join ${ctx.school.name} on Elimu Pay`, html: emailHtml })
+    emailSent = true
+  } catch (err) {
+    console.error('team invite email error:', err)
+  }
+
+  return NextResponse.json({
+    ...member,
+    tempPassword: isNewUser ? tempPassword : null,
+    isNewUser,
+    emailSent,
+  })
 }
 
 export async function DELETE(req: Request) {

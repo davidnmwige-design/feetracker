@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import RoleGuard from '@/components/RoleGuard'
 
 export default function Reports() {
   useEffect(() => {
@@ -287,6 +288,7 @@ export default function Reports() {
     : uniqueClasses.filter(c => c === selectedClass)
 
   return (
+    <RoleGuard requiredPermission="canViewReports">
     <div style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
       <style>{`
         @media (max-width: 640px) {
@@ -452,5 +454,6 @@ export default function Reports() {
         )}
       </div>
     </div>
+    </RoleGuard>
   )
 }

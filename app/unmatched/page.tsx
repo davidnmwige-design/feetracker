@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import RoleGuard from '@/components/RoleGuard'
 
 export default function Unmatched() {
   useEffect(() => {
@@ -116,6 +117,7 @@ export default function Unmatched() {
   }
 
   return (
+    <RoleGuard requiredPermission="canUpload">
     <div style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
       <style>{`
         @media (max-width: 640px) {
@@ -384,5 +386,6 @@ export default function Unmatched() {
 
       <style>{`@keyframes unm-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
+    </RoleGuard>
   )
 }

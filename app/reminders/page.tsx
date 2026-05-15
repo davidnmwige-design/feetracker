@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import RoleGuard from '@/components/RoleGuard'
 
 function reminderEmailHtml({
   schoolName,
@@ -281,6 +282,7 @@ export default function Reminders() {
   const totalOutstanding = withBalance.reduce((sum, s) => sum + getBalance(s), 0)
 
   return (
+    <RoleGuard requiredPermission="canSendReminders">
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
       <style>{`
         @media (max-width: 640px) {
@@ -565,5 +567,6 @@ export default function Reminders() {
         </div>
       )}
     </div>
+    </RoleGuard>
   )
 }

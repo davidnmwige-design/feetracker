@@ -7,6 +7,7 @@ import {
   getAnnualTotal, getBillingAmount, getDiscountedAnnual,
   getAnnualSavings, getSetupFee, getPlanName, BILLING_DISCOUNTS,
 } from '@/lib/pricing'
+import RoleGuard from '@/components/RoleGuard'
 
 const TERMS = [
   'Term 1 2026', 'Term 2 2026', 'Term 3 2026',
@@ -69,6 +70,9 @@ export default function Settings() {
   const [inviting, setInviting] = useState(false)
   const [inviteSuccess, setInviteSuccess] = useState('')
   const [inviteError, setInviteError] = useState('')
+  const [inviteResult, setInviteResult] = useState<{
+    name: string; email: string; role: string; tempPassword: string | null; emailSent: boolean
+  } | null>(null)
 
   const [exporting, setExporting] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
@@ -192,16 +196,25 @@ export default function Settings() {
     if (!inviteName.trim() || !inviteEmail.trim() || inviting) return
     setInviting(true); setInviteError(''); setInviteSuccess('')
     try {
-      const res = await fetch('/api/team', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: inviteName.trim(), email: inviteEmail.trim(), role: inviteRole }) })
+      const res = await fetch('/api/team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: inviteName.trim(), email: inviteEmail.trim(), role: inviteRole }),
+      })
       const data = await res.json()
       if (!res.ok) {
         setInviteError(data.error || 'Failed to invite')
       } else {
         setTeamMembers(prev => [...prev, data])
-        setInviteSuccess('Invitation sent. They will receive an email with their login details.')
-        setInviteName(''); setInviteEmail(''); setInviteRole('accountant')
         setShowInviteForm(false)
-        setTimeout(() => setInviteSuccess(''), 6000)
+        setInviteResult({
+          name: inviteName.trim(),
+          email: inviteEmail.trim(),
+          role: inviteRole,
+          tempPassword: data.tempPassword ?? null,
+          emailSent: data.emailSent ?? false,
+        })
+        setInviteName(''); setInviteEmail(''); setInviteRole('accountant')
       }
     } catch { setInviteError('Something went wrong') }
     setInviting(false)
@@ -603,6 +616,7 @@ export default function Settings() {
   }
 
   return (
+    <RoleGuard requiredPermission="canChangeSettings">
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
       <style>{`
         @media (max-width: 640px) {
@@ -1312,6 +1326,70 @@ export default function Settings() {
         )}
       </div>
 
+      {/* Invite result modal — shown once after successful invite */}
+      {inviteResult && (
+        <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
+          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{textAlign: 'center', marginBottom: '20px'}}>
+              <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '22px'}}>
+                +
+              </div>
+              <h3 style={{fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px'}}>Team member added!</h3>
+              <p style={{fontSize: '13px', color: '#64748b', margin: 0}}>{inviteResult.name} has been added as <strong style={{textTransform: 'capitalize'}}>{inviteResult.role}</strong></p>
+            </div>
+
+            {inviteResult.emailSent ? (
+              <div style={{background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px', color: '#166534'}}>
+                Invitation email sent to {inviteResult.email}
+              </div>
+            ) : (
+              <div style={{background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px', color: '#92400e'}}>
+                Email could not be sent automatically. Share the login details below manually.
+              </div>
+            )}
+
+            {inviteResult.tempPassword ? (
+              <>
+                <p style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', marginBottom: '10px'}}>Share these login details with {inviteResult.name}:</p>
+                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px'}}>
+                    <span style={{color: '#64748b'}}>Email</span>
+                    <span style={{fontWeight: 600, color: '#0f172a'}}>{inviteResult.email}</span>
+                  </div>
+                  <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '13px'}}>
+                    <span style={{color: '#64748b'}}>Temporary password</span>
+                    <span style={{fontWeight: 700, color: '#0a1f4e', fontFamily: 'monospace', letterSpacing: '1px'}}>{inviteResult.tempPassword}</span>
+                  </div>
+                  <p style={{fontSize: '11px', color: '#94a3b8', margin: '10px 0 0'}}>
+                    Sign in at: {process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'}/login
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const text = `Elimu Pay login details for ${inviteResult.name}:\nEmail: ${inviteResult.email}\nTemporary password: ${inviteResult.tempPassword}\nSign in at: ${typeof window !== 'undefined' ? window.location.origin : ''}/login\n\nPlease change your password immediately after signing in.`
+                    navigator.clipboard?.writeText(text).catch(() => {})
+                  }}
+                  style={{width: '100%', background: '#0a1f4e', color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer', marginBottom: '8px'}}
+                >
+                  Copy login details
+                </button>
+              </>
+            ) : (
+              <p style={{fontSize: '13px', color: '#64748b', marginBottom: '16px'}}>
+                {inviteResult.name} already has an Elimu Pay account. They should sign in with their existing password at {typeof window !== 'undefined' ? window.location.origin : ''}/login.
+              </p>
+            )}
+
+            <button
+              onClick={() => setInviteResult(null)}
+              style={{width: '100%', background: '#f8f9fc', color: '#64748b', padding: '10px', borderRadius: '6px', fontSize: '13px', border: '1px solid #e2e8f0', cursor: 'pointer'}}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Upgrade Modal */}
       {showUpgradeModal && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
@@ -1443,5 +1521,6 @@ export default function Settings() {
         </div>
       )}
     </div>
+    </RoleGuard>
   )
 }

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { maskEmail } from '@/lib/mask'
+import RoleGuard from '@/components/RoleGuard'
 
 function clearanceCertEmailHtml({
   schoolName,
@@ -534,6 +535,7 @@ export default function Students() {
   }
 
   return (
+    <RoleGuard requiredPermission="canManageStudents">
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden', maxWidth: '100vw'}}>
       <style>{`
         @media (max-width: 640px) {
@@ -1046,5 +1048,6 @@ export default function Students() {
         </div>
       )}
     </div>
+    </RoleGuard>
   )
 }

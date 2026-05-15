@@ -2,14 +2,44 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import LogoutButton from '@/components/LogoutButton'
+import { useRole } from '@/hooks/useRole'
+import { ROLE_PERMISSIONS } from '@/lib/roleContext'
+
+const ALL_NAV_LINKS = [
+  { href: '/dashboard', label: 'Dashboard', page: 'dashboard' },
+  { href: '/students',  label: 'Students',  page: 'students'  },
+  { href: '/invoices',  label: 'Invoices',  page: 'invoices'  },
+  { href: '/reminders', label: 'Reminders', page: 'reminders' },
+  { href: '/upload',    label: 'Upload',    page: 'upload'    },
+  { href: '/unmatched', label: 'Unmatched', page: 'unmatched' },
+  { href: '/reports',   label: 'Reports',   page: 'reports'   },
+  { href: '/settings',  label: 'Settings',  page: 'settings'  },
+]
+
+const ROLE_LABELS: Record<string, string> = {
+  accountant: 'Accountant',
+  principal:  'Principal',
+  viewer:     'Viewer',
+  admin:      'Admin',
+}
 
 export default function AppNav() {
   const pathname = usePathname()
+  const { role, loading } = useRole()
 
-  // Never render on admin pages or public/auth pages
   if (pathname.startsWith('/admin')) return null
-  const hideNav = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-2fa', '/trial-expired', '/demo', '/privacy'].some(p => pathname === p || pathname.startsWith(p + '/'))
+  const hideNav = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-2fa', '/trial-expired', '/demo', '/privacy'].some(
+    p => pathname === p || pathname.startsWith(p + '/')
+  )
   if (hideNav) return null
+
+  // While loading, show all links (fail open)
+  const allowedPages = loading
+    ? ALL_NAV_LINKS.map(l => l.page)
+    : (ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS]?.pages ?? ALL_NAV_LINKS.map(l => l.page))
+
+  const visibleLinks = ALL_NAV_LINKS.filter(l => allowedPages.includes(l.page))
+  const showRoleBadge = !loading && role !== 'owner'
 
   return (
     <nav style={{
@@ -47,16 +77,7 @@ export default function AppNav() {
         minWidth: 0,
         paddingRight: '4px',
       }}>
-        {[
-          { href: '/dashboard', label: 'Dashboard' },
-          { href: '/students', label: 'Students' },
-          { href: '/invoices', label: 'Invoices' },
-          { href: '/reminders', label: 'Reminders' },
-          { href: '/upload', label: 'Upload' },
-          { href: '/unmatched', label: 'Unmatched' },
-          { href: '/reports', label: 'Reports' },
-          { href: '/settings', label: 'Settings' },
-        ].map(({ href, label }) => (
+        {visibleLinks.map(({ href, label }) => (
           <Link key={href} href={href} style={{
             fontSize: '13px',
             color: pathname === href ? '#0a1f4e' : '#64748b',
@@ -69,6 +90,17 @@ export default function AppNav() {
             {label}
           </Link>
         ))}
+
+        {showRoleBadge && (
+          <span style={{
+            fontSize: '10px', fontWeight: 600, color: '#64748b',
+            background: '#f1f5f9', border: '1px solid #e2e8f0',
+            padding: '2px 8px', borderRadius: '999px', whiteSpace: 'nowrap', flexShrink: 0,
+          }}>
+            {ROLE_LABELS[role] ?? role}
+          </span>
+        )}
+
         <div style={{flexShrink: 0}}>
           <LogoutButton />
         </div>

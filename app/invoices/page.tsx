@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import RoleGuard from '@/components/RoleGuard'
 
 // -- PDF builder ---------------------------------------------------------------
 
@@ -421,6 +422,7 @@ export default function Invoices() {
   const draftCount = filtered.filter(s => getStatus(s) === 'draft').length
 
   return (
+    <RoleGuard requiredPermission="canManageInvoices">
     <div style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
       <style>{`
         @media (max-width: 768px) {
@@ -608,5 +610,6 @@ export default function Invoices() {
         )}
       </div>
     </div>
+    </RoleGuard>
   )
 }

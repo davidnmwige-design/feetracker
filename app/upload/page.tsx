@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import RoleGuard from '@/components/RoleGuard'
 
 export default function Upload() {
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function Upload() {
   }
 
   return (
+    <RoleGuard requiredPermission="canUpload">
     <div style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
       <style>{`
         @media (max-width: 640px) {
@@ -205,5 +207,6 @@ export default function Upload() {
         )}
       </div>
     </div>
+    </RoleGuard>
   )
 }
