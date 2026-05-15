@@ -5,7 +5,8 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sendEmail, paymentConfirmationHtml } from '@/lib/email'
 import { decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 import * as XLSX from 'xlsx'
 import { parseJsonRows, parseTextStatement, matchTransactions } from '@/lib/statementParser'
 
@@ -20,19 +21,14 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true },
-    })
-
-    if (!user?.school) {
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) {
       return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
 
-    const role = await getUserRole(user.id, user.school)
-    if (!hasPermission(role, 'upload', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'upload', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
-    const schoolId = user.school.id
+    const schoolId = ctx.school.id
     const formData = await req.formData()
     const file = formData.get('file') as File
 
@@ -116,7 +112,7 @@ export async function POST(req: Request) {
           const fullStudent = await prisma.student.findUnique({ where: { id: studentId } })
           const balance = (fullStudent?.feeRequired || 0) - paid
 
-          const msg = `Dear ${student.parentName || 'Parent'}, we have received KES ${tx.amount.toLocaleString()} for ${fullStudent?.name || ''}, ${fullStudent?.class || ''}. Outstanding balance: KES ${Math.max(0, balance).toLocaleString()}. Thank you. - ${user.school!.name}`
+          const msg = `Dear ${student.parentName || 'Parent'}, we have received KES ${tx.amount.toLocaleString()} for ${fullStudent?.name || ''}, ${fullStudent?.class || ''}. Outstanding balance: KES ${Math.max(0, balance).toLocaleString()}. Thank you. - ${ctx.school.name}`
           const phone = student.parentPhone
             ? '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '')
             : ''
@@ -128,11 +124,11 @@ export async function POST(req: Request) {
               const hasFeeBreakdown = fullStudent.tuitionFee > 0 || fullStudent.sportsFee > 0 || fullStudent.clubsFee > 0 || fullStudent.otherFee > 0
               sendEmail({
                 to: parentEmail,
-                subject: `Payment received for ${fullStudent.name} — ${user.school!.name}`,
-                fromName: `${user.school!.name} via Elimu Pay`,
-                replyTo: (user.school as any).replyToEmail || undefined,
+                subject: `Payment received for ${fullStudent.name} — ${ctx.school.name}`,
+                fromName: `${ctx.school.name} via Elimu Pay`,
+                replyTo: ctx.school.replyToEmail || undefined,
                 html: paymentConfirmationHtml({
-                  schoolName: user.school!.name,
+                  schoolName: ctx.school.name,
                   parentName: student.parentName || 'Parent',
                   studentName: fullStudent.name,
                   studentClass: `${fullStudent.class} ${fullStudent.stream || ''}`.trim(),
@@ -145,8 +141,8 @@ export async function POST(req: Request) {
                     otherFee: fullStudent.otherFee,
                     totalFee: fullStudent.feeRequired,
                   } : undefined,
-                  paybill: user.school!.paybill,
-                  accountNumberFormat: user.school!.accountNumberFormat,
+                  paybill: ctx.school.paybill,
+                  accountNumberFormat: ctx.school.accountNumberFormat,
                 }),
               }).catch(err => console.error('Payment email failed:', err))
             }
@@ -159,7 +155,7 @@ export async function POST(req: Request) {
     const needsReview = confidenceCounts.low + unmatchedCount
 
     await logAudit({
-      userId: user.id, schoolId, action: 'MPESA_UPLOAD',
+      userId: ctx.userId, schoolId, action: 'MPESA_UPLOAD',
       details: `${parseResult.formatDetected} | ${confidenceCounts.high} high, ${confidenceCounts.medium} medium confidence matched, ${needsReview} need review`,
       ipAddress: getIp(req),
     })

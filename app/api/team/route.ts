@@ -41,6 +41,13 @@ export async function GET(req: Request) {
   return NextResponse.json(members)
 }
 
+const ROLE_DESCRIPTIONS: Record<string, string> = {
+  admin:      'Full access — manage students, upload statements, send invoices, manage team',
+  accountant: 'Can upload bank statements, send reminders and invoices',
+  principal:  'Can view the dashboard, student records and reports',
+  viewer:     'Read-only access to the dashboard',
+}
+
 export async function POST(req: Request) {
   const ctx = await getActorAndSchool(req)
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -54,47 +61,68 @@ export async function POST(req: Request) {
 
   if (!name || !email) return NextResponse.json({ error: 'Name and email are required' }, { status: 400 })
 
-  const tempPassword = crypto.randomBytes(8).toString('hex')
-  const hashed = await bcrypt.hash(tempPassword, 10)
-
+  // Check if user already exists
   let targetUser = await prisma.user.findUnique({ where: { email } })
-  if (!targetUser) {
-    targetUser = await prisma.user.create({ data: { name, email, password: hashed } })
+  const isNewUser = !targetUser
+  let tempPassword: string | null = null
+
+  if (isNewUser) {
+    tempPassword = crypto.randomBytes(8).toString('hex')
+    const hashed = await bcrypt.hash(tempPassword, 10)
+    targetUser = await prisma.user.create({
+      data: { name, email, password: hashed, twoFactorEnabled: false },
+    })
   }
 
-  const existing = await prisma.schoolUser.findFirst({ where: { schoolId: ctx.school.id, userId: targetUser.id } })
-  if (existing) return NextResponse.json({ error: 'This user is already a team member' }, { status: 400 })
+  // Check if already in this school
+  const existing = await prisma.schoolUser.findFirst({
+    where: { schoolId: ctx.school.id, userId: targetUser!.id },
+  })
+  if (existing) {
+    return NextResponse.json({ error: 'This person is already a team member' }, { status: 400 })
+  }
 
   const member = await prisma.schoolUser.create({
-    data: { schoolId: ctx.school.id, userId: targetUser.id, role },
+    data: { schoolId: ctx.school.id, userId: targetUser!.id, role },
     include: { user: { select: { id: true, name: true, email: true } } },
   })
 
   const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'}/login`
+  const inviterName = ctx.user.name || 'The school admin'
+  const roleDesc = ROLE_DESCRIPTIONS[role] || role
+
+  const credentialsBlock = isNewUser && tempPassword
+    ? `<div style="background:#f8f9fc;border:1px solid #e2e8f0;border-radius:8px;padding:20px;margin:20px 0">
+        <p style="margin:0 0 8px;color:#475569;font-size:13px;font-weight:600">Your login details</p>
+        <p style="margin:0 0 6px;font-size:13px;color:#0f172a"><strong>Email:</strong> ${email}</p>
+        <p style="margin:0;font-size:13px;color:#0f172a"><strong>Temporary password:</strong> <code style="background:#f1f5f9;padding:3px 8px;border-radius:4px;font-family:monospace;font-size:14px;letter-spacing:1px">${tempPassword}</code></p>
+      </div>
+      <p style="color:#dc2626;font-size:13px;margin:0 0 20px;font-weight:600">Please sign in and change your password immediately.</p>`
+    : `<p style="color:#64748b;font-size:13px;margin:0 0 20px">Sign in with your existing Elimu Pay account using <strong>${email}</strong>.</p>`
+
   sendEmail({
     to: email,
     subject: `You have been invited to join ${ctx.school.name} on Elimu Pay`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
-      <div style="background:#0a1f4e;padding:24px;text-align:center">
-        <h1 style="margin:0;font-family:Georgia,serif;font-size:22px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
-        <p style="color:#94a3c8;margin:6px 0 0;font-size:12px">${ctx.school.name}</p>
+    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
+      <div style="background:#0a1f4e;padding:24px 32px;text-align:center">
+        <h1 style="margin:0;font-family:Georgia,serif;font-size:24px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
+        <p style="color:#94a3c8;margin:8px 0 0;font-size:12px">School Fee Management</p>
       </div>
       <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
-        <h2 style="color:#0f172a;font-size:18px;margin-bottom:8px">You have been invited</h2>
-        <p style="color:#64748b;font-size:14px;line-height:1.6;margin-bottom:20px">
-          Dear ${name},<br><br>
-          You have been invited to join <strong>${ctx.school.name}</strong> on Elimu Pay as a <strong>${role}</strong>.
+        <h2 style="color:#0f172a;font-size:20px;margin:0 0 8px">You have been invited</h2>
+        <p style="color:#64748b;font-size:14px;line-height:1.7;margin:0 0 20px">
+          Hi ${name},<br><br>
+          <strong>${inviterName}</strong> has invited you to join <strong>${ctx.school.name}</strong> on Elimu Pay.
         </p>
-        <div style="background:#f8f9fc;border-radius:8px;padding:20px;margin-bottom:20px">
-          <p style="margin:0 0 8px;color:#64748b;font-size:13px">Your login details:</p>
-          <p style="margin:0 0 6px;font-size:13px"><strong>Email:</strong> ${email}</p>
-          <p style="margin:0;font-size:13px"><strong>Temporary password:</strong> <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:monospace">${tempPassword}</code></p>
+        <div style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:8px;padding:16px 20px;margin:0 0 20px">
+          <p style="margin:0 0 4px;font-size:13px;color:#475569"><strong>Your role:</strong> <span style="text-transform:capitalize;color:#0a1f4e;font-weight:700">${role}</span></p>
+          <p style="margin:0;font-size:13px;color:#64748b">${roleDesc}</p>
         </div>
-        <p style="color:#dc2626;font-size:13px;margin-bottom:20px;font-weight:600">Sign in and change your password immediately.</p>
-        <a href="${loginUrl}" style="display:block;text-align:center;background:#0a1f4e;color:#fff;padding:12px;border-radius:6px;font-size:14px;font-weight:700;text-decoration:none">Sign in to Elimu Pay</a>
+        ${credentialsBlock}
+        <a href="${loginUrl}" style="display:block;text-align:center;background:#0a1f4e;color:#fff;padding:14px 24px;border-radius:6px;font-size:14px;font-weight:700;text-decoration:none">Sign in to Elimu Pay</a>
       </div>
-      <div style="padding:16px;background:#f8f9fc;text-align:center">
-        <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay - support@elimupay.co.ke</p>
+      <div style="padding:16px;background:#f8f9fc;text-align:center;border:1px solid #e2e8f0;border-top:none">
+        <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@elimupay.co.ke</p>
       </div>
     </div>`,
   }).catch(err => console.error('team invite email error:', err))

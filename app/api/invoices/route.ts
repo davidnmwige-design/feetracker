@@ -3,32 +3,25 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { logAudit } from '@/lib/audit'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
-
-async function getSchoolUser(req: Request) {
-  if (!checkRateLimit(getIp(req))) return null
-  const session = await auth()
-  if (!session?.user?.email) return null
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    include: { school: true },
-  })
-  return user?.school ? user : null
-}
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function GET(req: Request) {
-  const user = await getSchoolUser(req)
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  const session = await auth()
+  if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const role = await getUserRole(user.id, user.school!)
-  if (!hasPermission(role, 'invoices', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+  const ctx = await resolveSchool(session.user.email)
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (!hasPermission(ctx.role, 'invoices', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   try {
     const url = new URL(req.url)
-    const term = url.searchParams.get('term') || user.school!.currentTerm
+    const term = url.searchParams.get('term') || ctx.school.currentTerm
 
     const invoices = await prisma.invoice.findMany({
-      where: { schoolId: user.school!.id, term },
+      where: { schoolId: ctx.school.id, term },
     })
     return NextResponse.json(invoices)
   } catch (err) {
@@ -38,14 +31,17 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await getSchoolUser(req)
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  const session = await auth()
+  if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const role = await getUserRole(user.id, user.school!)
-  if (!hasPermission(role, 'invoices', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
+  const ctx = await resolveSchool(session.user.email)
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (!hasPermission(ctx.role, 'invoices', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   try {
-    const school = user.school!
+    const school = ctx.school
     const body = await req.json()
     const { studentId, status, amount, breakdown } = body
     if (!studentId) return NextResponse.json({ error: 'Missing studentId' }, { status: 400 })

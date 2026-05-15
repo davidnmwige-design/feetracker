@@ -1,10 +1,10 @@
-import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function POST(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -17,14 +17,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true },
-    })
-
-    if (user?.school) {
-      const role = await getUserRole(user.id, user.school)
-      if (!hasPermission(role, 'send-email', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    const ctx = await resolveSchool(session.user.email)
+    if (ctx) {
+      if (!hasPermission(ctx.role, 'send-email', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
     }
 
     const body = await req.json()

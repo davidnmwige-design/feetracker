@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { sendEmail } from '@/lib/email'
 import LivePaymentsFeed from '@/components/LivePaymentsFeed'
 import { require2FA } from '@/lib/check2fa'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export const revalidate = 0
 
@@ -13,16 +14,19 @@ export default async function Dashboard() {
   const session = await auth()
   if (!session?.user?.email) redirect('/login')
 
-  const user = await prisma.user.findUnique({
+  // Quick check for admin redirect before full query
+  const baseUser = await prisma.user.findUnique({
     where: { email: session.user.email },
-    include: { school: true }
+    select: { id: true, isAdmin: true },
   })
+  if (!baseUser) redirect('/login')
+  if (baseUser.isAdmin) redirect('/admin/dashboard')
 
-  if (!user) redirect('/login')
-  if (user.isAdmin) redirect('/admin/dashboard')
-  if (!user.school) redirect('/signup')
+  // Resolve school for both owners and invited team members
+  const ctx = await resolveSchool(session.user.email)
+  if (!ctx) redirect('/signup')
 
-  const school = user.school
+  const { school } = ctx
 
   if (school.trialEndsAt) {
     const now = new Date()
@@ -47,7 +51,7 @@ export default async function Dashboard() {
               <p style="color:#64748b;font-size:13px;margin:0 0 16px">This school has not upgraded and their trial expires on <strong>${trialEnd}</strong>.</p>
               <table style="width:100%;border-collapse:collapse;font-size:13px">
                 <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">School</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${school.name}</td></tr>
-                <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">Admin email</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${user.email}</td></tr>
+                <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">Admin email</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${session.user.email}</td></tr>
                 <tr><td style="padding:8px 0;color:#64748b">Trial ends</td><td style="padding:8px 0;font-weight:700;color:#e24b4a;text-align:right">${trialEnd}</td></tr>
               </table>
             </div>

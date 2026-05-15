@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function PATCH(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -15,16 +16,12 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    include: { school: true },
-  })
-  if (!user?.school) {
+  const ctx = await resolveSchool(session.user.email)
+  if (!ctx) {
     return NextResponse.json({ error: 'No school found' }, { status: 400 })
   }
 
-  const role = await getUserRole(user.id, user.school)
-  if (!hasPermission(role, 'fee-categories', 'POST')) {
+  if (!hasPermission(ctx.role, 'fee-categories', 'POST')) {
     return NextResponse.json(FORBIDDEN, { status: 403 })
   }
 
@@ -49,7 +46,7 @@ export async function PATCH(req: Request) {
 
     const amount = Math.max(0, Number(newAmount))
     const name = sanitize(categoryName.trim(), 100)
-    const schoolId = user.school.id
+    const schoolId = ctx.school.id
 
     const studentWhere: Record<string, unknown> = { schoolId }
     if (className && className !== 'All' && className.trim() !== '') {

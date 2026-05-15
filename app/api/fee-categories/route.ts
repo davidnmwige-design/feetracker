@@ -3,28 +3,24 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
-
-async function getSchoolUser(req: Request) {
-  if (!checkRateLimit(getIp(req))) return null
-  const session = await auth()
-  if (!session?.user?.email) return null
-  const user = await prisma.user.findUnique({ where: { email: session.user.email }, include: { school: true } })
-  return user?.school ? user : null
-}
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function GET(req: Request) {
-  const user = await getSchoolUser(req)
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  const session = await auth()
+  if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const role = await getUserRole(user.id, user.school!)
-  if (!hasPermission(role, 'fee-categories', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+  const ctx = await resolveSchool(session.user.email)
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (!hasPermission(ctx.role, 'fee-categories', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   const { searchParams } = new URL(req.url)
   const studentId = Number(searchParams.get('studentId'))
   if (!studentId) return NextResponse.json({ error: 'studentId required' }, { status: 400 })
 
-  const student = await prisma.student.findFirst({ where: { id: studentId, schoolId: user.school!.id } })
+  const student = await prisma.student.findFirst({ where: { id: studentId, schoolId: ctx.school.id } })
   if (!student) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const cats = await prisma.feeCategory.findMany({ where: { studentId } })
@@ -32,16 +28,19 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await getSchoolUser(req)
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  const session = await auth()
+  if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const role = await getUserRole(user.id, user.school!)
-  if (!hasPermission(role, 'fee-categories', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
+  const ctx = await resolveSchool(session.user.email)
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (!hasPermission(ctx.role, 'fee-categories', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   const body = await req.json()
   const { studentId, categories } = body
 
-  const student = await prisma.student.findFirst({ where: { id: Number(studentId), schoolId: user.school!.id } })
+  const student = await prisma.student.findFirst({ where: { id: Number(studentId), schoolId: ctx.school.id } })
   if (!student) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   if (!Array.isArray(categories)) return NextResponse.json({ error: 'categories must be array' }, { status: 400 })

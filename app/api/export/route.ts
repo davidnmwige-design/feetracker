@@ -4,7 +4,8 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -18,16 +19,12 @@ export async function GET(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true },
-    })
-    if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
 
-    const role = await getUserRole(user.id, user.school)
-    if (!hasPermission(role, 'export', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'export', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
-    const schoolId = user.school.id
+    const schoolId = ctx.school.id
 
     const [students, payments, invoices] = await Promise.all([
       prisma.student.findMany({ where: { schoolId }, orderBy: { name: 'asc' } }),
@@ -75,7 +72,7 @@ export async function GET(req: Request) {
 
     const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
 
-    logAudit({ userId: user.id, schoolId, action: 'DATA_EXPORT', details: `${students.length} students, ${payments.length} payments, ${invoices.length} invoices`, ipAddress: getIp(req) }).catch(() => {})
+    logAudit({ userId: ctx.userId, schoolId, action: 'DATA_EXPORT', details: `${students.length} students, ${payments.length} payments, ${invoices.length} invoices`, ipAddress: getIp(req) }).catch(() => {})
 
     return new NextResponse(buf, {
       headers: {

@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -16,21 +17,16 @@ export async function GET(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true }
-    })
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) return NextResponse.json([])
 
-    if (!user?.school) return NextResponse.json([])
-
-    const role = await getUserRole(user.id, user.school)
-    if (!hasPermission(role, 'unmatched', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'unmatched', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     // Scope unmatched payments to this school
     const payments = await prisma.payment.findMany({
       where: {
         matched: false,
-        schoolId: user.school.id,
+        schoolId: ctx.school.id,
       },
       orderBy: { paidAt: 'desc' }
     })
@@ -53,17 +49,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true }
-    })
-
-    if (!user?.school) {
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) {
       return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
 
-    const rolePost = await getUserRole(user.id, user.school)
-    if (!hasPermission(rolePost, 'unmatched', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'unmatched', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const body = await req.json()
     const paymentId = Number(body.paymentId)
@@ -74,13 +65,13 @@ export async function POST(req: Request) {
       where: { id: paymentId }
     })
 
-    if (!existingPayment || existingPayment.schoolId !== user.school.id) {
+    if (!existingPayment || existingPayment.schoolId !== ctx.school.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Verify the student belongs to this school
     const student = await prisma.student.findUnique({ where: { id: studentId } })
-    if (!student || student.schoolId !== user.school.id) {
+    if (!student || student.schoolId !== ctx.school.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

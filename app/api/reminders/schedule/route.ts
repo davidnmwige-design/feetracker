@@ -2,33 +2,32 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
-
-async function getSchoolUser(req: Request) {
-  if (!checkRateLimit(getIp(req))) return null
-  const session = await auth()
-  if (!session?.user?.email) return null
-  const user = await prisma.user.findUnique({ where: { email: session.user.email }, include: { school: true } })
-  return user?.school ? user : null
-}
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function GET(req: Request) {
-  const user = await getSchoolUser(req)
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  const session = await auth()
+  if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const role = await getUserRole(user.id, user.school!)
-  if (!hasPermission(role, 'reminders/schedule', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+  const ctx = await resolveSchool(session.user.email)
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const schedule = await prisma.reminderSchedule.findUnique({ where: { schoolId: user.school!.id } })
+  if (!hasPermission(ctx.role, 'reminders/schedule', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+
+  const schedule = await prisma.reminderSchedule.findUnique({ where: { schoolId: ctx.school.id } })
   return NextResponse.json(schedule || { enabled: false, frequency: 'weekly', dayOfWeek: 1, dayOfMonth: 1, time: '08:00' })
 }
 
 export async function POST(req: Request) {
-  const user = await getSchoolUser(req)
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  const session = await auth()
+  if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const role = await getUserRole(user.id, user.school!)
-  if (!hasPermission(role, 'reminders/schedule', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
+  const ctx = await resolveSchool(session.user.email)
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (!hasPermission(ctx.role, 'reminders/schedule', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   const body = await req.json()
   const data = {
@@ -40,9 +39,9 @@ export async function POST(req: Request) {
   }
 
   const schedule = await prisma.reminderSchedule.upsert({
-    where: { schoolId: user.school!.id },
+    where: { schoolId: ctx.school.id },
     update: data,
-    create: { schoolId: user.school!.id, ...data },
+    create: { schoolId: ctx.school.id, ...data },
   })
   return NextResponse.json(schedule)
 }

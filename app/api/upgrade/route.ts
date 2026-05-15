@@ -5,7 +5,8 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
 import { logAudit } from '@/lib/audit'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function POST(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -18,14 +19,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true }
-    })
-    if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
 
-    const role = await getUserRole(user.id, user.school)
-    if (!hasPermission(role, 'upgrade', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'upgrade', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const body = await req.json()
     const requestedPlan = sanitize(body.requestedPlan || '', 50)
@@ -37,8 +34,8 @@ export async function POST(req: Request) {
 
     const request = await prisma.planUpgradeRequest.create({
       data: {
-        schoolId: user.school.id,
-        currentPlan: user.school.currentPlan,
+        schoolId: ctx.school.id,
+        currentPlan: ctx.school.currentPlan,
         requestedPlan,
         notes: notes || null,
       }
@@ -57,7 +54,7 @@ export async function POST(req: Request) {
             <table style="width:100%;border-collapse:collapse">
               <tr>
                 <td style="padding:8px 0;color:#64748b;font-size:13px">School</td>
-                <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">${user.school.name}</td>
+                <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">${ctx.school.name}</td>
               </tr>
               <tr style="border-top:1px solid #e2e8f0">
                 <td style="padding:8px 0;color:#64748b;font-size:13px">Admin email</td>
@@ -65,7 +62,7 @@ export async function POST(req: Request) {
               </tr>
               <tr style="border-top:1px solid #e2e8f0">
                 <td style="padding:8px 0;color:#64748b;font-size:13px">Current plan</td>
-                <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">${user.school.currentPlan}</td>
+                <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">${ctx.school.currentPlan}</td>
               </tr>
               <tr style="border-top:1px solid #e2e8f0">
                 <td style="padding:8px 0;color:#64748b;font-size:13px">Requested plan</td>
@@ -84,11 +81,11 @@ export async function POST(req: Request) {
 
     sendEmail({
       to: 'davidnmwige@gmail.com',
-      subject: `Plan Upgrade Request — ${user.school.name} (${user.school.currentPlan} → ${requestedPlan})`,
+      subject: `Plan Upgrade Request — ${ctx.school.name} (${ctx.school.currentPlan} → ${requestedPlan})`,
       html: adminHtml,
     }).catch(err => console.error('Upgrade email error:', err))
 
-    logAudit({ userId: user.id, schoolId: user.school.id, action: 'PLAN_UPGRADE_REQUESTED', details: `${user.school.currentPlan} → ${requestedPlan}`, ipAddress: getIp(req) }).catch(() => {})
+    logAudit({ userId: ctx.userId, schoolId: ctx.school.id, action: 'PLAN_UPGRADE_REQUESTED', details: `${ctx.school.currentPlan} → ${requestedPlan}`, ipAddress: getIp(req) }).catch(() => {})
     return NextResponse.json({ success: true, requestId: request.id, adminEmail: session.user.email })
   } catch (err) {
     console.error('upgrade POST error:', err)

@@ -4,8 +4,9 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { encrypt, decrypt } from '@/lib/encrypt'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { logAudit } from '@/lib/audit'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function GET(
   req: Request,
@@ -25,17 +26,13 @@ export async function GET(
     const studentId = Number(id)
     if (!studentId) return NextResponse.json({ error: 'Invalid student ID' }, { status: 400 })
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true }
-    })
-    if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
 
-    const role = await getUserRole(user.id, user.school)
-    if (!hasPermission(role, 'students', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'students', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const student = await prisma.student.findFirst({
-      where: { id: studentId, schoolId: user.school.id },
+      where: { id: studentId, schoolId: ctx.school.id },
       include: {
         payments: { orderBy: { paidAt: 'desc' } },
         school: true,
@@ -72,17 +69,13 @@ export async function PATCH(
     const studentId = Number(id)
     if (!studentId) return NextResponse.json({ error: 'Invalid student ID' }, { status: 400 })
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true }
-    })
-    if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
 
-    const rolePatch = await getUserRole(user.id, user.school)
-    if (!hasPermission(rolePatch, 'students', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'students', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const student = await prisma.student.findFirst({
-      where: { id: studentId, schoolId: user.school.id }
+      where: { id: studentId, schoolId: ctx.school.id }
     })
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
@@ -157,17 +150,13 @@ export async function DELETE(
     const studentId = Number(id)
     if (!studentId) return NextResponse.json({ error: 'Invalid student ID' }, { status: 400 })
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true },
-    })
-    if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
 
-    const roleDelete = await getUserRole(user.id, user.school)
-    if (!hasPermission(roleDelete, 'students', 'DELETE')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'students', 'DELETE')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const student = await prisma.student.findFirst({
-      where: { id: studentId, schoolId: user.school.id },
+      where: { id: studentId, schoolId: ctx.school.id },
     })
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
@@ -176,7 +165,7 @@ export async function DELETE(
     await prisma.payment.updateMany({ where: { studentId }, data: { studentId: null, matched: false } })
     await prisma.student.delete({ where: { id: studentId } })
 
-    logAudit({ userId: user.id, schoolId: user.school.id, action: 'STUDENT_DELETED', details: `${student.name} (${student.admNo})`, ipAddress: getIp(req) }).catch(() => {})
+    logAudit({ userId: ctx.userId, schoolId: ctx.school.id, action: 'STUDENT_DELETED', details: `${student.name} (${student.admNo})`, ipAddress: getIp(req) }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error('students/[id] DELETE error:', err)

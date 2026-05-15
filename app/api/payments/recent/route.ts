@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function GET() {
   const session = await auth()
@@ -9,15 +10,11 @@ export async function GET() {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true },
-    })
-
-    if (!user?.school) return NextResponse.json({ payments: [], fetchedAt: new Date().toISOString() })
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) return NextResponse.json({ payments: [], fetchedAt: new Date().toISOString() })
 
     const payments = await prisma.payment.findMany({
-      where: { student: { schoolId: user.school.id } },
+      where: { student: { schoolId: ctx.school.id } },
       take: 10,
       orderBy: { paidAt: 'desc' },
       include: { student: true },

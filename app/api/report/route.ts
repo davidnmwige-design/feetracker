@@ -2,7 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -16,21 +17,16 @@ export async function GET(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true }
-    })
-
-    if (!user?.school) {
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) {
       return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
 
-    const role = await getUserRole(user.id, user.school)
-    if (!hasPermission(role, 'report', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'report', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const { searchParams } = new URL(req.url)
     const classFilter = searchParams.get('class')
-    const where: Record<string, unknown> = { schoolId: user.school.id }
+    const where: Record<string, unknown> = { schoolId: ctx.school.id }
     if (classFilter) where['class'] = classFilter
 
     const students = await prisma.student.findMany({

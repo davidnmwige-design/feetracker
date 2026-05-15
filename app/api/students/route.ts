@@ -5,7 +5,8 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { encrypt, decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -19,18 +20,13 @@ export async function GET(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true }
-    })
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) return NextResponse.json([])
 
-    if (!user?.school) return NextResponse.json([])
-
-    const role = await getUserRole(user.id, user.school)
-    if (!hasPermission(role, 'students', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'students', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const students = await prisma.student.findMany({
-      where: { schoolId: user.school.id },
+      where: { schoolId: ctx.school.id },
       include: { payments: true, feeCategories: true },
       orderBy: { name: 'asc' }
     })
@@ -59,18 +55,20 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: { include: { _count: { select: { students: true } } } } }
-    })
-
-    if (!user?.school) {
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) {
       return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
 
-    const schoolId = user.school.id
-    const currentCount = (user.school as any)._count.students
-    const planName = (user.school as any).currentPlan || 'Starter'
+    if (!hasPermission(ctx.role, 'students', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
+
+    const schoolId = ctx.school.id
+    const schoolWithCount = await prisma.school.findUnique({
+      where: { id: schoolId },
+      include: { _count: { select: { students: true } } }
+    })
+    const currentCount = (schoolWithCount as any)?._count?.students ?? 0
+    const planName = ctx.school.currentPlan || 'Starter'
     const planCap = planName === 'Growth' ? 600 : planName === 'Premium' ? 1000 : planName === 'Enterprise' ? Infinity : 300
 
     const formData = await req.formData()
@@ -87,9 +85,6 @@ export async function POST(req: Request) {
     const workbook = XLSX.read(buffer, { type: 'array' })
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
     const rows = XLSX.utils.sheet_to_json(sheet) as any[]
-
-    const rolePost = await getUserRole(user.id, user.school)
-    if (!hasPermission(rolePost, 'students', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     if (currentCount + rows.length > planCap) {
       return NextResponse.json({
@@ -144,7 +139,7 @@ export async function POST(req: Request) {
       created.push(student)
     }
 
-    await logAudit({ userId: user.id, schoolId, action: 'STUDENT_IMPORT', details: `${created.length} students imported` })
+    await logAudit({ userId: ctx.userId, schoolId, action: 'STUDENT_IMPORT', details: `${created.length} students imported` })
     return NextResponse.json({ count: created.length })
   } catch (err) {
     console.error('students POST error:', err)
@@ -163,14 +158,10 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true }
-    })
-    if (!user?.school) return NextResponse.json({ error: 'No school found' }, { status: 400 })
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
 
-    const rolePatch = await getUserRole(user.id, user.school)
-    if (!hasPermission(rolePatch, 'students', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'students', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const body = await req.json()
     const studentId = Number(body.studentId)
@@ -178,7 +169,7 @@ export async function PATCH(req: Request) {
     const parentEmail = rawEmail ? encrypt(rawEmail) : null
 
     const student = await prisma.student.findFirst({
-      where: { id: studentId, schoolId: user.school.id }
+      where: { id: studentId, schoolId: ctx.school.id }
     })
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 

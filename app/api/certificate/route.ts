@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { logAudit } from '@/lib/audit'
-import { getUserRole, hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { hasPermission, FORBIDDEN } from '@/lib/permissions'
+import { resolveSchool } from '@/lib/schoolContext'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -16,17 +17,12 @@ export async function GET(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { school: true }
-    })
-
-    if (!user?.school) {
+    const ctx = await resolveSchool(session.user.email)
+    if (!ctx) {
       return NextResponse.json({ error: 'No school found' }, { status: 400 })
     }
 
-    const role = await getUserRole(user.id, user.school)
-    if (!hasPermission(role, 'certificate', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+    if (!hasPermission(ctx.role, 'certificate', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const { searchParams } = new URL(req.url)
     const studentId = Number(searchParams.get('studentId'))
@@ -45,14 +41,14 @@ export async function GET(req: Request) {
     }
 
     // Ensure student belongs to the authenticated user's school
-    if (student.schoolId !== user.school.id) {
+    if (student.schoolId !== ctx.school.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0)
     const balance = student.feeRequired - totalPaid
 
-    logAudit({ userId: user.id, schoolId: user.school.id, action: 'CERTIFICATE_GENERATED', details: `Student: ${student.name} (${student.admNo})`, ipAddress: getIp(req) }).catch(() => {})
+    logAudit({ userId: ctx.userId, schoolId: ctx.school.id, action: 'CERTIFICATE_GENERATED', details: `Student: ${student.name} (${student.admNo})`, ipAddress: getIp(req) }).catch(() => {})
 
     return NextResponse.json({
       student: {
