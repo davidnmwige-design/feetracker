@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import RoleGuard from '@/components/RoleGuard'
+import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
 
 // -- PDF builder ---------------------------------------------------------------
 
@@ -374,7 +375,7 @@ export default function Invoices() {
     }
     lines.push(`— ${school.name}`)
 
-    const waPhone = '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '')
+    const waPhone = normalizePhoneForWhatsApp(student.parentPhone)
     window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank')
 
     saveInvoiceStatus(student.id, student, 'sent')

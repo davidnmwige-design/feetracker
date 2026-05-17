@@ -75,9 +75,12 @@ function LoginForm() {
 
           <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
             <div>
-              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Email address</label>
+              <label htmlFor="email" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Email address</label>
               <input
+                id="email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                 placeholder="your@email.com"
                 value={form.email}
@@ -87,10 +90,13 @@ function LoginForm() {
             </div>
 
             <div>
-              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Password</label>
+              <label htmlFor="password" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Password</label>
               <div style={{position: 'relative'}}>
                 <input
+                  id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                   style={{paddingRight: '40px'}}
                   placeholder="Your password"

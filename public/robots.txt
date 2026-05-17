@@ -1,4 +1,17 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://feetracker.co.ke/sitemap.xml
+Allow: /demo
+Allow: /privacy
+Allow: /login
+Allow: /signup
+Disallow: /dashboard
+Disallow: /students
+Disallow: /upload
+Disallow: /reminders
+Disallow: /settings
+Disallow: /reports
+Disallow: /invoices
+Disallow: /unmatched
+Disallow: /admin
+Disallow: /api/
+Sitemap: https://elimupay.co.ke/sitemap.xml

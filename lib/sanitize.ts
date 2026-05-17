@@ -9,3 +9,13 @@ export function sanitize(value: unknown, maxLength = 500): string {
     .trim()
     .slice(0, maxLength)
 }
+
+export function sanitizeName(value: string): string {
+  if (!value) return ''
+  let s = String(value).trim()
+  s = s.replace(/^[=+\-@\t\r]+/, '')
+  s = s.replace(/[\n\r\x00-\x1F\x7F]/g, ' ')
+  s = s.replace(/\s+/g, ' ').trim()
+  if (s.length > 80) s = s.substring(0, 80)
+  return s
+}

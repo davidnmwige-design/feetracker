@@ -42,7 +42,7 @@ export async function GET(req: Request) {
     }
 
     if (student.schoolId !== ctx.school.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
     const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0)

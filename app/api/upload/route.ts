@@ -9,6 +9,7 @@ import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
 import * as XLSX from 'xlsx'
 import { parseJsonRows, parseTextStatement, matchTransactions } from '@/lib/statementParser'
+import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
 
 export async function POST(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -114,7 +115,7 @@ export async function POST(req: Request) {
 
           const msg = `Dear ${student.parentName || 'Parent'}, we have received KES ${tx.amount.toLocaleString()} for ${fullStudent?.name || ''}, ${fullStudent?.class || ''}. Outstanding balance: KES ${Math.max(0, balance).toLocaleString()}. Thank you. - ${ctx.school.name}`
           const phone = student.parentPhone
-            ? '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '')
+            ? normalizePhoneForWhatsApp(student.parentPhone)
             : ''
           notifications.push({ msg, phone })
 

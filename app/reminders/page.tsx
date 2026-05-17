@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import RoleGuard from '@/components/RoleGuard'
+import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
 
 function reminderEmailHtml({
   schoolName,
@@ -384,7 +385,7 @@ export default function Reminders() {
               onClick={() => {
                 withBalance.forEach((student, i) => {
                   const msg = getMessage(student)
-                  const phone = '254' + student.parentPhone.replace(/^0/, '')
+                  const phone = normalizePhoneForWhatsApp(student.parentPhone)
                   const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
                   setTimeout(() => window.open(url, '_blank'), i * 1500)
                 })
@@ -418,7 +419,7 @@ export default function Reminders() {
             const paid = getPaid(student)
             const percent = Math.round((paid / (student.effectiveFee ?? student.feeRequired)) * 100)
             const msg = getMessage(student)
-            const waPhone = student.parentPhone ? '254' + student.parentPhone.replace(/\s/g, '').replace(/^0/, '') : ''
+            const waPhone = student.parentPhone ? normalizePhoneForWhatsApp(student.parentPhone) : ''
             const waLink = waPhone ? 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg) : ''
             const isFormOpen = emailFormId === student.id
             const isSending = emailSendingId === student.id

@@ -37,6 +37,14 @@ export async function PATCH(req: Request) {
     if (!hasPermission(ctx.role, 'school', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const body = await req.json()
+
+    if ('name' in body && body.name != null && (String(body.name).length < 1 || String(body.name).length > 120)) {
+      return NextResponse.json({ error: 'School name must be between 1 and 120 characters' }, { status: 400 })
+    }
+    if ('paybill' in body && body.paybill != null && body.paybill !== '' && !/^\d{5,7}$/.test(String(body.paybill))) {
+      return NextResponse.json({ error: 'Paybill must be 5 to 7 digits' }, { status: 400 })
+    }
+
     const data: Record<string, unknown> = {}
     const strings = ['name', 'paybill', 'accountNumberFormat', 'currentTerm', 'replyToEmail', 'emailSignature', 'whatsappNumber', 'penaltyType', 'billingCycle']
     const booleans = ['penaltyEnabled']

@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
-import { sanitize } from '@/lib/sanitize'
+import { sanitize, sanitizeName } from '@/lib/sanitize'
 import { encrypt, decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
@@ -115,19 +115,19 @@ export async function POST(req: Request) {
         update: {
           tuitionFee, sportsFee, clubsFee, otherFee, feeRequired,
           ...(encryptedEmail ? { parentEmail: encryptedEmail } : {}),
-          parent2Name: String(row['Parent 2 Name'] || row['parent2Name'] || '') || null,
+          parent2Name: sanitizeName(String(row['Parent 2 Name'] || row['parent2Name'] || '')) || null,
           parent2Phone: String(row['Parent 2 Phone'] || row['parent2Phone'] || '') || null,
           ...(encryptedEmail2 ? { parent2Email: encryptedEmail2 } : {}),
         },
         create: {
-          name: String(row['Name'] || row['name'] || row['NAME'] || ''),
+          name: sanitizeName(String(row['Name'] || row['name'] || row['NAME'] || '')),
           admNo,
-          class: String(row['Class'] || row['class'] || row['CLASS'] || ''),
-          stream: String(row['Stream'] || row['stream'] || ''),
-          parentName: String(row['Parent Name'] || row['parentName'] || ''),
+          class: sanitizeName(String(row['Class'] || row['class'] || row['CLASS'] || '')),
+          stream: sanitizeName(String(row['Stream'] || row['stream'] || '')),
+          parentName: sanitizeName(String(row['Parent Name'] || row['parentName'] || '')),
           parentPhone: String(row['Parent Phone'] || row['parentPhone'] || ''),
           parentEmail: encryptedEmail,
-          parent2Name: String(row['Parent 2 Name'] || row['parent2Name'] || '') || null,
+          parent2Name: sanitizeName(String(row['Parent 2 Name'] || row['parent2Name'] || '')) || null,
           parent2Phone: String(row['Parent 2 Phone'] || row['parent2Phone'] || '') || null,
           parent2Email: encryptedEmail2,
           feeRequired,

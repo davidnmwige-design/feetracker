@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { signIn } from 'next-auth/react'
 
 function PasswordRule({ met, label }: { met: boolean; label: string }) {
   return (
@@ -68,7 +69,20 @@ export default function Signup() {
       return
     }
 
-    router.push('/login?registered=true')
+    // Sign in automatically after successful signup
+    setError('')
+    const result = await signIn('credentials', {
+      email: form.email,
+      password: form.password,
+      redirect: false,
+    })
+
+    if (result?.error) {
+      router.push('/login?registered=true')
+      return
+    }
+
+    router.push('/dashboard')
   }
 
   return (
@@ -88,8 +102,12 @@ export default function Signup() {
 
           <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
             <div>
-              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Your name</label>
+              <label htmlFor="name" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Your name</label>
               <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                 placeholder="e.g. John Kamau"
                 value={form.name}
@@ -98,9 +116,12 @@ export default function Signup() {
             </div>
 
             <div>
-              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Email address</label>
+              <label htmlFor="email" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Email address</label>
               <input
+                id="email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                 placeholder="e.g. john@stmarys.ac.ke"
                 value={form.email}
@@ -109,10 +130,13 @@ export default function Signup() {
             </div>
 
             <div>
-              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Password</label>
+              <label htmlFor="password" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Password</label>
               <div style={{position: 'relative'}}>
                 <input
+                  id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                   style={{paddingRight: '40px'}}
                   placeholder="Create a strong password"
@@ -138,10 +162,13 @@ export default function Signup() {
             </div>
 
             <div>
-              <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Confirm password</label>
+              <label htmlFor="confirmPassword" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Confirm password</label>
               <div style={{position: 'relative'}}>
                 <input
+                  id="confirmPassword"
+                  name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                   style={{paddingRight: '40px'}}
                   placeholder="Repeat your password"
@@ -170,8 +197,12 @@ export default function Signup() {
               <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: '14px'}}>School details</p>
               <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
                 <div>
-                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>School name</label>
+                  <label htmlFor="schoolName" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>School name</label>
                   <input
+                    id="schoolName"
+                    name="schoolName"
+                    type="text"
+                    autoComplete="organization"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                     placeholder="e.g. St. Mary's Academy"
                     value={form.schoolName}
@@ -179,8 +210,12 @@ export default function Signup() {
                   />
                 </div>
                 <div>
-                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>MPESA Paybill / Till number</label>
+                  <label htmlFor="paybill" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>MPESA Paybill / Till number</label>
                   <input
+                    id="paybill"
+                    name="paybill"
+                    type="text"
+                    autoComplete="off"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                     placeholder="e.g. 123456"
                     value={form.paybill}
@@ -188,8 +223,11 @@ export default function Signup() {
                   />
                 </div>
                 <div>
-                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Current term</label>
+                  <label htmlFor="term" className="text-sm font-medium text-gray-700 block mb-1">Current term</label>
                   <select
+                    id="term"
+                    name="term"
+                    aria-label="Current term"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                     value={form.term}
                     onChange={e => setForm({ ...form, term: e.target.value })}

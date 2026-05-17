@@ -10,6 +10,12 @@ import crypto from 'crypto'
 
 const VALID_ROLES = ['admin', 'accountant', 'principal', 'viewer']
 
+function isValidEmail(email: string): boolean {
+  if (!email || email.length > 254) return false
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+  return emailRegex.test(email)
+}
+
 async function getActorAndSchool(req: Request) {
   if (!checkRateLimit(getIp(req))) return null
   const session = await auth()
@@ -55,11 +61,13 @@ export async function POST(req: Request) {
   if (!hasPermission(rolePost, 'team', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   const body = await req.json()
-  const name = sanitize(body.name || '', 100)
-  const email = sanitize(body.email || '', 200).toLowerCase()
+  const name = sanitize(body.name || '', 120)
+  const email = sanitize(body.email || '', 254).toLowerCase()
   const role = VALID_ROLES.includes(body.role) ? body.role : 'viewer'
 
-  if (!name || !email) return NextResponse.json({ error: 'Name and email are required' }, { status: 400 })
+  if (!name || name.length > 120) return NextResponse.json({ error: 'Name must be between 1 and 120 characters' }, { status: 400 })
+  if (!email || email.length > 254) return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
+  if (!isValidEmail(email)) return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
 
   // Check if user already exists
   let targetUser = await prisma.user.findUnique({ where: { email } })

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
 
 const CLASSES = ['PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Form 1', 'Form 2', 'Form 3', 'Form 4']
 
@@ -489,7 +490,7 @@ export default function StudentDetail() {
   const statusColor = cleared ? '#0a7c3e' : partial ? '#92681a' : '#a32d2d'
 
   const rawPhone = student.parentPhone || ''
-  const whatsappPhone = rawPhone.replace(/^0/, '254').replace(/\D/g, '')
+  const whatsappPhone = rawPhone ? normalizePhoneForWhatsApp(rawPhone) : ''
   const whatsappMsg = `Dear ${student.parentName || 'Parent'}, this is a reminder that ${student.name} has an outstanding fee balance of KES ${balance.toLocaleString()} for ${student.school?.currentTerm || 'the current term'}. Please make payment at your earliest convenience. Thank you — ${student.school?.name || 'School'}.`
 
   const sectionStyle: React.CSSProperties = { background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '16px' }
@@ -664,7 +665,7 @@ export default function StudentDetail() {
                     <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                       <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.parent2Phone || '—'}</span>
                       {student.parent2Phone && (
-                        <a href={`https://wa.me/254${student.parent2Phone.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" rel="noopener noreferrer"
+                        <a href={`https://wa.me/${normalizePhoneForWhatsApp(student.parent2Phone)}`} target="_blank" rel="noopener noreferrer"
                           style={{background: '#25D366', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', textDecoration: 'none'}}>
                           WhatsApp
                         </a>

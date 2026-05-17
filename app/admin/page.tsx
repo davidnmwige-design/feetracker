@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function AdminSetup() {
@@ -13,6 +13,12 @@ export default function AdminSetup() {
     password: '',
     secretKey: ''
   })
+
+  useEffect(() => {
+    fetch('/api/admin/setup').then(r => r.json()).then(data => {
+      if (data.setupComplete) router.replace('/login')
+    }).catch(() => {})
+  }, [router])
 
   async function handleSubmit() {
     setLoading(true)
