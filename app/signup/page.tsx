@@ -69,8 +69,7 @@ export default function Signup() {
       return
     }
 
-    // Sign in automatically after successful signup
-    setError('')
+    // Try to sign in with the credentials just submitted
     const result = await signIn('credentials', {
       email: form.email,
       password: form.password,
@@ -78,7 +77,8 @@ export default function Signup() {
     })
 
     if (result?.error) {
-      router.push('/login?registered=true')
+      // signIn failed — the email already exists with a different password
+      router.push('/login?message=account-exists')
       return
     }
 

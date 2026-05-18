@@ -47,9 +47,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true })
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } })
+    const normalizedEmail = email.toLowerCase().trim()
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } })
     if (existing) {
-      // Return generic success to prevent email enumeration
       return NextResponse.json({ success: true })
     }
 
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     const user = await prisma.user.create({
       data: {
         name,
-        email,
+        email: normalizedEmail,
         password: hashed,
         school: {
           create: {

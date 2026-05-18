@@ -9,6 +9,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const registered = searchParams.get('registered')
+  const message = searchParams.get('message')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -64,6 +65,12 @@ function LoginForm() {
           {registered && (
             <div style={{background: '#f0f4f9', border: '1px solid #c8d8f0', color: '#0a1f4e', fontSize: '13px', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
               Account created! Sign in to get started.
+            </div>
+          )}
+
+          {message === 'account-exists' && (
+            <div style={{background: '#fef9ec', border: '1px solid #f5e19a', color: '#92681a', fontSize: '13px', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
+              An account with this email already exists. Please sign in.
             </div>
           )}
 
