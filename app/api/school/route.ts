@@ -5,6 +5,7 @@ import { sanitize } from '@/lib/sanitize'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
 import { prisma } from '@/lib/prisma'
+import { getCache, setCache, invalidateCache, CacheKeys } from '@/lib/cache'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -17,6 +18,12 @@ export async function GET(req: Request) {
     const ctx = await resolveSchool(session.user.email)
     if (!ctx) return NextResponse.json(null)
     if (!hasPermission(ctx.role, 'school', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
+
+    const cacheKey = CacheKeys.schoolSettings(ctx.school.id)
+    const cached = await getCache(cacheKey)
+    if (cached) return NextResponse.json(cached)
+
+    await setCache(cacheKey, ctx.school, 300)
     return NextResponse.json(ctx.school)
   } catch (err) {
     console.error('school GET error:', err)
@@ -77,6 +84,7 @@ export async function PATCH(req: Request) {
     }
 
     const school = await prisma.school.update({ where: { id: ctx.school.id }, data })
+    await invalidateCache(CacheKeys.schoolSettings(ctx.school.id))
     return NextResponse.json(school)
   } catch (err) {
     console.error('school PATCH error:', err)

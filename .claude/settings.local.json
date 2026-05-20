@@ -43,7 +43,17 @@
       "Bash(powershell -Command \"Get-ChildItem -Recurse -Include *.tsx,*.ts -Exclude node_modules,.next | Select-String -Pattern '[☀-⟿⬀-⯿︀-️ἀ0-῿F⌚-⌛⏩-⏳⏸-⏺▪-▫▶◀◻-◾☔-☕♈-♓♿⚓⚡⚪-⚫⚽-⚾⛄-⛅⛎⛔⛪⛲-⛳⛵⛺⛽✂✅✈-✍✏✒✔✖✝✡✨✳-✴❄❇❌❎❓-❕❗❣-❤➕-➗➡➰➿⤴-⤵⬅-⬇⬛-⬜⭐⭕〰〽㊗㊙]' | Select-Object Filename, LineNumber, Line | Format-Table -AutoSize\")",
       "Bash(sort -t: -k1)",
       "Bash(mkdir -p \"C:/Users/david/feetracker/app/api/bursaries/[id]\")",
-      "Bash(mkdir -p \"C:/Users/david/feetracker/app/api/bursaries/student/[studentId]\")"
+      "Bash(mkdir -p \"C:/Users/david/feetracker/app/api/bursaries/student/[studentId]\")",
+      "Bash(Test-Path *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\david\\\\feetracker\\\\prisma\\\\migrations\" -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | ForEach-Object { $_ -replace [regex]::Escape\\(\"C:\\\\Users\\\\david\\\\feetracker\\\\prisma\\\\migrations\\\\\"\\), \"\" } | Sort-Object)",
+      "Bash(xargs -I{} grep -l \"prisma\\\\.\" {})",
+      "Bash(ls .env*)",
+      "Bash(ls vercel.json)",
+      "Bash(ls next.config*)",
+      "Bash(ls app/api/health)",
+      "Bash(ls app/status)",
+      "Bash(ls public/sw.js)",
+      "Bash(ls components/StagingBanner.tsx components/PWAInstallPrompt.tsx components/CrispChat.tsx components/StudentAvatar.tsx)"
     ]
   }
 }

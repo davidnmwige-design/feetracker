@@ -7,6 +7,7 @@ import { encrypt, decrypt } from '@/lib/encrypt'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { logAudit } from '@/lib/audit'
 import { resolveSchool } from '@/lib/schoolContext'
+import { hashPhone } from '@/lib/phoneHash'
 
 export async function GET(
   req: Request,
@@ -102,7 +103,9 @@ export async function PATCH(
       data.parentName = sanitize(body.parentName || '', 200).trim() || null
     }
     if ('parentPhone' in body) {
-      data.parentPhone = sanitize(body.parentPhone || '', 50).trim() || null
+      const phoneVal = sanitize(body.parentPhone || '', 50).trim() || null
+      data.parentPhone = phoneVal
+      ;(data as Record<string, unknown>).parentPhoneHash = hashPhone(phoneVal)
     }
     if ('parentEmail' in body) {
       const raw = sanitize(body.parentEmail || '', 200).toLowerCase().trim() || null
@@ -112,7 +115,9 @@ export async function PATCH(
       data.parent2Name = sanitize(body.parent2Name || '', 200).trim() || null
     }
     if ('parent2Phone' in body) {
-      data.parent2Phone = sanitize(body.parent2Phone || '', 50).trim() || null
+      const phone2Val = sanitize(body.parent2Phone || '', 50).trim() || null
+      data.parent2Phone = phone2Val
+      ;(data as Record<string, unknown>).parent2PhoneHash = hashPhone(phone2Val)
     }
     if ('parent2Email' in body) {
       const raw2 = sanitize(body.parent2Email || '', 200).toLowerCase().trim() || null

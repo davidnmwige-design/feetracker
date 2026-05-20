@@ -8,6 +8,7 @@ import { logAudit } from '@/lib/audit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
 import { getEffectiveFee } from '@/lib/feeCalculations'
+import { hashPhone } from '@/lib/phoneHash'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -110,13 +111,16 @@ export async function POST(req: Request) {
       const parent2Email = String(row['Parent 2 Email'] || row['parent2Email'] || '')
       const encryptedEmail = parentEmail ? encrypt(parentEmail) : null
       const encryptedEmail2 = parent2Email ? encrypt(parent2Email) : null
+      const rawPhone = String(row['Parent Phone'] || row['parentPhone'] || '')
+      const rawPhone2 = String(row['Parent 2 Phone'] || row['parent2Phone'] || '') || null
       const student = await prisma.student.upsert({
         where: { admNo_schoolId: { admNo, schoolId } },
         update: {
           tuitionFee, sportsFee, clubsFee, otherFee, feeRequired,
           ...(encryptedEmail ? { parentEmail: encryptedEmail } : {}),
           parent2Name: sanitizeName(String(row['Parent 2 Name'] || row['parent2Name'] || '')) || null,
-          parent2Phone: String(row['Parent 2 Phone'] || row['parent2Phone'] || '') || null,
+          parent2Phone: rawPhone2,
+          parent2PhoneHash: hashPhone(rawPhone2),
           ...(encryptedEmail2 ? { parent2Email: encryptedEmail2 } : {}),
         },
         create: {
@@ -125,10 +129,12 @@ export async function POST(req: Request) {
           class: sanitizeName(String(row['Class'] || row['class'] || row['CLASS'] || '')),
           stream: sanitizeName(String(row['Stream'] || row['stream'] || '')),
           parentName: sanitizeName(String(row['Parent Name'] || row['parentName'] || '')),
-          parentPhone: String(row['Parent Phone'] || row['parentPhone'] || ''),
+          parentPhone: rawPhone,
+          parentPhoneHash: hashPhone(rawPhone),
           parentEmail: encryptedEmail,
           parent2Name: sanitizeName(String(row['Parent 2 Name'] || row['parent2Name'] || '')) || null,
-          parent2Phone: String(row['Parent 2 Phone'] || row['parent2Phone'] || '') || null,
+          parent2Phone: rawPhone2,
+          parent2PhoneHash: hashPhone(rawPhone2),
           parent2Email: encryptedEmail2,
           feeRequired,
           tuitionFee,

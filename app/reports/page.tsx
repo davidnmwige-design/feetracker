@@ -289,7 +289,7 @@ export default function Reports() {
 
   return (
     <RoleGuard requiredPermission="canViewReports">
-    <div style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
+    <main style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
       <style>{`
         @media (max-width: 640px) {
           .rpt-header { flex-direction: column !important; align-items: flex-start !important; gap: 14px !important; padding: 16px !important; }
@@ -453,7 +453,7 @@ export default function Reports() {
           </>
         )}
       </div>
-    </div>
+    </main>
     </RoleGuard>
   )
 }

@@ -118,7 +118,7 @@ export default function Unmatched() {
 
   return (
     <RoleGuard requiredPermission="canUpload">
-    <div style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
+    <main style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
       <style>{`
         @media (max-width: 640px) {
           .unm-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
@@ -385,7 +385,7 @@ export default function Unmatched() {
       </div>
 
       <style>{`@keyframes unm-spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
+    </main>
     </RoleGuard>
   )
 }

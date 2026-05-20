@@ -19,6 +19,8 @@ model User {
   school             School?
   schoolUsers        SchoolUser[]
   otpCodes           OTPCode[]
+
+  @@index([isAdmin])
 }
 
 model OTPCode {
@@ -29,6 +31,9 @@ model OTPCode {
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model School {
@@ -65,6 +70,9 @@ model School {
   schoolUsers         SchoolUser[]
   reminderSchedule    ReminderSchedule?
   feeDiscounts        FeeDiscount[]
+
+  @@index([paybill])
+  @@index([currentPlan])
 }
 
 model SchoolUser {
@@ -77,6 +85,8 @@ model SchoolUser {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([schoolId, userId])
+  @@index([userId])
+  @@index([schoolId])
 }
 
 model PlanUpgradeRequest {
@@ -101,25 +111,28 @@ model Term {
 }
 
 model Student {
-  id           Int          @id @default(autoincrement())
-  name         String
-  admNo        String
-  class        String
-  stream       String?
-  parentName   String?
-  parentPhone  String?
-  parentEmail  String?
-  parent2Name  String?
-  parent2Phone String?
-  parent2Email String?
-  feeRequired  Float        @default(0)
-  tuitionFee   Float        @default(0)
-  sportsFee    Float        @default(0)
-  clubsFee     Float        @default(0)
-  otherFee     Float        @default(0)
-  createdAt    DateTime     @default(now())
-  schoolId     Int
-  school       School       @relation(fields: [schoolId], references: [id])
+  id               Int               @id @default(autoincrement())
+  name             String
+  admNo            String
+  class            String
+  stream           String?
+  parentName       String?
+  parentPhone      String?
+  parentEmail      String?
+  parent2Name      String?
+  parent2Phone     String?
+  parent2Email     String?
+  parentPhoneHash  String?
+  parent2PhoneHash String?
+  photoUrl         String?
+  feeRequired      Float             @default(0)
+  tuitionFee       Float             @default(0)
+  sportsFee        Float             @default(0)
+  clubsFee         Float             @default(0)
+  otherFee         Float             @default(0)
+  createdAt        DateTime          @default(now())
+  schoolId         Int
+  school           School            @relation(fields: [schoolId], references: [id])
   payments         Payment[]
   invoices         Invoice[]
   feeCategories    FeeCategory[]
@@ -127,14 +140,19 @@ model Student {
   studentDiscounts StudentDiscount[]
 
   @@unique([admNo, schoolId])
+  @@index([schoolId])
+  @@index([schoolId, class])
+  @@index([parentPhone])
+  @@index([schoolId, parentPhone])
+  @@index([parentPhoneHash])
 }
 
 model Bursary {
   id            Int       @id @default(autoincrement())
   studentId     Int       @unique
-  type          String    // 'full', 'partial', 'scholarship', 'staff_child', 'other'
+  type          String
   description   String?
-  discountType  String    // 'percentage' or 'fixed'
+  discountType  String
   discountValue Float
   approvedBy    String?
   startDate     DateTime  @default(now())
@@ -142,6 +160,8 @@ model Bursary {
   active        Boolean   @default(true)
   createdAt     DateTime  @default(now())
   student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([active])
 }
 
 model FeeCategory {
@@ -150,6 +170,8 @@ model FeeCategory {
   name      String
   amount    Float
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
 }
 
 model Payment {
@@ -168,6 +190,13 @@ model Payment {
   student     Student? @relation(fields: [studentId], references: [id])
   term        Term?    @relation(fields: [termId], references: [id])
   school      School?  @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([mpesaRef])
+  @@index([schoolId, matched])
+  @@index([paidAt])
+  @@index([source])
 }
 
 model PasswordReset {
@@ -214,6 +243,9 @@ model Invoice {
   school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, term])
+  @@index([schoolId])
+  @@index([schoolId, status])
+  @@index([status])
 }
 
 model AuditLog {
@@ -224,6 +256,10 @@ model AuditLog {
   details   String?
   ipAddress String?
   createdAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Contract {
@@ -247,6 +283,8 @@ model ReminderSchedule {
   lastSentAt   DateTime?
   createdAt    DateTime  @default(now())
   school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([enabled])
 }
 
 model PlatformSettings {
@@ -280,19 +318,22 @@ model AdminAnnouncement {
 }
 
 model FeeDiscount {
-  id               Int               @id @default(autoincrement())
-  schoolId         Int
-  name             String
-  description      String?
-  discountType     String            // 'percentage' or 'fixed'
-  discountValue    Float
-  applicableTo     String            @default("individual")
-  className        String?
-  active           Boolean           @default(true)
-  isSiblingDiscount Boolean          @default(false)
-  createdAt        DateTime          @default(now())
-  school           School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  studentDiscounts StudentDiscount[]
+  id                Int               @id @default(autoincrement())
+  schoolId          Int
+  name              String
+  description       String?
+  discountType      String
+  discountValue     Float
+  applicableTo      String            @default("individual")
+  className         String?
+  active            Boolean           @default(true)
+  isSiblingDiscount Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  school            School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentDiscounts  StudentDiscount[]
+
+  @@index([schoolId])
+  @@index([active])
 }
 
 model StudentDiscount {
@@ -305,4 +346,6 @@ model StudentDiscount {
   discount   FeeDiscount @relation(fields: [discountId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, discountId])
+  @@index([studentId])
+  @@index([discountId])
 }

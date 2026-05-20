@@ -46,7 +46,7 @@ const jsonLd = {
 
 export default function Home() {
   return (
-    <div style={{fontFamily: 'Arial, sans-serif', background: '#fff', color: '#0f172a', overflowX: 'hidden'}}>
+    <main style={{fontFamily: 'Arial, sans-serif', background: '#fff', color: '#0f172a', overflowX: 'hidden'}}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <style>{`
         @media (max-width: 768px) {
@@ -224,6 +224,6 @@ export default function Home() {
         </p>
       </div>
 
-    </div>
+    </main>
   )
 }
