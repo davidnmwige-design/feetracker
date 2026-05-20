@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import LogoutButton from '@/components/LogoutButton'
@@ -76,11 +76,11 @@ export default function AppNav() {
         {logoUrl ? (
           <>
             <img src={logoUrl} alt="School logo" style={{maxHeight: '32px', maxWidth: '100px', objectFit: 'contain'}} />
-            <span style={{fontSize: '9px', color: '#94a3b8', letterSpacing: '0.3px'}}>Powered by Elimu Pay</span>
+            <span style={{fontSize: '9px', color: 'var(--ep-text-tertiary)', letterSpacing: '0.3px'}}>Powered by Elimu Pay</span>
           </>
         ) : (
           <span style={{fontSize: '16px', fontWeight: 700, fontFamily: 'Georgia, serif'}}>
-            <span style={{color: '#0a1f4e'}}>Elimu</span><span style={{color: '#8d7022'}}> Pay</span>
+            <span style={{color: 'var(--ep-text-primary)'}}>Elimu</span><span style={{color: '#8d7022'}}> Pay</span>
           </span>
         )}
       </Link>
@@ -98,7 +98,7 @@ export default function AppNav() {
         {visibleLinks.map(({ href, label }) => (
           <Link key={href} href={href} style={{
             fontSize: '13px',
-            color: pathname === href ? '#0a1f4e' : '#64748b',
+            color: pathname === href ? 'var(--ep-text-primary)' : 'var(--ep-text-secondary)',
             fontWeight: pathname === href ? 700 : 400,
             textDecoration: 'none',
             whiteSpace: 'nowrap',
@@ -111,8 +111,8 @@ export default function AppNav() {
 
         {showRoleBadge && (
           <span style={{
-            fontSize: '10px', fontWeight: 600, color: '#64748b',
-            background: '#f1f5f9', border: '1px solid #e2e8f0',
+            fontSize: '10px', fontWeight: 600, color: 'var(--ep-text-secondary)',
+            background: 'var(--ep-bg-tertiary)', border: '1px solid var(--ep-border)',
             padding: '2px 8px', borderRadius: '999px', whiteSpace: 'nowrap', flexShrink: 0,
           }}>
             {ROLE_LABELS[role] ?? role}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 
 interface HealthData {
@@ -39,7 +39,7 @@ export default function StatusPage() {
   const statusBg = loading ? '#f1f5f9' : isHealthy ? '#e1f5ee' : '#fcebeb'
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f9fc', fontFamily: 'Arial, sans-serif', padding: '48px 16px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--ep-bg-secondary)', fontFamily: 'Arial, sans-serif', padding: '48px 16px' }}>
       <div style={{ maxWidth: '560px', margin: '0 auto' }}>
         <div style={{ background: '#0a1f4e', padding: '28px 32px', borderRadius: '10px 10px 0 0' }}>
           <h1 style={{ color: '#fff', fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0 }}>
@@ -48,7 +48,7 @@ export default function StatusPage() {
           <p style={{ color: '#94a3c8', fontSize: '13px', margin: '4px 0 0' }}>System Status</p>
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', padding: '28px 32px' }}>
+        <div style={{ background: 'var(--ep-card-bg)', border: '1px solid var(--ep-border)', padding: '28px 32px' }}>
           <div style={{ background: statusBg, border: `1px solid ${statusColor}30`, borderRadius: '8px', padding: '16px 20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
             <div>
@@ -56,7 +56,7 @@ export default function StatusPage() {
                 {loading ? 'Checking...' : isHealthy ? 'All systems operational' : 'Service disruption detected'}
               </p>
               {lastChecked && (
-                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>
+                <p style={{ fontSize: '12px', color: 'var(--ep-text-tertiary)', margin: '2px 0 0' }}>
                   Last checked: {lastChecked.toLocaleTimeString()}
                 </p>
               )}
@@ -72,8 +72,8 @@ export default function StatusPage() {
                 { label: 'Version', value: health.version || '—', ok: true },
               ].map(row => (
                 <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-                  <span style={{ fontSize: '13px', color: '#64748b' }}>{row.label}</span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: row.ok ? '#0f172a' : '#e24b4a' }}>{row.value}</span>
+                  <span style={{ fontSize: '13px', color: 'var(--ep-text-secondary)' }}>{row.label}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: row.ok ? 'var(--ep-text-primary)' : '#e24b4a' }}>{row.value}</span>
                 </div>
               ))}
             </div>
@@ -88,8 +88,8 @@ export default function StatusPage() {
           </button>
         </div>
 
-        <div style={{ background: '#f8f9fc', border: '1px solid #e2e8f0', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px 32px', textAlign: 'center' }}>
-          <p style={{ color: '#94a3b8', fontSize: '11px', margin: 0 }}>
+        <div style={{ background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px 32px', textAlign: 'center' }}>
+          <p style={{ color: 'var(--ep-text-tertiary)', fontSize: '11px', margin: 0 }}>
             Elimu Pay · <a href="mailto:support@elimupay.co.ke" style={{ color: '#8d7022' }}>support@elimupay.co.ke</a>
           </p>
         </div>

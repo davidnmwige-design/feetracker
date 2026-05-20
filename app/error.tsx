@@ -13,13 +13,13 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#f8f9fc',
+      background: 'var(--ep-bg-secondary)',
       fontFamily: 'Arial, sans-serif',
       padding: '16px',
     }}>
       <div style={{
-        background: '#fff',
-        border: '1px solid #e2e8f0',
+        background: 'var(--ep-card-bg)',
+        border: '1px solid var(--ep-border)',
         borderRadius: '12px',
         padding: '40px',
         maxWidth: '480px',
@@ -29,7 +29,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <h2 style={{ color: '#0a1f4e', marginBottom: '12px', fontSize: '20px' }}>
           Something went wrong
         </h2>
-        <p style={{ color: '#64748b', marginBottom: '24px', fontSize: '14px', lineHeight: 1.6 }}>
+        <p style={{ color: 'var(--ep-text-secondary)', marginBottom: '24px', fontSize: '14px', lineHeight: 1.6 }}>
           We have been notified and are looking into it.
           Please try again or contact support if the problem persists.
         </p>

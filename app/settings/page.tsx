@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -820,20 +820,20 @@ export default function Settings() {
 
       <div className="set-content" style={{padding: '24px 32px', maxWidth: '640px'}}>
         {loading ? (
-          <div style={{textAlign: 'center', color: '#94a3b8', padding: '48px'}}>Loading...</div>
+          <div style={{textAlign: 'center', color: 'var(--ep-text-tertiary)', padding: '48px'}}>Loading...</div>
         ) : (
           <>
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px'}}>
-                <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0}}>School details</h2>
+                <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>School details</h2>
                 {!editingSchool && (
                   <button onClick={startEditSchool}
-                    style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+                    style={{background: '#c8a84b', color: 'var(--ep-text-primary)', border: 'none', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
                     Edit
                   </button>
                 )}
               </div>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>Your school information</p>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>Your school information</p>
 
               {schoolSaveSuccess && (
                 <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', color: '#166534', fontSize: '13px', padding: '10px 12px', borderRadius: '6px', marginBottom: '14px'}}>
@@ -853,8 +853,8 @@ export default function Settings() {
                     {label: 'Plan', value: `${currentPlanName} (${studentCount} students)`},
                   ].map((row, i, arr) => (
                     <div key={row.label} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none'}}>
-                      <span style={{fontSize: '13px', color: '#64748b'}}>{row.label}</span>
-                      <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', textAlign: 'right', maxWidth: '60%'}}>{row.value}</span>
+                      <span style={{fontSize: '13px', color: 'var(--ep-text-secondary)'}}>{row.label}</span>
+                      <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)', textAlign: 'right', maxWidth: '60%'}}>{row.value}</span>
                     </div>
                   ))}
                 </div>
@@ -873,34 +873,34 @@ export default function Settings() {
                     {label: 'School email address (reply-to)', key: 'replyToEmail', type: 'email', placeholder: 'e.g. info@stmarys.ac.ke'},
                   ] as {label: string; key: keyof typeof editSchool; type: string; placeholder: string}[]).map(field => (
                     <div key={field.key}>
-                      <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '5px'}}>{field.label}</label>
+                      <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '5px'}}>{field.label}</label>
                       <input
                         type={field.type}
                         value={editSchool[field.key]}
                         onChange={e => setEditSchool(prev => ({...prev, [field.key]: e.target.value}))}
                         placeholder={field.placeholder}
-                        style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
+                        style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
                       />
                     </div>
                   ))}
                   <div>
-                    <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '5px'}}>Current term</label>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '5px'}}>Current term</label>
                     <select
                       value={editSchool.currentTerm}
                       onChange={e => setEditSchool(prev => ({...prev, currentTerm: e.target.value}))}
-                      style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: '#fff', boxSizing: 'border-box' as const}}
+                      style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: 'var(--ep-card-bg)', boxSizing: 'border-box' as const}}
                     >
                       {TERMS.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '5px'}}>Email signature</label>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '5px'}}>Email signature</label>
                     <textarea
                       value={editSchool.emailSignature}
                       onChange={e => setEditSchool(prev => ({...prev, emailSignature: e.target.value}))}
                       placeholder="e.g. Bursary Office | St. Mary's Academy | Tel: 0712 345 678"
                       rows={2}
-                      style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', resize: 'vertical' as const, boxSizing: 'border-box' as const}}
+                      style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', resize: 'vertical' as const, boxSizing: 'border-box' as const}}
                     />
                   </div>
                   <div style={{display: 'flex', gap: '8px', paddingTop: '4px'}}>
@@ -909,7 +909,7 @@ export default function Settings() {
                       {schoolSaving ? 'Saving…' : 'Save changes'}
                     </button>
                     <button onClick={() => { setEditingSchool(false); setSchoolSaveError('') }}
-                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      style={{background: 'none', border: '1px solid var(--ep-border)', color: 'var(--ep-text-secondary)', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
                       Cancel
                     </button>
                   </div>
@@ -918,15 +918,15 @@ export default function Settings() {
             </div>
 
             {/* Payment settings */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Payment settings</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Payment settings</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 Tell parents how to pay when sending invoices and reminders
               </p>
-              <label style={{fontSize: '13px', color: '#0f172a', fontWeight: 600, display: 'block', marginBottom: '4px'}}>
+              <label style={{fontSize: '13px', color: 'var(--ep-text-primary)', fontWeight: 600, display: 'block', marginBottom: '4px'}}>
                 Payment Account Number Format
               </label>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '8px'}}>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '8px'}}>
                 e.g. "ADM followed by your admission number" or "Your child's admission number e.g. ADM1234"
               </p>
               <div style={{display: 'flex', gap: '10px'}}>
@@ -936,7 +936,7 @@ export default function Settings() {
                   onChange={e => setAcctFmt(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') saveAcctFmt() }}
                   placeholder="Your child's admission number e.g. ADM1234"
-                  style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none'}}
+                  style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none'}}
                 />
                 <button
                   onClick={saveAcctFmt}
@@ -954,9 +954,9 @@ export default function Settings() {
             </div>
 
             {/* WhatsApp number */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>School WhatsApp number</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>School WhatsApp number</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 Your school's WhatsApp number used to send reminders and invoices to parents. Shown to staff on reminder pages.
               </p>
               <div style={{display: 'flex', gap: '10px'}}>
@@ -966,7 +966,7 @@ export default function Settings() {
                   onChange={e => setWhatsappNumber(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') saveWhatsapp() }}
                   placeholder="e.g. 0722000000"
-                  style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none'}}
+                  style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none'}}
                 />
                 <button
                   onClick={saveWhatsapp}
@@ -979,31 +979,31 @@ export default function Settings() {
             </div>
 
             {/* Late payment penalty */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Late payment penalty</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Late payment penalty</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 Automatically add a penalty to students who haven't paid by a specified date each month.
               </p>
               <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
                 <label style={{display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer'}}>
                   <input type="checkbox" checked={penaltyEnabled} onChange={e => setPenaltyEnabled(e.target.checked)} style={{accentColor: '#0a1f4e', width: '16px', height: '16px'}} />
-                  <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>Enable late payment penalties</span>
+                  <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>Enable late payment penalties</span>
                 </label>
                 {penaltyEnabled && (
                   <>
                     <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap' as const}}>
-                      <label style={{display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: '#0f172a'}}>
+                      <label style={{display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: 'var(--ep-text-primary)'}}>
                         <input type="radio" name="penaltyType" value="fixed" checked={penaltyType === 'fixed'} onChange={() => setPenaltyType('fixed')} style={{accentColor: '#0a1f4e'}} />
                         Fixed amount (KES)
                       </label>
-                      <label style={{display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: '#0f172a'}}>
+                      <label style={{display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: 'var(--ep-text-primary)'}}>
                         <input type="radio" name="penaltyType" value="percentage" checked={penaltyType === 'percentage'} onChange={() => setPenaltyType('percentage')} style={{accentColor: '#0a1f4e'}} />
                         Percentage of balance (%)
                       </label>
                     </div>
                     <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap' as const}}>
                       <div style={{flex: 1, minWidth: '140px'}}>
-                        <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>
+                        <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '4px'}}>
                           {penaltyType === 'fixed' ? 'Penalty amount (KES)' : 'Penalty percentage (%)'}
                         </label>
                         <input
@@ -1011,11 +1011,11 @@ export default function Settings() {
                           min="0"
                           value={penaltyAmount}
                           onChange={e => setPenaltyAmount(Number(e.target.value))}
-                          style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
+                          style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
                         />
                       </div>
                       <div style={{flex: 1, minWidth: '140px'}}>
-                        <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>Penalty applies after day</label>
+                        <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '4px'}}>Penalty applies after day</label>
                         <input
                           type="number"
                           min="1"
@@ -1023,9 +1023,9 @@ export default function Settings() {
                           value={penaltyDueDate}
                           onChange={e => setPenaltyDueDate(Number(e.target.value))}
                           placeholder="e.g. 15"
-                          style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
+                          style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
                         />
-                        <p style={{fontSize: '11px', color: '#94a3b8', margin: '4px 0 0'}}>Penalty applies after the {penaltyDueDate}th of each month</p>
+                        <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', margin: '4px 0 0'}}>Penalty applies after the {penaltyDueDate}th of each month</p>
                       </div>
                     </div>
                   </>
@@ -1041,34 +1041,34 @@ export default function Settings() {
             </div>
 
             {/* Email settings */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Email Settings</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>Control how emails appear to parents</p>
-              <div style={{background: '#f0f4f9', border: '1px solid #d4ddf0', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#475569'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Email Settings</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>Control how emails appear to parents</p>
+              <div style={{background: 'var(--ep-bg-tertiary)', border: '1px solid #d4ddf0', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>
                 <strong>From:</strong> {school?.name || 'Your school'} via Elimu Pay
                 {replyToEmail && <><br /><strong>Reply-To:</strong> {replyToEmail}</>}
               </div>
               <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
                 <div>
-                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>School email address (reply-to)</label>
-                  <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 6px'}}>Parents will see this as the reply-to address</p>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>School email address (reply-to)</label>
+                  <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', margin: '0 0 6px'}}>Parents will see this as the reply-to address</p>
                   <input
                     type="email"
                     value={replyToEmail}
                     onChange={e => setReplyToEmail(e.target.value)}
                     placeholder="e.g. info@stmarys.ac.ke"
-                    style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none', boxSizing: 'border-box'}}
+                    style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none', boxSizing: 'border-box'}}
                   />
                 </div>
                 <div>
-                  <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Email signature</label>
-                  <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 6px'}}>Appears at the bottom of all emails</p>
+                  <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>Email signature</label>
+                  <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', margin: '0 0 6px'}}>Appears at the bottom of all emails</p>
                   <textarea
                     value={emailSignature}
                     onChange={e => setEmailSignature(e.target.value)}
                     placeholder="e.g. Bursary Office | St. Mary's Academy | Tel: 0712 345 678"
                     rows={2}
-                    style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none', resize: 'vertical', boxSizing: 'border-box'}}
+                    style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none', resize: 'vertical', boxSizing: 'border-box'}}
                   />
                 </div>
                 <button
@@ -1087,32 +1087,32 @@ export default function Settings() {
             </div>
 
             {/* Your Plan */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Subscription</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>KES 200 per student per year</p>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Subscription</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>KES 200 per student per year</p>
 
               {/* Pricing breakdown */}
-              <div style={{background: '#f8f9fc', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px', fontSize: '13px'}}>
+              <div style={{background: 'var(--ep-bg-secondary)', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px', fontSize: '13px'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
-                  <span style={{color: '#64748b'}}>Students enrolled</span>
-                  <span style={{fontWeight: 700, color: '#0f172a'}}>{studentCount}</span>
+                  <span style={{color: 'var(--ep-text-secondary)'}}>Students enrolled</span>
+                  <span style={{fontWeight: 700, color: 'var(--ep-text-primary)'}}>{studentCount}</span>
                 </div>
                 <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
-                  <span style={{color: '#64748b'}}>Annual rate (KES 200 x {studentCount})</span>
-                  <span style={{fontWeight: 700, color: '#0f172a'}}>KES {annualTotal.toLocaleString()}/year</span>
+                  <span style={{color: 'var(--ep-text-secondary)'}}>Annual rate (KES 200 x {studentCount})</span>
+                  <span style={{fontWeight: 700, color: 'var(--ep-text-primary)'}}>KES {annualTotal.toLocaleString()}/year</span>
                 </div>
                 <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
-                  <span style={{color: '#64748b'}}>Plan tier</span>
-                  <span style={{fontWeight: 700, color: '#0a1f4e'}}>{currentPlanName}</span>
+                  <span style={{color: 'var(--ep-text-secondary)'}}>Plan tier</span>
+                  <span style={{fontWeight: 700, color: 'var(--ep-text-primary)'}}>{currentPlanName}</span>
                 </div>
-                <div style={{borderTop: '1px solid #e2e8f0', paddingTop: '8px', display: 'flex', justifyContent: 'space-between'}}>
-                  <span style={{color: '#64748b'}}>Setup fee (one-time)</span>
-                  <span style={{fontWeight: 700, color: '#0f172a'}}>KES {setupFee.toLocaleString()}</span>
+                <div style={{borderTop: '1px solid var(--ep-border)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between'}}>
+                  <span style={{color: 'var(--ep-text-secondary)'}}>Setup fee (one-time)</span>
+                  <span style={{fontWeight: 700, color: 'var(--ep-text-primary)'}}>KES {setupFee.toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Billing cycle selector */}
-              <p style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', marginBottom: '10px'}}>Billing cycle</p>
+              <p style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '10px'}}>Billing cycle</p>
               <div style={{display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap'}}>
                 {(['monthly', 'term', 'annual'] as const).map(c => {
                   const amt = getBillingAmount(studentCount, c)
@@ -1124,11 +1124,11 @@ export default function Settings() {
                       border: selectedCycle === c ? '2px solid #0a1f4e' : '1px solid #e2e8f0',
                       background: selectedCycle === c ? '#f0f4ff' : '#fff', cursor: 'pointer',
                     }}>
-                      <div style={{fontSize: '12px', fontWeight: 700, color: '#0f172a', textTransform: 'capitalize'}}>{c === 'term' ? 'Per Term' : c.charAt(0).toUpperCase() + c.slice(1)}</div>
-                      <div style={{fontSize: '15px', fontWeight: 700, color: '#0a1f4e', margin: '2px 0'}}>KES {amt.toLocaleString()}<span style={{fontSize: '11px', fontWeight: 400, color: '#94a3b8'}}>{suffix}</span></div>
+                      <div style={{fontSize: '12px', fontWeight: 700, color: 'var(--ep-text-primary)', textTransform: 'capitalize'}}>{c === 'term' ? 'Per Term' : c.charAt(0).toUpperCase() + c.slice(1)}</div>
+                      <div style={{fontSize: '15px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: '2px 0'}}>KES {amt.toLocaleString()}<span style={{fontSize: '11px', fontWeight: 400, color: 'var(--ep-text-tertiary)'}}>{suffix}</span></div>
                       {savings > 0
                         ? <div style={{fontSize: '10px', color: '#16a34a', fontWeight: 600}}>Save KES {savings.toLocaleString()}/year</div>
-                        : <div style={{fontSize: '10px', color: '#94a3b8'}}>No discount</div>
+                        : <div style={{fontSize: '10px', color: 'var(--ep-text-tertiary)'}}>No discount</div>
                       }
                     </button>
                   )
@@ -1150,14 +1150,14 @@ export default function Settings() {
               </button>
             </div>
 
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Start a new term</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Start a new term</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 This will archive the current term and start fresh. All students stay in the system but payments reset for the new term.
               </p>
               <div className="set-term-row" style={{display: 'flex', gap: '10px'}}>
                 <select
-                  style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', color: '#0f172a', background: '#fff', outline: 'none'}}
+                  style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', color: 'var(--ep-text-primary)', background: 'var(--ep-card-bg)', outline: 'none'}}
                   value={selectedTerm}
                   onChange={e => setSelectedTerm(e.target.value)}
                 >
@@ -1180,16 +1180,16 @@ export default function Settings() {
               </div>
             </div>
 
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Subscription invoice</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Subscription invoice</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 Generate your Elimu Pay subscription invoice for {new Date().toLocaleString('en-KE', { month: 'long', year: 'numeric' })}.
                 Plan: <strong>{currentPlanName}</strong> — KES {billingAmount.toLocaleString()} {selectedCycle === 'monthly' ? '/month' : selectedCycle === 'term' ? '/term' : '/year'}.
               </p>
               <div className="set-invoice-row" style={{display: 'flex', gap: '10px'}}>
                 <button
                   onClick={downloadInvoice}
-                  style={{flex: 1, background: '#c8a84b', color: '#0a1f4e', padding: '10px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer'}}
+                  style={{flex: 1, background: '#c8a84b', color: 'var(--ep-text-primary)', padding: '10px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer'}}
                 >
                   Download Invoice PDF
                 </button>
@@ -1203,9 +1203,9 @@ export default function Settings() {
             </div>
 
             {/* Export data */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Export your data</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Export your data</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 Download all your school data — students, payments, and invoices — as an Excel file.
               </p>
               <button
@@ -1218,9 +1218,9 @@ export default function Settings() {
             </div>
 
             {/* Two-Factor Authentication */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Two-Factor Authentication</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Two-Factor Authentication</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 Two-Factor Authentication adds an extra layer of security. When enabled, you will receive a verification code by email each time you log in.
               </p>
               {twoFASuccess && <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', color: '#166534', fontSize: '13px', padding: '10px 12px', borderRadius: '6px', marginBottom: '12px'}}>{twoFASuccess}</div>}
@@ -1230,9 +1230,9 @@ export default function Settings() {
                 <div>
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px'}}>
                     <span style={{background: '#e1f5ee', color: '#166534', fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px'}}>Enabled</span>
-                    <span style={{fontSize: '13px', color: '#0f172a', fontWeight: 600}}>Two-Factor Authentication is active</span>
+                    <span style={{fontSize: '13px', color: 'var(--ep-text-primary)', fontWeight: 600}}>Two-Factor Authentication is active</span>
                   </div>
-                  <p style={{fontSize: '13px', color: '#64748b', marginBottom: '16px'}}>
+                  <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', marginBottom: '16px'}}>
                     Verification codes are sent to {maskEmail(userEmail)}
                   </p>
                   {!showDisableForm ? (
@@ -1242,19 +1242,19 @@ export default function Settings() {
                     </button>
                   ) : (
                     <div>
-                      <p style={{fontSize: '12px', color: '#64748b', marginBottom: '8px'}}>Enter your current password to disable 2FA:</p>
+                      <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', marginBottom: '8px'}}>Enter your current password to disable 2FA:</p>
                       {twoFAError && <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '12px', padding: '8px 12px', borderRadius: '6px', marginBottom: '8px'}}>{twoFAError}</div>}
                       <div style={{display: 'flex', gap: '8px'}}>
                         <input type="password" value={twoFADisablePass} onChange={e => setTwoFADisablePass(e.target.value)}
                           placeholder="Current password"
                           onKeyDown={e => e.key === 'Enter' && disable2FA()}
-                          style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none'}} />
+                          style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none'}} />
                         <button onClick={disable2FA} disabled={!twoFADisablePass.trim() || twoFADisabling}
                           style={{background: twoFADisabling ? '#94a3b8' : '#dc2626', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: twoFADisabling ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const}}>
                           {twoFADisabling ? 'Disabling…' : 'Confirm disable'}
                         </button>
                         <button onClick={() => { setShowDisableForm(false); setTwoFADisablePass(''); setTwoFAError('') }}
-                          style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                          style={{background: 'none', border: '1px solid var(--ep-border)', color: 'var(--ep-text-secondary)', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
                           Cancel
                         </button>
                       </div>
@@ -1263,7 +1263,7 @@ export default function Settings() {
                 </div>
               ) : !twoFACodeSent ? (
                 <div>
-                  <p style={{fontSize: '13px', color: '#64748b', marginBottom: '12px'}}>Two-Factor Authentication is not enabled.</p>
+                  <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', marginBottom: '12px'}}>Two-Factor Authentication is not enabled.</p>
                   <button onClick={start2FAEmailSetup} disabled={twoFALoading}
                     style={{background: twoFALoading ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '9px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: twoFALoading ? 'not-allowed' : 'pointer'}}>
                     {twoFALoading ? 'Sending code…' : 'Enable 2FA'}
@@ -1271,7 +1271,7 @@ export default function Settings() {
                 </div>
               ) : (
                 <div>
-                  <p style={{fontSize: '13px', color: '#0f172a', marginBottom: '12px'}}>
+                  <p style={{fontSize: '13px', color: 'var(--ep-text-primary)', marginBottom: '12px'}}>
                     We sent a 6-digit code to <strong>{twoFAMaskedEmail}</strong>. Enter it below to enable 2FA.
                   </p>
                   {twoFAError && <div style={{background: '#fcebeb', border: '1px solid #fecaca', color: '#a32d2d', fontSize: '12px', padding: '8px 12px', borderRadius: '6px', marginBottom: '8px'}}>{twoFAError}</div>}
@@ -1286,7 +1286,7 @@ export default function Settings() {
                       {twoFALoading ? 'Verifying…' : 'Verify and enable'}
                     </button>
                     <button onClick={() => { setTwoFACodeSent(false); setTwoFACode(''); setTwoFAError('') }}
-                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '9px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      style={{background: 'none', border: '1px solid var(--ep-border)', color: 'var(--ep-text-secondary)', padding: '9px 12px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
                       Cancel
                     </button>
                   </div>
@@ -1295,9 +1295,9 @@ export default function Settings() {
             </div>
 
             {/* Real-time MPESA Notifications */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Real-time MPESA Notifications</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Real-time MPESA Notifications</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 Receive instant payment notifications via the Safaricom Daraja API. Payments are recorded automatically the moment a parent pays.
               </p>
 
@@ -1306,14 +1306,14 @@ export default function Settings() {
                   No paybill number configured. Add your MPESA Paybill number to school settings first.
                 </div>
               ) : !process.env.NEXT_PUBLIC_DARAJA_ENABLED && typeof window !== 'undefined' ? (
-                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '14px', fontSize: '13px', color: '#64748b'}}>
+                <div style={{background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '14px', fontSize: '13px', color: 'var(--ep-text-secondary)'}}>
                   Contact Elimu Pay support to enable real-time MPESA notifications. When enabled, payments will be recorded automatically the moment a parent pays.
                 </div>
               ) : (
                 <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
                   <div style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9'}}>
-                    <span style={{fontSize: '13px', color: '#64748b'}}>Paybill number</span>
-                    <span style={{fontSize: '13px', fontWeight: 700, color: '#0f172a'}}>{school?.paybill}</span>
+                    <span style={{fontSize: '13px', color: 'var(--ep-text-secondary)'}}>Paybill number</span>
+                    <span style={{fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)'}}>{school?.paybill}</span>
                   </div>
 
                   {darajaResult?.success ? (
@@ -1331,7 +1331,7 @@ export default function Settings() {
                     {darajaRegistering ? 'Activating…' : darajaResult?.success ? 'Re-register URLs' : 'Activate real-time notifications'}
                   </button>
 
-                  <div style={{background: '#f0f4f9', border: '1px solid #d4ddf0', borderRadius: '6px', padding: '12px 14px', fontSize: '12px', color: '#475569'}}>
+                  <div style={{background: 'var(--ep-bg-tertiary)', border: '1px solid #d4ddf0', borderRadius: '6px', padding: '12px 14px', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>
                     <strong>Instructions for parents:</strong> Tell parents to use their child&apos;s admission number as the account number when paying.<br />
                     Example: Paybill <strong>{school?.paybill}</strong>, Account: <strong>ADM1234</strong>
                   </div>
@@ -1340,9 +1340,9 @@ export default function Settings() {
             </div>
 
             {/* Session security */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Session security</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Session security</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 Sign out of all devices immediately. Any browser or device with an active session will be logged out.
               </p>
               <button
@@ -1355,11 +1355,11 @@ export default function Settings() {
             </div>
 
             {/* Academic Year */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
                 <div>
-                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Academic Year</h2>
-                  <p style={{fontSize: '12px', color: '#94a3b8', margin: '0 0 16px'}}>Track term dates and set the active academic year</p>
+                  <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Academic Year</h2>
+                  <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', margin: '0 0 16px'}}>Track term dates and set the active academic year</p>
                 </div>
                 {!showAcYearForm && (
                   <button onClick={() => { setShowAcYearForm(true); setAcYearError('') }}
@@ -1377,14 +1377,14 @@ export default function Settings() {
               )}
 
               {showAcYearForm && (
-                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
-                  <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '12px'}}>New academic year</p>
+                <div style={{background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
+                  <p style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '12px'}}>New academic year</p>
                   <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                     <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
                       <div style={{flex: 1}}>
-                        <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>Year</label>
+                        <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '4px'}}>Year</label>
                         <input type="number" value={acYearForm.year} onChange={e => setAcYearForm(f => ({...f, year: parseInt(e.target.value)}))}
-                          style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                          style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
                       </div>
                       <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', marginTop: '14px'}}>
                         <input type="checkbox" checked={acYearForm.isActive} onChange={e => setAcYearForm(f => ({...f, isActive: e.target.checked}))} style={{accentColor: '#0a1f4e'}} />
@@ -1394,14 +1394,14 @@ export default function Settings() {
                     {(['term1', 'term2', 'term3'] as const).map(t => (
                       <div key={t} style={{display: 'flex', gap: '10px'}}>
                         <div style={{flex: 1}}>
-                          <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>{t === 'term1' ? 'Term 1' : t === 'term2' ? 'Term 2' : 'Term 3'} Start</label>
+                          <label style={{fontSize: '12px', color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '4px'}}>{t === 'term1' ? 'Term 1' : t === 'term2' ? 'Term 2' : 'Term 3'} Start</label>
                           <input type="date" value={(acYearForm as any)[t + 'Start']} onChange={e => setAcYearForm(f => ({...f, [t + 'Start']: e.target.value}))}
-                            style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                            style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
                         </div>
                         <div style={{flex: 1}}>
-                          <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>End</label>
+                          <label style={{fontSize: '12px', color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '4px'}}>End</label>
                           <input type="date" value={(acYearForm as any)[t + 'End']} onChange={e => setAcYearForm(f => ({...f, [t + 'End']: e.target.value}))}
-                            style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                            style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
                         </div>
                       </div>
                     ))}
@@ -1413,25 +1413,25 @@ export default function Settings() {
                       {acYearSaving ? 'Saving...' : 'Save'}
                     </button>
                     <button onClick={() => setShowAcYearForm(false)}
-                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      style={{background: 'none', border: '1px solid var(--ep-border)', color: 'var(--ep-text-secondary)', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
                       Cancel
                     </button>
                   </div>
                 </div>
               )}
 
-              {acYearLoading ? <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading...</p> : academicYears.length === 0 ? (
-                <p style={{fontSize: '13px', color: '#94a3b8'}}>No academic years configured yet.</p>
+              {acYearLoading ? <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>Loading...</p> : academicYears.length === 0 ? (
+                <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>No academic years configured yet.</p>
               ) : (
                 <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
                   {academicYears.map(y => (
-                    <div key={y.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 14px', gap: '8px'}}>
+                    <div key={y.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '10px 14px', gap: '8px'}}>
                       <div>
                         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                          <span style={{fontSize: '14px', fontWeight: 700, color: '#0f172a'}}>{y.year}</span>
-                          {y.isActive && <span style={{fontSize: '10px', background: '#c8a84b', color: '#0a1f4e', padding: '2px 8px', borderRadius: '999px', fontWeight: 700}}>Active</span>}
+                          <span style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)'}}>{y.year}</span>
+                          {y.isActive && <span style={{fontSize: '10px', background: '#c8a84b', color: 'var(--ep-text-primary)', padding: '2px 8px', borderRadius: '999px', fontWeight: 700}}>Active</span>}
                         </div>
-                        {y.term1Start && <p style={{fontSize: '11px', color: '#64748b', margin: '2px 0 0'}}>T1: {new Date(y.term1Start).toLocaleDateString('en-KE', {month:'short',day:'numeric'})} – {y.term1End ? new Date(y.term1End).toLocaleDateString('en-KE', {month:'short',day:'numeric'}) : '?'}</p>}
+                        {y.term1Start && <p style={{fontSize: '11px', color: 'var(--ep-text-secondary)', margin: '2px 0 0'}}>T1: {new Date(y.term1Start).toLocaleDateString('en-KE', {month:'short',day:'numeric'})} – {y.term1End ? new Date(y.term1End).toLocaleDateString('en-KE', {month:'short',day:'numeric'}) : '?'}</p>}
                       </div>
                       <div style={{display: 'flex', gap: '6px'}}>
                         {!y.isActive && <button onClick={() => activateAcademicYear(y.id)}
@@ -1446,11 +1446,11 @@ export default function Settings() {
             </div>
 
             {/* Exam Fees */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
                 <div>
-                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Exam Fees</h2>
-                  <p style={{fontSize: '12px', color: '#94a3b8', margin: '0 0 16px'}}>Track KCSE, KCPE, and mock exam fees separately from regular school fees</p>
+                  <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Exam Fees</h2>
+                  <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', margin: '0 0 16px'}}>Track KCSE, KCPE, and mock exam fees separately from regular school fees</p>
                 </div>
                 {!showExamFeeForm && (
                   <button onClick={() => { setShowExamFeeForm(true); setExamFeeError('') }}
@@ -1461,14 +1461,14 @@ export default function Settings() {
               </div>
 
               {showExamFeeForm && (
-                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
-                  <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '12px'}}>New exam fee</p>
+                <div style={{background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
+                  <p style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '12px'}}>New exam fee</p>
                   <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                     <input type="text" placeholder="Name (e.g. KCSE Registration 2026)" value={examFeeForm.name} onChange={e => setExamFeeForm(f => ({...f, name: e.target.value}))}
-                      style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}} />
+                      style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}} />
                     <div style={{display: 'flex', gap: '10px'}}>
                       <select value={examFeeForm.examType} onChange={e => setExamFeeForm(f => ({...f, examType: e.target.value}))}
-                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                        style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', background: 'var(--ep-card-bg)', outline: 'none'}}>
                         <option value="KCSE">KCSE</option>
                         <option value="KCPE">KCPE</option>
                         <option value="Mock Exam">Mock Exam</option>
@@ -1476,15 +1476,15 @@ export default function Settings() {
                         <option value="Other">Other</option>
                       </select>
                       <input type="number" placeholder="Amount (KES)" value={examFeeForm.amount} onChange={e => setExamFeeForm(f => ({...f, amount: e.target.value}))}
-                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                        style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
                     </div>
                     <div style={{display: 'flex', gap: '10px'}}>
                       <input type="text" placeholder="Target class (e.g. Form 4)" value={examFeeForm.targetClass} onChange={e => setExamFeeForm(f => ({...f, targetClass: e.target.value}))}
-                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                        style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
                       <div style={{flex: 1}}>
-                        <label style={{fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px'}}>Due date (optional)</label>
+                        <label style={{fontSize: '11px', color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '4px'}}>Due date (optional)</label>
                         <input type="date" value={examFeeForm.dueDate} onChange={e => setExamFeeForm(f => ({...f, dueDate: e.target.value}))}
-                          style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                          style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
                       </div>
                     </div>
                   </div>
@@ -1495,29 +1495,29 @@ export default function Settings() {
                       {examFeeSaving ? 'Saving...' : 'Save'}
                     </button>
                     <button onClick={() => setShowExamFeeForm(false)}
-                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      style={{background: 'none', border: '1px solid var(--ep-border)', color: 'var(--ep-text-secondary)', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
                       Cancel
                     </button>
                   </div>
                 </div>
               )}
 
-              {examFeeLoading ? <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading...</p> : examFees.length === 0 ? (
-                <p style={{fontSize: '13px', color: '#94a3b8'}}>No exam fees configured yet.</p>
+              {examFeeLoading ? <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>Loading...</p> : examFees.length === 0 ? (
+                <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>No exam fees configured yet.</p>
               ) : (
                 <div style={{border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden'}}>
                   {examFees.map((f, i) => (
                     <div key={f.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < examFees.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '8px'}}>
                       <div style={{flex: 1, minWidth: 0}}>
-                        <div style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{f.name}</div>
-                        <p style={{fontSize: '12px', color: '#64748b', margin: '2px 0 0'}}>
+                        <div style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>{f.name}</div>
+                        <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', margin: '2px 0 0'}}>
                           {f.examType} · KES {f.amount.toLocaleString()} · {f.targetClass}
                           {f.dueDate ? ` · Due: ${new Date(f.dueDate).toLocaleDateString('en-KE')}` : ''}
                         </p>
                       </div>
                       <div style={{display: 'flex', gap: '6px', flexShrink: 0}}>
                         <button onClick={() => assignExamFeeToClass(f.id)} disabled={examFeeAssigning === f.id}
-                          style={{fontSize: '11px', color: '#0a1f4e', background: 'none', border: '1px solid #0a1f4e', padding: '3px 10px', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap'}}>
+                          style={{fontSize: '11px', color: 'var(--ep-text-primary)', background: 'none', border: '1px solid #0a1f4e', padding: '3px 10px', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap'}}>
                           {examFeeAssigning === f.id ? 'Assigning...' : 'Assign to class'}
                         </button>
                         <button onClick={() => deleteExamFee(f.id)}
@@ -1532,16 +1532,16 @@ export default function Settings() {
             </div>
 
             {/* School Branding */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>School Branding</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '20px'}}>Your logo and brand colour appear on certificates, invoices, and emails</p>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>School Branding</h2>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '20px'}}>Your logo and brand colour appear on certificates, invoices, and emails</p>
 
               {/* Logo */}
               <div style={{marginBottom: '20px'}}>
-                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '8px'}}>School logo</label>
+                <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '8px'}}>School logo</label>
                 {logoUrl ? (
                   <div style={{display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px'}}>
-                    <img src={logoUrl} alt="School logo" style={{maxHeight: '64px', maxWidth: '160px', objectFit: 'contain', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px'}} />
+                    <img src={logoUrl} alt="School logo" style={{maxHeight: '64px', maxWidth: '160px', objectFit: 'contain', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '4px'}} />
                     <button onClick={removeLogo} disabled={logoUploading}
                       style={{fontSize: '12px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer'}}>
                       Remove logo
@@ -1557,44 +1557,44 @@ export default function Settings() {
                   {logoUploading ? 'Uploading...' : 'Upload logo'}
                   <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={uploadLogo} style={{display: 'none'}} disabled={logoUploading} />
                 </label>
-                <p style={{fontSize: '11px', color: '#94a3b8', marginTop: '4px'}}>JPG, PNG, or WebP · Max 2MB</p>
+                <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', marginTop: '4px'}}>JPG, PNG, or WebP · Max 2MB</p>
               </div>
 
               {/* Brand colour */}
               <div style={{marginBottom: '20px'}}>
-                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '8px'}}>Brand accent colour</label>
+                <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '8px'}}>Brand accent colour</label>
                 <div style={{display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap'}}>
                   <input
                     type="color"
                     value={brandColor}
                     onChange={e => setBrandColor(e.target.value)}
-                    style={{width: '44px', height: '36px', padding: '2px', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', background: '#fff'}}
+                    style={{width: '44px', height: '36px', padding: '2px', border: '1px solid var(--ep-border)', borderRadius: '6px', cursor: 'pointer', background: 'var(--ep-card-bg)'}}
                   />
-                  <span style={{fontSize: '13px', fontFamily: 'monospace', color: '#0f172a'}}>{brandColor}</span>
+                  <span style={{fontSize: '13px', fontFamily: 'monospace', color: 'var(--ep-text-primary)'}}>{brandColor}</span>
                   <div style={{display: 'flex', gap: '6px', alignItems: 'center'}}>
                     <span style={{background: brandColor, color: '#fff', padding: '4px 10px', borderRadius: '5px', fontSize: '12px', fontWeight: 700}}>Button</span>
                     <span style={{background: brandColor, color: '#fff', padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 700}}>Badge</span>
                   </div>
-                  <button onClick={() => setBrandColor('#c8a84b')} style={{fontSize: '11px', color: '#64748b', background: 'none', border: '1px solid #e2e8f0', padding: '4px 10px', borderRadius: '5px', cursor: 'pointer'}}>
+                  <button onClick={() => setBrandColor('#c8a84b')} style={{fontSize: '11px', color: 'var(--ep-text-secondary)', background: 'none', border: '1px solid var(--ep-border)', padding: '4px 10px', borderRadius: '5px', cursor: 'pointer'}}>
                     Reset to default
                   </button>
                 </div>
-                <p style={{fontSize: '11px', color: '#94a3b8', marginTop: '4px'}}>This replaces the gold (#c8a84b) accent throughout your school's interface</p>
+                <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', marginTop: '4px'}}>This replaces the gold (#c8a84b) accent throughout your school's interface</p>
               </div>
 
               {/* School motto */}
               <div style={{marginBottom: '20px'}}>
-                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>School motto (optional)</label>
-                <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 6px'}}>Appears on fee clearance certificates</p>
+                <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>School motto (optional)</label>
+                <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', margin: '0 0 6px'}}>Appears on fee clearance certificates</p>
                 <input
                   type="text"
                   value={schoolMotto}
                   onChange={e => setSchoolMotto(e.target.value.slice(0, 120))}
                   placeholder="e.g. Excellence in Education"
                   maxLength={120}
-                  style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none', boxSizing: 'border-box'}}
+                  style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none', boxSizing: 'border-box'}}
                 />
-                <p style={{fontSize: '11px', color: '#94a3b8', marginTop: '2px'}}>{schoolMotto.length}/120</p>
+                <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', marginTop: '2px'}}>{schoolMotto.length}/120</p>
               </div>
 
               <button
@@ -1607,11 +1607,11 @@ export default function Settings() {
             </div>
 
             {/* Student Discounts */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
                 <div>
-                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Student Discounts</h2>
-                  <p style={{fontSize: '12px', color: '#94a3b8', margin: '0 0 16px'}}>Manage sibling, group, and individual discounts for your school</p>
+                  <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Student Discounts</h2>
+                  <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', margin: '0 0 16px'}}>Manage sibling, group, and individual discounts for your school</p>
                 </div>
                 {!showDiscountForm && (
                   <button onClick={() => { setShowDiscountForm(true); setDiscountError('') }}
@@ -1622,28 +1622,28 @@ export default function Settings() {
               </div>
 
               {showDiscountForm && (
-                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
-                  <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '12px'}}>New discount</p>
+                <div style={{background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
+                  <p style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '12px'}}>New discount</p>
                   <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                     <input
                       type="text"
                       placeholder="Discount name (e.g. Sibling discount, Staff child)"
                       value={discountForm.name}
                       onChange={e => setDiscountForm(f => ({...f, name: e.target.value}))}
-                      style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}}
+                      style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}}
                     />
                     <input
                       type="text"
                       placeholder="Description (optional)"
                       value={discountForm.description}
                       onChange={e => setDiscountForm(f => ({...f, description: e.target.value}))}
-                      style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}}
+                      style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}}
                     />
                     <div style={{display: 'flex', gap: '10px'}}>
                       <select
                         value={discountForm.discountType}
                         onChange={e => setDiscountForm(f => ({...f, discountType: e.target.value}))}
-                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}
+                        style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', background: 'var(--ep-card-bg)', outline: 'none'}}
                       >
                         <option value="percentage">Percentage (%)</option>
                         <option value="fixed">Fixed amount (KES)</option>
@@ -1654,10 +1654,10 @@ export default function Settings() {
                         placeholder={discountForm.discountType === 'percentage' ? 'e.g. 10' : 'e.g. 5000'}
                         value={discountForm.discountValue}
                         onChange={e => setDiscountForm(f => ({...f, discountValue: e.target.value}))}
-                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}}
+                        style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}}
                       />
                     </div>
-                    <label style={{display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#0f172a', cursor: 'pointer'}}>
+                    <label style={{display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--ep-text-primary)', cursor: 'pointer'}}>
                       <input type="checkbox" checked={discountForm.isSiblingDiscount} onChange={e => setDiscountForm(f => ({...f, isSiblingDiscount: e.target.checked}))} style={{accentColor: '#0a1f4e'}} />
                       This is a sibling discount
                     </label>
@@ -1669,7 +1669,7 @@ export default function Settings() {
                       {discountSaving ? 'Saving...' : 'Save discount'}
                     </button>
                     <button onClick={() => { setShowDiscountForm(false); setDiscountError('') }}
-                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      style={{background: 'none', border: '1px solid var(--ep-border)', color: 'var(--ep-text-secondary)', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
                       Cancel
                     </button>
                   </div>
@@ -1677,27 +1677,27 @@ export default function Settings() {
               )}
 
               {discountsLoading ? (
-                <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading...</p>
+                <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>Loading...</p>
               ) : discounts.length === 0 ? (
-                <p style={{fontSize: '13px', color: '#94a3b8'}}>No discounts configured yet.</p>
+                <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>No discounts configured yet.</p>
               ) : (
                 <div style={{border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden', marginBottom: '16px'}}>
                   {discounts.map((d, i) => (
                     <div key={d.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < discounts.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '8px'}}>
                       <div style={{flex: 1, minWidth: 0}}>
                         <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-                          <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{d.name}</span>
+                          <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>{d.name}</span>
                           {d.isSiblingDiscount && <span style={{fontSize: '10px', background: '#dbeafe', color: '#1e40af', padding: '1px 6px', borderRadius: '4px', fontWeight: 600}}>Sibling</span>}
-                          {!d.active && <span style={{fontSize: '10px', background: '#f1f5f9', color: '#94a3b8', padding: '1px 6px', borderRadius: '4px', fontWeight: 600}}>Inactive</span>}
+                          {!d.active && <span style={{fontSize: '10px', background: 'var(--ep-bg-tertiary)', color: 'var(--ep-text-tertiary)', padding: '1px 6px', borderRadius: '4px', fontWeight: 600}}>Inactive</span>}
                         </div>
-                        <p style={{fontSize: '12px', color: '#64748b', margin: '2px 0 0'}}>
+                        <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', margin: '2px 0 0'}}>
                           {d.discountType === 'percentage' ? `${d.discountValue}% off` : `KES ${d.discountValue.toLocaleString()} off`}
                           {d.description ? ` — ${d.description}` : ''}
                         </p>
                       </div>
                       <div style={{display: 'flex', gap: '6px', flexShrink: 0}}>
                         <button onClick={() => toggleDiscountActive(d.id, d.active)}
-                          style={{fontSize: '11px', color: d.active ? '#64748b' : '#0a7c3e', background: 'none', border: '1px solid #e2e8f0', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer'}}>
+                          style={{fontSize: '11px', color: d.active ? '#64748b' : '#0a7c3e', background: 'none', border: '1px solid var(--ep-border)', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer'}}>
                           {d.active ? 'Disable' : 'Enable'}
                         </button>
                         <button onClick={() => deleteDiscount(d.id)}
@@ -1712,8 +1712,8 @@ export default function Settings() {
 
               {/* Sibling discount detector */}
               <div style={{borderTop: '1px solid #f1f5f9', paddingTop: '16px', marginTop: '4px'}}>
-                <h3 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Sibling discount detector</h3>
-                <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '10px'}}>Find students who share a parent phone number and apply a sibling discount to the whole group.</p>
+                <h3 style={{fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Sibling discount detector</h3>
+                <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '10px'}}>Find students who share a parent phone number and apply a sibling discount to the whole group.</p>
                 <button onClick={detectSiblingGroups} disabled={detectingGroups}
                   style={{background: detectingGroups ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: detectingGroups ? 'not-allowed' : 'pointer', marginBottom: '12px'}}>
                   {detectingGroups ? 'Detecting...' : 'Detect sibling groups'}
@@ -1722,11 +1722,11 @@ export default function Settings() {
                   <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                     <p style={{fontSize: '12px', color: '#0a7c3e', fontWeight: 600}}>{siblingGroups.length} sibling group(s) found.</p>
                     {siblingGroups.map((group, gi) => (
-                      <div key={gi} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px 14px', background: '#f8f9fc'}}>
-                        <p style={{fontSize: '12px', color: '#64748b', marginBottom: '4px'}}>
+                      <div key={gi} style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '12px 14px', background: 'var(--ep-bg-secondary)'}}>
+                        <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', marginBottom: '4px'}}>
                           {group.students.length} students share parent phone <strong>{group.parentPhone}</strong>:
                         </p>
-                        <p style={{fontSize: '13px', color: '#0f172a', fontWeight: 600, marginBottom: '8px'}}>
+                        <p style={{fontSize: '13px', color: 'var(--ep-text-primary)', fontWeight: 600, marginBottom: '8px'}}>
                           {group.students.map((s: any) => s.name).join(', ')}
                         </p>
                         {siblingApplyResult[group.parentPhone] ? (
@@ -1736,7 +1736,7 @@ export default function Settings() {
                             <select
                               value={applyingSiblingDiscountId[group.parentPhone] || ''}
                               onChange={e => setApplyingSiblingDiscountId(prev => ({...prev, [group.parentPhone]: e.target.value}))}
-                              style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '6px 10px', fontSize: '12px', background: '#fff', outline: 'none'}}
+                              style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '6px 10px', fontSize: '12px', background: 'var(--ep-card-bg)', outline: 'none'}}
                             >
                               <option value="">Select discount...</option>
                               {discounts.filter(d => d.active).map((d: any) => (
@@ -1756,17 +1756,17 @@ export default function Settings() {
                   </div>
                 )}
                 {!detectingGroups && siblingGroups.length === 0 && (
-                  <p style={{fontSize: '12px', color: '#94a3b8'}}>Click the button above to detect sibling groups from parent phone numbers.</p>
+                  <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)'}}>Click the button above to detect sibling groups from parent phone numbers.</p>
                 )}
               </div>
             </div>
 
             {/* Team members */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px'}}>
                 <div>
-                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Team members</h2>
-                  <p style={{fontSize: '12px', color: '#94a3b8', margin: 0}}>Staff with access to this school account</p>
+                  <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Team members</h2>
+                  <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', margin: 0}}>Staff with access to this school account</p>
                 </div>
                 {!showInviteForm && (
                   <button
@@ -1785,20 +1785,20 @@ export default function Settings() {
               )}
 
               {teamLoading ? (
-                <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading…</p>
+                <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>Loading…</p>
               ) : (
                 <>
                   {teamMembers.length === 0 && !showInviteForm && (
-                    <p style={{fontSize: '13px', color: '#94a3b8', marginBottom: '16px'}}>No team members yet. Invite a colleague to get started.</p>
+                    <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>No team members yet. Invite a colleague to get started.</p>
                   )}
                   {teamMembers.length > 0 && (
                     <div style={{marginBottom: '16px', border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden'}}>
                       {teamMembers.map((m, i) => {
                         const roleStyles: Record<string, { bg: string; color: string; label: string }> = {
-                          admin:       { bg: '#c8a84b', color: '#0a1f4e', label: 'Admin'       },
+                          admin:       { bg: '#c8a84b', color: 'var(--ep-text-primary)', label: 'Admin'       },
                           accountant:  { bg: '#dbeafe', color: '#1e40af', label: 'Accountant'  },
                           principal:   { bg: '#fef3c7', color: '#92400e', label: 'Principal'   },
-                          viewer:      { bg: '#f1f5f9', color: '#475569', label: 'Viewer'      },
+                          viewer:      { bg: '#f1f5f9', color: 'var(--ep-text-secondary)', label: 'Viewer'      },
                         }
                         const roleDesc: Record<string, string> = {
                           admin:      'Full access — manage students, upload statements, invite team',
@@ -1811,11 +1811,11 @@ export default function Settings() {
                           <div key={m.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderBottom: i < teamMembers.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '12px'}}>
                             <div style={{flex: 1, minWidth: 0}}>
                               <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px'}}>
-                                <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{m.user?.name}</span>
+                                <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>{m.user?.name}</span>
                                 <span style={{background: rs.bg, color: rs.color, fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap'}}>{rs.label}</span>
                               </div>
-                              <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 2px'}}>{m.user?.email}</p>
-                              <p style={{fontSize: '11px', color: '#64748b', margin: 0}}>{roleDesc[m.role] || ''}</p>
+                              <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', margin: '0 0 2px'}}>{m.user?.email}</p>
+                              <p style={{fontSize: '11px', color: 'var(--ep-text-secondary)', margin: 0}}>{roleDesc[m.role] || ''}</p>
                             </div>
                             <button
                               onClick={() => removeMember(m.id)}
@@ -1830,27 +1830,27 @@ export default function Settings() {
                   )}
 
                   {showInviteForm && (
-                    <div style={{border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px'}}>
-                      <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '12px'}}>Invite a team member</p>
+                    <div style={{border: '1px solid var(--ep-border)', borderRadius: '8px', padding: '16px'}}>
+                      <p style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '12px'}}>Invite a team member</p>
                       <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                         <input
                           type="text"
                           value={inviteName}
                           onChange={e => setInviteName(e.target.value)}
                           placeholder="Full name"
-                          style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box'}}
+                          style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box'}}
                         />
                         <input
                           type="email"
                           value={inviteEmail}
                           onChange={e => setInviteEmail(e.target.value)}
                           placeholder="Email address"
-                          style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box'}}
+                          style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box'}}
                         />
                         <select
                           value={inviteRole}
                           onChange={e => setInviteRole(e.target.value)}
-                          style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: '#fff'}}
+                          style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: 'var(--ep-card-bg)'}}
                         >
                           <option value="admin">Admin — full access</option>
                           <option value="accountant">Accountant — upload + send reminders</option>
@@ -1868,7 +1868,7 @@ export default function Settings() {
                           </button>
                           <button
                             onClick={() => { setShowInviteForm(false); setInviteError(''); setInviteName(''); setInviteEmail('') }}
-                            style={{background: '#f8f9fc', color: '#64748b', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', border: '1px solid #e2e8f0', cursor: 'pointer'}}
+                            style={{background: 'var(--ep-bg-secondary)', color: 'var(--ep-text-secondary)', padding: '9px 16px', borderRadius: '6px', fontSize: '13px', border: '1px solid var(--ep-border)', cursor: 'pointer'}}
                           >
                             Cancel
                           </button>
@@ -1881,9 +1881,9 @@ export default function Settings() {
             </div>
 
             {/* Danger zone */}
-            <div style={{background: '#fff', borderRadius: '8px', border: '2px solid #fecaca', padding: '24px', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '2px solid #fecaca', padding: '24px', marginBottom: '16px'}}>
               <h2 style={{fontSize: '14px', fontWeight: 700, color: '#dc2626', marginBottom: '4px'}}>Danger zone</h2>
-              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '16px'}}>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
                 Permanently delete your account and all school data. This cannot be undone.
               </p>
               <button
@@ -1894,15 +1894,15 @@ export default function Settings() {
               </button>
             </div>
 
-            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '16px'}}>Term history</h2>
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '16px'}}>Term history</h2>
               {terms.length === 0 ? (
-                <p style={{fontSize: '13px', color: '#94a3b8'}}>No terms created yet.</p>
+                <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>No terms created yet.</p>
               ) : (
                 terms.map((term, i) => (
                   <div key={term.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < terms.length - 1 ? '1px solid #f1f5f9' : 'none'}}>
-                    <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{term.name}</span>
-                    <span style={{fontSize: '11px', color: '#94a3b8'}}>
+                    <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>{term.name}</span>
+                    <span style={{fontSize: '11px', color: 'var(--ep-text-tertiary)'}}>
                       {new Date(term.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
                   </div>
@@ -1916,13 +1916,13 @@ export default function Settings() {
       {/* Invite result modal — shown once after successful invite */}
       {inviteResult && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
-          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
             <div style={{textAlign: 'center', marginBottom: '20px'}}>
               <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '22px'}}>
                 +
               </div>
-              <h3 style={{fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px'}}>Team member added!</h3>
-              <p style={{fontSize: '13px', color: '#64748b', margin: 0}}>{inviteResult.name} has been added as <strong style={{textTransform: 'capitalize'}}>{inviteResult.role}</strong></p>
+              <h3 style={{fontSize: '18px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: '0 0 4px'}}>Team member added!</h3>
+              <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', margin: 0}}>{inviteResult.name} has been added as <strong style={{textTransform: 'capitalize'}}>{inviteResult.role}</strong></p>
             </div>
 
             {inviteResult.emailSent ? (
@@ -1937,17 +1937,17 @@ export default function Settings() {
 
             {inviteResult.tempPassword ? (
               <>
-                <p style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', marginBottom: '10px'}}>Share these login details with {inviteResult.name}:</p>
-                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px'}}>
+                <p style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '10px'}}>Share these login details with {inviteResult.name}:</p>
+                <div style={{background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px'}}>
                   <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px'}}>
-                    <span style={{color: '#64748b'}}>Email</span>
-                    <span style={{fontWeight: 600, color: '#0f172a'}}>{inviteResult.email}</span>
+                    <span style={{color: 'var(--ep-text-secondary)'}}>Email</span>
+                    <span style={{fontWeight: 600, color: 'var(--ep-text-primary)'}}>{inviteResult.email}</span>
                   </div>
                   <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '13px'}}>
-                    <span style={{color: '#64748b'}}>Temporary password</span>
-                    <span style={{fontWeight: 700, color: '#0a1f4e', fontFamily: 'monospace', letterSpacing: '1px'}}>{inviteResult.tempPassword}</span>
+                    <span style={{color: 'var(--ep-text-secondary)'}}>Temporary password</span>
+                    <span style={{fontWeight: 700, color: 'var(--ep-text-primary)', fontFamily: 'monospace', letterSpacing: '1px'}}>{inviteResult.tempPassword}</span>
                   </div>
-                  <p style={{fontSize: '11px', color: '#94a3b8', margin: '10px 0 0'}}>
+                  <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', margin: '10px 0 0'}}>
                     Sign in at: {process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'}/login
                   </p>
                 </div>
@@ -1962,14 +1962,14 @@ export default function Settings() {
                 </button>
               </>
             ) : (
-              <p style={{fontSize: '13px', color: '#64748b', marginBottom: '16px'}}>
+              <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', marginBottom: '16px'}}>
                 {inviteResult.name} already has an Elimu Pay account. They should sign in with their existing password at {typeof window !== 'undefined' ? window.location.origin : ''}/login.
               </p>
             )}
 
             <button
               onClick={() => setInviteResult(null)}
-              style={{width: '100%', background: '#f8f9fc', color: '#64748b', padding: '10px', borderRadius: '6px', fontSize: '13px', border: '1px solid #e2e8f0', cursor: 'pointer'}}
+              style={{width: '100%', background: 'var(--ep-bg-secondary)', color: 'var(--ep-text-secondary)', padding: '10px', borderRadius: '6px', fontSize: '13px', border: '1px solid var(--ep-border)', cursor: 'pointer'}}
             >
               Close
             </button>
@@ -1980,13 +1980,13 @@ export default function Settings() {
       {/* Upgrade Modal */}
       {showUpgradeModal && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
-          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
             {upgradeSuccess ? (
               <>
                 <div style={{textAlign: 'center', padding: '8px 0 16px'}}>
                   <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '22px'}}>Done</div>
                   <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0a7c3e', marginBottom: '8px'}}>Request Submitted!</h3>
-                  <p style={{fontSize: '13px', color: '#64748b', lineHeight: 1.6}}>
+                  <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', lineHeight: 1.6}}>
                     {requestedPlan === 'Enterprise'
                       ? 'Our team will contact you within 24 hours to discuss your Enterprise plan and complete the setup.'
                       : <>Your upgrade request has been submitted. We will contact you at <strong>{upgradeEmail}</strong> or via WhatsApp <strong>+254 746 353 411</strong> to complete the upgrade.</>
@@ -2002,12 +2002,12 @@ export default function Settings() {
               </>
             ) : (
               <>
-                <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Request Tier Change</h3>
-                <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '12px'}}>Pricing is KES 200 per student per year — your bill adjusts automatically as you add students. Select a tier to move to:</p>
+                <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Request Tier Change</h3>
+                <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '12px'}}>Pricing is KES 200 per student per year — your bill adjusts automatically as you add students. Select a tier to move to:</p>
 
-                <div style={{background: '#f8f9fc', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px', color: '#64748b'}}>
-                  <div style={{marginBottom: '4px'}}><strong style={{color: '#0f172a'}}>Your current tier:</strong> {currentPlanName} ({studentCount} students)</div>
-                  <div><strong style={{color: '#0f172a'}}>Annual subscription:</strong> KES {annualTotal.toLocaleString()}/year</div>
+                <div style={{background: 'var(--ep-bg-secondary)', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>
+                  <div style={{marginBottom: '4px'}}><strong style={{color: 'var(--ep-text-primary)'}}>Your current tier:</strong> {currentPlanName} ({studentCount} students)</div>
+                  <div><strong style={{color: 'var(--ep-text-primary)'}}>Annual subscription:</strong> KES {annualTotal.toLocaleString()}/year</div>
                 </div>
 
                 {(['Growth', 'Professional', 'Premium', 'Enterprise'] as const).map(tier => (
@@ -2022,12 +2022,12 @@ export default function Settings() {
                   >
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                       <div>
-                        <p style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: 0}}>{tier}</p>
-                        <p style={{fontSize: '11px', color: '#64748b', margin: '2px 0 0'}}>
+                        <p style={{fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>{tier}</p>
+                        <p style={{fontSize: '11px', color: 'var(--ep-text-secondary)', margin: '2px 0 0'}}>
                           {tier === 'Growth' ? 'Up to 400 students' : tier === 'Professional' ? 'Up to 700 students' : tier === 'Premium' ? 'Up to 1,000 students' : '1,000+ students'}
                         </p>
                       </div>
-                      <div style={{textAlign: 'right', fontSize: '11px', color: '#64748b'}}>KES 200/student/yr</div>
+                      <div style={{textAlign: 'right', fontSize: '11px', color: 'var(--ep-text-secondary)'}}>KES 200/student/yr</div>
                     </div>
                   </div>
                 ))}
@@ -2036,7 +2036,7 @@ export default function Settings() {
                   placeholder="Any notes or questions? (optional)"
                   value={upgradeNotes}
                   onChange={e => setUpgradeNotes(e.target.value)}
-                  style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', resize: 'vertical', minHeight: '72px', marginBottom: '16px', boxSizing: 'border-box', outline: 'none'}}
+                  style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', resize: 'vertical', minHeight: '72px', marginBottom: '16px', boxSizing: 'border-box', outline: 'none'}}
                 />
 
                 {upgradeError && (
@@ -2046,7 +2046,7 @@ export default function Settings() {
                 <div style={{display: 'flex', gap: '10px'}}>
                   <button
                     onClick={closeUpgradeModal}
-                    style={{flex: 1, background: '#f1f5f9', color: '#64748b', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer'}}
+                    style={{flex: 1, background: 'var(--ep-bg-tertiary)', color: 'var(--ep-text-secondary)', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer'}}
                   >
                     Cancel
                   </button>
@@ -2070,25 +2070,25 @@ export default function Settings() {
       {/* Delete Account Modal */}
       {showDeleteModal && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
-          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', maxWidth: '440px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', maxWidth: '440px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
             <h3 style={{fontSize: '16px', fontWeight: 700, color: '#dc2626', marginBottom: '12px'}}>Delete account</h3>
-            <p style={{fontSize: '13px', color: '#475569', lineHeight: 1.6, marginBottom: '16px'}}>
+            <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', lineHeight: 1.6, marginBottom: '16px'}}>
               This will permanently delete all your school data including students, payments, and invoices. <strong>This cannot be undone.</strong>
             </p>
-            <p style={{fontSize: '13px', color: '#0f172a', marginBottom: '8px', fontWeight: 600}}>Type DELETE to confirm</p>
+            <p style={{fontSize: '13px', color: 'var(--ep-text-primary)', marginBottom: '8px', fontWeight: 600}}>Type DELETE to confirm</p>
             <input
               type="text"
               value={deleteConfirmText}
               onChange={e => setDeleteConfirmText(e.target.value)}
               placeholder="DELETE"
-              style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box'}}
+              style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box'}}
             />
             {deleteError && <p style={{color: '#ef4444', fontSize: '12px', marginBottom: '12px'}}>{deleteError}</p>}
             <div style={{display: 'flex', gap: '10px'}}>
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleting}
-                style={{flex: 1, background: '#f1f5f9', color: '#64748b', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer'}}
+                style={{flex: 1, background: 'var(--ep-bg-tertiary)', color: 'var(--ep-text-secondary)', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer'}}
               >
                 Cancel
               </button>

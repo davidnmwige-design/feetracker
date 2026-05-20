@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import RoleGuard from '@/components/RoleGuard'
@@ -302,7 +302,7 @@ export default function Reminders() {
         </div>
         <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
           {!loading && withBalance.length > 0 && (
-            <span style={{background: '#c8a84b', color: '#0a1f4e', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700}}>
+            <span style={{background: '#c8a84b', color: 'var(--ep-text-primary)', fontSize: '11px', padding: '4px 12px', borderRadius: '999px', fontWeight: 700}}>
               KES {totalOutstanding.toLocaleString()} outstanding
             </span>
           )}
@@ -328,42 +328,42 @@ export default function Reminders() {
 
         {/* Scheduled reminders */}
         {!loading && (
-          <div style={{background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '20px', marginBottom: '20px'}}>
+          <div style={{background: 'var(--ep-card-bg)', border: '1px solid var(--ep-border)', borderRadius: '8px', padding: '20px', marginBottom: '20px'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px'}}>
-              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0}}>Scheduled reminders</h2>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>Scheduled reminders</h2>
               <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
                 <input type="checkbox" checked={schedule.enabled} onChange={e => setSchedule((s: any) => ({ ...s, enabled: e.target.checked }))} style={{accentColor: '#0a1f4e', width: '16px', height: '16px'}} />
-                <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{schedule.enabled ? 'Enabled' : 'Disabled'}</span>
+                <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>{schedule.enabled ? 'Enabled' : 'Disabled'}</span>
               </label>
             </div>
             {schedule.enabled && (
               <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
                 <div style={{display: 'flex', gap: '12px', flexWrap: 'wrap' as const}}>
                   <div>
-                    <label style={{fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px'}}>Frequency</label>
-                    <select value={schedule.frequency} onChange={e => setSchedule((s: any) => ({ ...s, frequency: e.target.value }))} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '4px'}}>Frequency</label>
+                    <select value={schedule.frequency} onChange={e => setSchedule((s: any) => ({ ...s, frequency: e.target.value }))} style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', background: 'var(--ep-card-bg)', outline: 'none'}}>
                       <option value="weekly">Weekly</option>
                       <option value="monthly">Monthly</option>
                     </select>
                   </div>
                   {schedule.frequency === 'weekly' ? (
                     <div>
-                      <label style={{fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px'}}>Day of week</label>
-                      <select value={schedule.dayOfWeek} onChange={e => setSchedule((s: any) => ({ ...s, dayOfWeek: Number(e.target.value) }))} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                      <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '4px'}}>Day of week</label>
+                      <select value={schedule.dayOfWeek} onChange={e => setSchedule((s: any) => ({ ...s, dayOfWeek: Number(e.target.value) }))} style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', background: 'var(--ep-card-bg)', outline: 'none'}}>
                         {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
                       </select>
                     </div>
                   ) : (
                     <div>
-                      <label style={{fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px'}}>Day of month</label>
-                      <select value={schedule.dayOfMonth} onChange={e => setSchedule((s: any) => ({ ...s, dayOfMonth: Number(e.target.value) }))} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                      <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '4px'}}>Day of month</label>
+                      <select value={schedule.dayOfMonth} onChange={e => setSchedule((s: any) => ({ ...s, dayOfMonth: Number(e.target.value) }))} style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', background: 'var(--ep-card-bg)', outline: 'none'}}>
                         {Array.from({length: 28}, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}{['st','nd','rd'][d-1] || 'th'}</option>)}
                       </select>
                     </div>
                   )}
                   <div>
-                    <label style={{fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px'}}>Time</label>
-                    <input type="time" value={schedule.time} onChange={e => setSchedule((s: any) => ({ ...s, time: e.target.value }))} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', outline: 'none'}} />
+                    <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '4px'}}>Time</label>
+                    <input type="time" value={schedule.time} onChange={e => setSchedule((s: any) => ({ ...s, time: e.target.value }))} style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 12px', fontSize: '13px', outline: 'none'}} />
                   </div>
                 </div>
                 {getNextSendDate() && (
@@ -390,7 +390,7 @@ export default function Reminders() {
                   setTimeout(() => window.open(url, '_blank'), i * 1500)
                 })
               }}
-              style={{background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}
+              style={{background: '#c8a84b', color: 'var(--ep-text-primary)', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}
             >
               Send WhatsApp to all {withBalance.length} parents
             </button>
@@ -404,12 +404,12 @@ export default function Reminders() {
         )}
 
         {loading && (
-          <div style={{textAlign: 'center', color: '#94a3b8', padding: '48px'}}>Loading...</div>
+          <div style={{textAlign: 'center', color: 'var(--ep-text-tertiary)', padding: '48px'}}>Loading...</div>
         )}
 
         {!loading && withBalance.length === 0 && (
-          <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '48px', textAlign: 'center'}}>
-            <p style={{color: '#94a3b8', fontSize: '14px'}}>No outstanding balances. All students are fully paid!</p>
+          <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '48px', textAlign: 'center'}}>
+            <p style={{color: 'var(--ep-text-tertiary)', fontSize: '14px'}}>No outstanding balances. All students are fully paid!</p>
           </div>
         )}
 
@@ -426,26 +426,26 @@ export default function Reminders() {
             const wasSent = emailSentIds.has(student.id)
 
             return (
-              <div key={student.id} style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px'}}>
+              <div key={student.id} style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '16px'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px'}}>
                   <div>
-                    <p style={{fontWeight: 600, color: '#0f172a', fontSize: '14px', marginBottom: '2px'}}>{student.name}</p>
-                    <p style={{fontSize: '12px', color: '#94a3b8'}}>{student.class} {student.stream} · {student.parentName || 'Parent'} · {student.parentPhone}</p>
+                    <p style={{fontWeight: 600, color: 'var(--ep-text-primary)', fontSize: '14px', marginBottom: '2px'}}>{student.name}</p>
+                    <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)'}}>{student.class} {student.stream} · {student.parentName || 'Parent'} · {student.parentPhone}</p>
                   </div>
                   <div style={{textAlign: 'right'}}>
                     <p style={{color: '#e24b4a', fontWeight: 700, fontSize: '14px'}}>KES {balance.toLocaleString()}</p>
-                    <p style={{fontSize: '11px', color: '#94a3b8'}}>{percent}% paid</p>
+                    <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)'}}>{percent}% paid</p>
                   </div>
                 </div>
 
-                <div style={{background: '#f8f9fc', borderLeft: '3px solid #c8a84b', padding: '10px 12px', borderRadius: '0 4px 4px 0', fontSize: '12px', color: '#64748b', marginBottom: '12px'}}>
+                <div style={{background: 'var(--ep-bg-secondary)', borderLeft: '3px solid #c8a84b', padding: '10px 12px', borderRadius: '0 4px 4px 0', fontSize: '12px', color: 'var(--ep-text-secondary)', marginBottom: '12px'}}>
                   {msg}
                 </div>
 
                 <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap' as const}}>
                   <button
                     onClick={() => copyMessage(student.id, msg)}
-                    style={{fontSize: '12px', border: '1px solid #e2e8f0', padding: '6px 12px', borderRadius: '5px', background: '#fff', color: '#64748b', cursor: 'pointer'}}
+                    style={{fontSize: '12px', border: '1px solid var(--ep-border)', padding: '6px 12px', borderRadius: '5px', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', cursor: 'pointer'}}
                   >
                     {copied === student.id ? 'Copied!' : 'Copy message'}
                   </button>
@@ -464,7 +464,7 @@ export default function Reminders() {
                   ) : (
                     <button
                       onClick={() => isFormOpen ? setEmailFormId(null) : openEmailForm(student)}
-                      style={{fontSize: '12px', color: '#0a1f4e', background: 'none', border: '1px solid #0a1f4e', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 600}}
+                      style={{fontSize: '12px', color: 'var(--ep-text-primary)', background: 'none', border: '1px solid #0a1f4e', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 600}}
                     >
                       {isFormOpen ? 'Cancel' : 'Send via email'}
                     </button>
@@ -472,8 +472,8 @@ export default function Reminders() {
                 </div>
 
                 {isFormOpen && (
-                  <div style={{marginTop: '12px', background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '14px'}}>
-                    <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '6px'}}>Parent email address</label>
+                  <div style={{marginTop: '12px', background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '14px'}}>
+                    <label style={{fontSize: '12px', color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '6px'}}>Parent email address</label>
                     <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap' as const}}>
                       <input
                         ref={emailInputRef}
@@ -485,7 +485,7 @@ export default function Reminders() {
                           if (e.key === 'Escape') setEmailFormId(null)
                         }}
                         placeholder="parent@example.com"
-                        style={{flex: 1, minWidth: '200px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none'}}
+                        style={{flex: 1, minWidth: '200px', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none'}}
                       />
                       <button
                         onClick={() => sendReminderEmail(student, emailFormValue)}
@@ -511,25 +511,25 @@ export default function Reminders() {
           style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px'}}
           onClick={e => { if (e.target === e.currentTarget && !bulkSending) { setBulkModal(false); setBulkResult(null) } }}
         >
-          <div style={{background: '#fff', borderRadius: '12px', width: '540px', maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column' as const}}>
+          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', width: '540px', maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column' as const}}>
             <div style={{padding: '24px 24px 16px', borderBottom: '1px solid #f1f5f9', flexShrink: 0}}>
-              <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Send email reminders to all parents</h3>
-              <p style={{fontSize: '12px', color: '#64748b', margin: 0}}>{withBalance.length} parents with outstanding balances · fill in missing emails before sending</p>
+              <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Send email reminders to all parents</h3>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', margin: 0}}>{withBalance.length} parents with outstanding balances · fill in missing emails before sending</p>
             </div>
 
             <div style={{overflowY: 'auto', flex: 1, padding: '16px 24px'}}>
               {withBalance.map(student => (
                 <div key={student.id} style={{display: 'flex', gap: '10px', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f8fafc'}}>
                   <div style={{flex: 1, minWidth: 0}}>
-                    <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const}}>{student.name}</p>
-                    <p style={{fontSize: '11px', color: '#94a3b8', margin: 0}}>KES {getBalance(student).toLocaleString()} outstanding</p>
+                    <p style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const}}>{student.name}</p>
+                    <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', margin: 0}}>KES {getBalance(student).toLocaleString()} outstanding</p>
                   </div>
                   <input
                     type="email"
                     value={bulkEmails[student.id] ?? ''}
                     onChange={e => setBulkEmails(prev => ({ ...prev, [student.id]: e.target.value }))}
                     placeholder="parent@example.com"
-                    style={{width: '220px', border: '1px solid #e2e8f0', borderRadius: '5px', padding: '6px 9px', fontSize: '12px', outline: 'none', flexShrink: 0}}
+                    style={{width: '220px', border: '1px solid var(--ep-border)', borderRadius: '5px', padding: '6px 9px', fontSize: '12px', outline: 'none', flexShrink: 0}}
                   />
                   {emailSentIds.has(student.id) && (
                     <span style={{fontSize: '11px', color: '#0a7c3e', fontWeight: 700, whiteSpace: 'nowrap' as const, flexShrink: 0}}>Sent</span>
@@ -540,7 +540,7 @@ export default function Reminders() {
 
             <div style={{padding: '16px 24px', borderTop: '1px solid #f1f5f9', flexShrink: 0}}>
               {bulkResult && (
-                <p style={{fontSize: '13px', color: bulkResult.sent > 0 ? '#0a7c3e' : '#64748b', marginBottom: '12px', fontWeight: 600}}>
+                <p style={{fontSize: '13px', color: bulkResult.sent > 0 ? '#0a7c3e' : 'var(--ep-text-secondary)', marginBottom: '12px', fontWeight: 600}}>
                   {bulkResult.sent > 0 ? `${bulkResult.sent} email${bulkResult.sent > 1 ? 's' : ''} sent` : ''}
                   {bulkResult.skipped > 0 ? `${bulkResult.sent > 0 ? ' · ' : ''}${bulkResult.skipped} skipped (no email)` : ''}
                 </p>
@@ -549,7 +549,7 @@ export default function Reminders() {
                 <button
                   onClick={() => { if (!bulkSending) { setBulkModal(false); setBulkResult(null) } }}
                   disabled={bulkSending}
-                  style={{padding: '9px 18px', borderRadius: '6px', fontSize: '13px', background: 'none', border: '1px solid #e2e8f0', cursor: bulkSending ? 'not-allowed' : 'pointer', color: '#64748b'}}
+                  style={{padding: '9px 18px', borderRadius: '6px', fontSize: '13px', background: 'none', border: '1px solid var(--ep-border)', cursor: bulkSending ? 'not-allowed' : 'pointer', color: 'var(--ep-text-secondary)'}}
                 >
                   {bulkResult ? 'Close' : 'Cancel'}
                 </button>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import RoleGuard from '@/components/RoleGuard'
@@ -346,7 +346,7 @@ export default function Reports() {
             <button
               onClick={printReport}
               disabled={printing || loading}
-              style={{ background: printing ? '#94a3b8' : '#c8a84b', color: '#0a1f4e', padding: '8px 14px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: printing || loading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
+              style={{ background: printing ? '#94a3b8' : '#c8a84b', color: 'var(--ep-text-primary)', padding: '8px 14px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: printing || loading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
             >
               {printing ? 'Generating…' : selectedClass === 'All' ? 'Print PDF' : `Print PDF — ${selectedClass}`}
             </button>
@@ -360,9 +360,9 @@ export default function Reports() {
       {/* Content */}
       <div className="rpt-content" style={{ padding: '24px 32px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', color: '#94a3b8', padding: '48px' }}>Loading...</div>
+          <div style={{ textAlign: 'center', color: 'var(--ep-text-tertiary)', padding: '48px' }}>Loading...</div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#94a3b8', padding: '48px', fontSize: '14px' }}>
+          <div style={{ textAlign: 'center', color: 'var(--ep-text-tertiary)', padding: '48px', fontSize: '14px' }}>
             No students found{selectedClass !== 'All' ? ` in ${selectedClass}` : ''}.
           </div>
         ) : (
@@ -370,13 +370,13 @@ export default function Reports() {
             {/* Summary cards */}
             <div className="rpt-grid4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
               {[
-                { label: 'Expected',        value: 'KES ' + totalExpected.toLocaleString(),  color: '#0f172a' },
-                { label: 'Collected',       value: 'KES ' + totalCollected.toLocaleString(), color: '#0a1f4e' },
+                { label: 'Expected',        value: 'KES ' + totalExpected.toLocaleString(),  color: 'var(--ep-text-primary)' },
+                { label: 'Collected',       value: 'KES ' + totalCollected.toLocaleString(), color: 'var(--ep-text-primary)' },
                 { label: 'Outstanding',     value: 'KES ' + totalBalance.toLocaleString(),   color: '#c8a84b' },
                 { label: 'Collection rate', value: rate + '%', color: rate >= 80 ? '#0a7c3e' : rate >= 50 ? '#92681a' : '#a32d2d' },
               ].map(card => (
-                <div key={card.label} style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px' }}>
-                  <p style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>{card.label}</p>
+                <div key={card.label} style={{ background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '16px' }}>
+                  <p style={{ fontSize: '10px', color: 'var(--ep-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>{card.label}</p>
                   <p style={{ fontSize: '20px', fontWeight: 700, color: card.color, margin: 0 }}>{card.value}</p>
                 </div>
               ))}
@@ -389,9 +389,9 @@ export default function Reports() {
                 { label: 'Partial payment', value: partialPaid, color: '#92681a', bg: '#fef9ec' },
                 { label: 'No payment',     value: unpaid,      color: '#e24b4a', bg: '#fcebeb' },
               ].map(card => (
-                <div key={card.label} style={{ background: card.bg, borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px', textAlign: 'center' }}>
+                <div key={card.label} style={{ background: card.bg, borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '16px', textAlign: 'center' }}>
                   <p style={{ fontSize: '28px', fontWeight: 700, color: card.color, margin: 0 }}>{card.value}</p>
-                  <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>{card.label}</p>
+                  <p style={{ fontSize: '11px', color: 'var(--ep-text-tertiary)', marginTop: '4px' }}>{card.label}</p>
                 </div>
               ))}
             </div>
@@ -403,12 +403,12 @@ export default function Reports() {
               const clsCollected = classStudents.reduce((s, st) => s + (st.payments || []).reduce((p: number, pay: any) => p + pay.amount, 0), 0)
               const clsRate      = clsExpected > 0 ? Math.round(clsCollected / clsExpected * 100) : 0
               return (
-                <div key={cls} style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', background: '#f8f9fc', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: '8px' }}>
-                    <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#0a1f4e', margin: 0 }}>
-                      {cls} <span style={{ fontWeight: 400, color: '#94a3b8' }}>· {classStudents.length} students</span>
+                <div key={cls} style={{ background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', marginBottom: '16px' }}>
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', background: 'var(--ep-bg-secondary)', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: '8px' }}>
+                    <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0 }}>
+                      {cls} <span style={{ fontWeight: 400, color: 'var(--ep-text-tertiary)' }}>· {classStudents.length} students</span>
                     </h2>
-                    <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#64748b', flexWrap: 'wrap' as const }}>
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--ep-text-secondary)', flexWrap: 'wrap' as const }}>
                       <span>Expected: <strong>KES {clsExpected.toLocaleString()}</strong></span>
                       <span>Collected: <strong style={{ color: '#0a7c3e' }}>KES {clsCollected.toLocaleString()}</strong></span>
                       <span style={{ background: clsRate >= 80 ? '#e1f5ee' : clsRate >= 50 ? '#fef9ec' : '#fcebeb', color: clsRate >= 80 ? '#166534' : clsRate >= 50 ? '#92681a' : '#a32d2d', padding: '2px 8px', borderRadius: '999px', fontWeight: 700 }}>
@@ -421,7 +421,7 @@ export default function Reports() {
                       <thead>
                         <tr style={{ textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9' }}>
                           {['Name', 'Adm No', 'Fee Req', 'Paid', 'Balance', 'Status'].map(h => (
-                            <th key={h} style={{ padding: '8px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
+                            <th key={h} style={{ padding: '8px 14px', color: 'var(--ep-text-tertiary)', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -433,11 +433,11 @@ export default function Reports() {
                           const st = status === 'Paid' ? { bg: '#e1f5ee', c: '#166534' } : status === 'Partial' ? { bg: '#fef9ec', c: '#92681a' } : { bg: '#fcebeb', c: '#a32d2d' }
                           return (
                             <tr key={student.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                              <td style={{ padding: '9px 14px', fontWeight: 600, color: '#0f172a' }}>{student.name}</td>
-                              <td style={{ padding: '9px 14px', color: '#64748b' }}>{student.admNo || '—'}</td>
+                              <td style={{ padding: '9px 14px', fontWeight: 600, color: 'var(--ep-text-primary)' }}>{student.name}</td>
+                              <td style={{ padding: '9px 14px', color: 'var(--ep-text-secondary)' }}>{student.admNo || '—'}</td>
                               <td style={{ padding: '9px 14px', whiteSpace: 'nowrap' }}>KES {student.feeRequired.toLocaleString()}</td>
                               <td style={{ padding: '9px 14px', color: '#0a7c3e', fontWeight: 600, whiteSpace: 'nowrap' }}>KES {paid.toLocaleString()}</td>
-                              <td style={{ padding: '9px 14px', color: bal > 0 ? '#e24b4a' : '#64748b', fontWeight: bal > 0 ? 600 : 400, whiteSpace: 'nowrap' }}>KES {bal.toLocaleString()}</td>
+                              <td style={{ padding: '9px 14px', color: bal > 0 ? '#e24b4a' : 'var(--ep-text-secondary)', fontWeight: bal > 0 ? 600 : 400, whiteSpace: 'nowrap' }}>KES {bal.toLocaleString()}</td>
                               <td style={{ padding: '9px 14px' }}>
                                 <span style={{ background: st.bg, color: st.c, fontSize: '10px', padding: '3px 8px', borderRadius: '999px', fontWeight: 600 }}>{status}</span>
                               </td>

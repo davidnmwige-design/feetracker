@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import RoleGuard from '@/components/RoleGuard'
@@ -210,7 +210,7 @@ function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, { bg: string; color: string }> = {
     paid:  { bg: '#e1f5ee', color: '#166534' },
     sent:  { bg: '#dbeafe', color: '#1e40af' },
-    draft: { bg: '#f1f5f9', color: '#475569' },
+    draft: { bg: '#f1f5f9', color: 'var(--ep-text-secondary)' },
   }
   const s = styles[status] || styles.draft
   return (
@@ -449,17 +449,17 @@ export default function Invoices() {
       <div className="inv-content" style={{ padding: '24px 32px' }}>
         {/* Bulk send confirmation dialog */}
         {bulkConfirm && (
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
-            <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Send invoices to all {filtered.length} students?</h2>
-            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px', lineHeight: 1.6 }}>
+          <div style={{ background: 'var(--ep-card-bg)', border: '1px solid var(--ep-border)', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '8px' }}>Send invoices to all {filtered.length} students?</h2>
+            <p style={{ fontSize: '13px', color: 'var(--ep-text-secondary)', marginBottom: '20px', lineHeight: 1.6 }}>
               Parents with email on file will receive an email with a PDF invoice attached.
               Parents with only a phone number will be contacted via WhatsApp. Parents with neither will be skipped.
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={runBulkSend} style={{ background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '10px 24px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={runBulkSend} style={{ background: '#c8a84b', color: 'var(--ep-text-primary)', border: 'none', padding: '10px 24px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
                 Continue
               </button>
-              <button onClick={() => setBulkConfirm(false)} style={{ background: '#f1f5f9', color: '#475569', border: 'none', padding: '10px 24px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+              <button onClick={() => setBulkConfirm(false)} style={{ background: 'var(--ep-bg-tertiary)', color: 'var(--ep-text-secondary)', border: 'none', padding: '10px 24px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
                 Cancel
               </button>
             </div>
@@ -470,14 +470,14 @@ export default function Invoices() {
         {bulkState && (
           <div style={{ background: bulkState.running ? '#fff' : '#e1f5ee', border: `1px solid ${bulkState.running ? '#e2e8f0' : '#bbf7d0'}`, borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
             {bulkState.running ? (
-              <p style={{ fontSize: '13px', color: '#0f172a', margin: 0 }}>
+              <p style={{ fontSize: '13px', color: 'var(--ep-text-primary)', margin: 0 }}>
                 Sending invoices… {bulkState.done} / {bulkState.total}
               </p>
             ) : (
               <p style={{ fontSize: '13px', color: '#166534', margin: 0 }}>Done. {bulkState.summary}</p>
             )}
             {!bulkState.running && (
-              <button onClick={() => setBulkState(null)} style={{ marginTop: '8px', fontSize: '12px', color: '#475569', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Dismiss</button>
+              <button onClick={() => setBulkState(null)} style={{ marginTop: '8px', fontSize: '12px', color: 'var(--ep-text-secondary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Dismiss</button>
             )}
           </div>
         )}
@@ -489,23 +489,23 @@ export default function Invoices() {
             placeholder="Search by name, class, or admission no…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', width: '280px', outline: 'none' }}
+            style={{ border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', width: '280px', outline: 'none' }}
           />
           <button
             onClick={() => setBulkConfirm(true)}
             disabled={filtered.length === 0 || !!bulkState?.running}
-            style={{ background: '#c8a84b', color: '#0a1f4e', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' as const, opacity: filtered.length === 0 ? 0.5 : 1 }}
+            style={{ background: '#c8a84b', color: 'var(--ep-text-primary)', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' as const, opacity: filtered.length === 0 ? 0.5 : 1 }}
           >
             Send invoices to all {filtered.length > 0 ? `(${filtered.length})` : ''}
           </button>
         </div>
 
         {/* Table */}
-        <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+        <div style={{ background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)' }}>
           {loading ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: '#94a3b8' }}>Loading…</div>
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--ep-text-tertiary)' }}>Loading…</div>
           ) : filtered.length === 0 ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--ep-text-tertiary)', fontSize: '13px' }}>
               {students.length === 0 ? 'No students found. Import students first.' : 'No students match your search.'}
             </div>
           ) : (
@@ -514,7 +514,7 @@ export default function Invoices() {
                 <thead>
                   <tr style={{ textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9' }}>
                     {['Student', 'Class', 'Fee breakdown', 'Paid', 'Due', 'Status', 'Actions'].map(h => (
-                      <th key={h} style={{ padding: '10px 14px', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} style={{ padding: '10px 14px', color: 'var(--ep-text-tertiary)', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -532,27 +532,27 @@ export default function Invoices() {
                     return (
                       <tr key={student.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                         <td style={{ padding: '10px 14px' }}>
-                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{student.name}</div>
-                          <div style={{ fontSize: '11px', color: '#94a3b8' }}>{student.admNo}</div>
+                          <div style={{ fontWeight: 600, color: 'var(--ep-text-primary)' }}>{student.name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--ep-text-tertiary)' }}>{student.admNo}</div>
                         </td>
-                        <td style={{ padding: '10px 14px', color: '#64748b', whiteSpace: 'nowrap' }}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>
+                        <td style={{ padding: '10px 14px', color: 'var(--ep-text-secondary)', whiteSpace: 'nowrap' }}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>
                         <td style={{ padding: '10px 14px' }}>
                           {(() => {
                             const cats = student.feeCategories as { name: string; amount: number }[] | undefined
                             if (cats && cats.length > 0) {
-                              return <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.6 }}>
+                              return <div style={{ fontSize: '11px', color: 'var(--ep-text-secondary)', lineHeight: 1.6 }}>
                                 {cats.filter(c => c.amount > 0).map((c, i) => <div key={i}>{c.name}: KES {c.amount.toLocaleString()}</div>)}
                               </div>
                             }
                             if (hasFeeBreakdown) {
-                              return <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.6 }}>
+                              return <div style={{ fontSize: '11px', color: 'var(--ep-text-secondary)', lineHeight: 1.6 }}>
                                 {student.tuitionFee > 0 && <div>Tuition: KES {student.tuitionFee.toLocaleString()}</div>}
                                 {student.sportsFee > 0 && <div>Sports: KES {student.sportsFee.toLocaleString()}</div>}
                                 {student.clubsFee > 0 && <div>Clubs: KES {student.clubsFee.toLocaleString()}</div>}
                                 {student.otherFee > 0 && <div>Other: KES {student.otherFee.toLocaleString()}</div>}
                               </div>
                             }
-                            return <span style={{ fontSize: '11px', color: '#94a3b8' }}>KES {student.feeRequired.toLocaleString()}</span>
+                            return <span style={{ fontSize: '11px', color: 'var(--ep-text-tertiary)' }}>KES {student.feeRequired.toLocaleString()}</span>
                           })()}
                         </td>
                         <td style={{ padding: '10px 14px', color: '#166534', fontWeight: 600, whiteSpace: 'nowrap' }}>KES {totalPaid.toLocaleString()}</td>
@@ -575,7 +575,7 @@ export default function Invoices() {
                                 {isSending ? '…' : 'Email'}
                               </button>
                             ) : (
-                              <span style={{ fontSize: '11px', color: '#94a3b8', padding: '5px 0' }}>No email</span>
+                              <span style={{ fontSize: '11px', color: 'var(--ep-text-tertiary)', padding: '5px 0' }}>No email</span>
                             )}
                             {hasPhone && (
                               <button
@@ -598,7 +598,7 @@ export default function Invoices() {
 
         {/* Summary footer */}
         {!loading && students.length > 0 && (
-          <div style={{ marginTop: '12px', display: 'flex', gap: '16px', fontSize: '12px', color: '#94a3b8', flexWrap: 'wrap' as const }}>
+          <div style={{ marginTop: '12px', display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--ep-text-tertiary)', flexWrap: 'wrap' as const }}>
             {(['draft', 'sent', 'paid'] as const).map(s => {
               const count = students.filter(st => (invoices[st.id]?.status || 'draft') === s).length
               const colors: Record<string, string> = { draft: '#94a3b8', sent: '#1e40af', paid: '#166534' }

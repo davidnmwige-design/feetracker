@@ -187,3 +187,28 @@
   border-color: var(--ep-border);
   color: var(--ep-text-primary);
 }
+
+/* ─── Dark mode global element overrides ────────────────────────────────── */
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]) {
+  background-color: var(--ep-input-bg) !important;
+  color: var(--ep-text-primary) !important;
+  border-color: var(--ep-border) !important;
+}
+[data-theme="dark"] select {
+  background-color: var(--ep-input-bg) !important;
+  color: var(--ep-text-primary) !important;
+  border-color: var(--ep-border) !important;
+}
+[data-theme="dark"] textarea {
+  background-color: var(--ep-input-bg) !important;
+  color: var(--ep-text-primary) !important;
+  border-color: var(--ep-border) !important;
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--ep-text-tertiary) !important;
+}
+[data-theme="dark"] option {
+  background-color: var(--ep-input-bg);
+  color: var(--ep-text-primary);
+}

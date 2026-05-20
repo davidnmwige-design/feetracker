@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -133,8 +133,8 @@ export default function Signup() {
   }
 
   return (
-    <main style={{background: '#f8f9fc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', fontFamily: 'Arial, sans-serif'}}>
-      <div style={{background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', width: '100%', maxWidth: '440px', overflow: 'hidden'}}>
+    <main style={{background: 'var(--ep-bg-secondary)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', fontFamily: 'Arial, sans-serif'}}>
+      <div style={{background: 'var(--ep-card-bg)', borderRadius: '10px', border: '1px solid var(--ep-border)', width: '100%', maxWidth: '440px', overflow: 'hidden'}}>
         <div style={{background: '#0a1f4e', padding: '28px 32px', textAlign: 'center'}}>
           <h1 style={{fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0}}><span style={{color: '#fff'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span></h1>
           <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '6px'}}>Create your account — 30 days free</p>
@@ -149,7 +149,7 @@ export default function Signup() {
 
           <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
             <div>
-              <label htmlFor="name" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Your name</label>
+              <label htmlFor="name" style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>Your name</label>
               <input
                 id="name"
                 name="name"
@@ -163,7 +163,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label htmlFor="email" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Email address</label>
+              <label htmlFor="email" style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>Email address</label>
               <input
                 id="email"
                 name="email"
@@ -177,7 +177,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label htmlFor="password" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Password</label>
+              <label htmlFor="password" style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>Password</label>
               <div style={{position: 'relative'}}>
                 <input
                   id="password"
@@ -198,13 +198,13 @@ export default function Signup() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', padding: '2px'}}
+                  style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ep-text-tertiary)', fontSize: '12px', padding: '2px'}}
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
               {form.password.length > 0 && (
-                <div style={{marginTop: '8px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', padding: '10px', background: '#f8f9fc', borderRadius: '6px', border: '1px solid #e2e8f0'}}>
+                <div style={{marginTop: '8px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', padding: '10px', background: 'var(--ep-bg-secondary)', borderRadius: '6px', border: '1px solid var(--ep-border)'}}>
                   <PasswordRule met={rules.length} label="8+ characters" />
                   <PasswordRule met={rules.upper} label="Uppercase letter" />
                   <PasswordRule met={rules.lower} label="Lowercase letter" />
@@ -220,7 +220,7 @@ export default function Signup() {
                 </div>
               )}
               {breachStatus === 'checking' && (
-                <p style={{fontSize: '11px', color: '#64748b', marginTop: '4px'}}>Checking password security...</p>
+                <p style={{fontSize: '11px', color: 'var(--ep-text-secondary)', marginTop: '4px'}}>Checking password security...</p>
               )}
               {breachStatus === 'safe' && (
                 <p style={{fontSize: '11px', color: '#0f6e56', marginTop: '4px'}}>Password not found in any known data breaches.</p>
@@ -231,7 +231,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Confirm password</label>
+              <label htmlFor="confirmPassword" style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>Confirm password</label>
               <div style={{position: 'relative'}}>
                 <input
                   id="confirmPassword"
@@ -247,7 +247,7 @@ export default function Signup() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(v => !v)}
-                  style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', padding: '2px'}}
+                  style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ep-text-tertiary)', fontSize: '12px', padding: '2px'}}
                 >
                   {showConfirmPassword ? 'Hide' : 'Show'}
                 </button>
@@ -263,10 +263,10 @@ export default function Signup() {
             </div>
 
             <div style={{borderTop: '1px solid #f1f5f9', paddingTop: '16px'}}>
-              <p style={{fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: '14px'}}>School details</p>
+              <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: '14px'}}>School details</p>
               <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
                 <div>
-                  <label htmlFor="schoolName" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>School name</label>
+                  <label htmlFor="schoolName" style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>School name</label>
                   <input
                     id="schoolName"
                     name="schoolName"
@@ -279,7 +279,7 @@ export default function Signup() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="paybill" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>MPESA Paybill / Till number</label>
+                  <label htmlFor="paybill" style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>MPESA Paybill / Till number</label>
                   <input
                     id="paybill"
                     name="paybill"
@@ -316,7 +316,7 @@ export default function Signup() {
                 onChange={e => setAgreedToPolicy(e.target.checked)}
                 style={{marginTop: '2px', accentColor: '#0a1f4e', flexShrink: 0}}
               />
-              <span style={{fontSize: '12px', color: '#64748b', lineHeight: '1.5'}}>
+              <span style={{fontSize: '12px', color: 'var(--ep-text-secondary)', lineHeight: '1.5'}}>
                 I have read and agree to the{' '}
                 <Link href="/privacy" target="_blank" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>
                   Privacy Policy
@@ -336,7 +336,7 @@ export default function Signup() {
               {loading ? 'Creating account...' : 'Start free trial'}
             </button>
 
-            <p style={{textAlign: 'center', fontSize: '12px', color: '#64748b'}}>
+            <p style={{textAlign: 'center', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>
               Already have an account?{' '}
               <Link href="/login" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>
                 Sign in

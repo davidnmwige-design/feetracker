@@ -1,10 +1,10 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 
 export default function TrialExpired() {
   return (
-    <div style={{background: '#f8f9fc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif', padding: '24px'}}>
+    <div style={{background: 'var(--ep-bg-secondary)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif', padding: '24px'}}>
       <div style={{maxWidth: '520px', width: '100%'}}>
-        <div style={{background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden'}}>
+        <div style={{background: 'var(--ep-card-bg)', borderRadius: '10px', border: '1px solid var(--ep-border)', overflow: 'hidden'}}>
           <div style={{background: '#0a1f4e', padding: '28px 32px', textAlign: 'center'}}>
             <h1 style={{fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0}}><span style={{color: '#fff'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span></h1>
             <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '6px'}}>Your free trial has ended</p>
@@ -14,31 +14,31 @@ export default function TrialExpired() {
             <div style={{width: '56px', height: '56px', background: '#fef9ec', border: '2px solid #c8a84b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '24px'}}>
             </div>
 
-            <h2 style={{fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '12px', fontFamily: 'Georgia, serif'}}>
+            <h2 style={{fontSize: '20px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '12px', fontFamily: 'Georgia, serif'}}>
               Your 14-day trial has expired
             </h2>
 
-            <p style={{fontSize: '14px', color: '#64748b', lineHeight: '1.7', marginBottom: '24px'}}>
+            <p style={{fontSize: '14px', color: 'var(--ep-text-secondary)', lineHeight: '1.7', marginBottom: '24px'}}>
               Thank you for trying Elimu Pay. Your school's data is safe and has not been deleted — you just need to subscribe to continue using the platform.
             </p>
 
-            <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '20px', marginBottom: '28px', textAlign: 'left'}}>
-              <p style={{fontSize: '12px', fontWeight: 700, color: '#0f172a', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Subscription pricing</p>
-              <p style={{fontSize: '12px', color: '#64748b', marginBottom: '12px'}}>KES 200 per student per year (min. KES 20,000/year)</p>
+            <div style={{background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '8px', padding: '20px', marginBottom: '28px', textAlign: 'left'}}>
+              <p style={{fontSize: '12px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Subscription pricing</p>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', marginBottom: '12px'}}>KES 200 per student per year (min. KES 20,000/year)</p>
               {[
                 {name: 'Up to 200 students',  monthly: Math.round(20000/12),  setup: '25,000'},
                 {name: '201–400 students',    monthly: Math.round(80000/12),  setup: '35,000'},
                 {name: '401–700 students',    monthly: Math.round(140000/12), setup: '50,000'},
               ].map((tier, i) => (
                 <div key={tier.name} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none'}}>
-                  <span style={{fontSize: '12px', color: '#475569'}}>{tier.name}</span>
+                  <span style={{fontSize: '12px', color: 'var(--ep-text-secondary)'}}>{tier.name}</span>
                   <span style={{fontSize: '13px', fontWeight: 700, color: '#c8a84b'}}>~KES {tier.monthly.toLocaleString()}/mo</span>
                 </div>
               ))}
-              <p style={{fontSize: '10px', color: '#94a3b8', marginTop: '10px', marginBottom: 0}}>One-time setup fee from KES 25,000. Discounts available for per-term or annual billing.</p>
+              <p style={{fontSize: '10px', color: 'var(--ep-text-tertiary)', marginTop: '10px', marginBottom: 0}}>One-time setup fee from KES 25,000. Discounts available for per-term or annual billing.</p>
             </div>
 
-            <p style={{fontSize: '13px', color: '#64748b', marginBottom: '20px'}}>
+            <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', marginBottom: '20px'}}>
               To subscribe, contact us and we'll get you set up within the hour:
             </p>
 
@@ -59,7 +59,7 @@ export default function TrialExpired() {
               </a>
               <Link
                 href="/login"
-                style={{display: 'block', background: '#f8f9fc', color: '#64748b', padding: '10px', borderRadius: '6px', fontSize: '12px', textDecoration: 'none', textAlign: 'center', border: '1px solid #e2e8f0'}}
+                style={{display: 'block', background: 'var(--ep-bg-secondary)', color: 'var(--ep-text-secondary)', padding: '10px', borderRadius: '6px', fontSize: '12px', textDecoration: 'none', textAlign: 'center', border: '1px solid var(--ep-border)'}}
               >
                 Sign out and return to login
               </Link>

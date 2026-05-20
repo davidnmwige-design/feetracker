@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import RoleGuard from '@/components/RoleGuard'
@@ -153,14 +153,14 @@ export default function Unmatched() {
       <div className="unm-body" style={{ padding: '24px 32px', maxWidth: '860px', margin: '0 auto', boxSizing: 'border-box' as const }}>
 
         {loading && (
-          <div style={{ textAlign: 'center', color: '#94a3b8', padding: '64px', fontSize: '14px' }}>Loading…</div>
+          <div style={{ textAlign: 'center', color: 'var(--ep-text-tertiary)', padding: '64px', fontSize: '14px' }}>Loading…</div>
         )}
 
         {!loading && payments.length === 0 && (
-          <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '56px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--ep-card-bg)', borderRadius: '10px', border: '1px solid var(--ep-border)', padding: '56px', textAlign: 'center' }}>
             <div style={{ fontSize: '32px', marginBottom: '12px' }}>Done</div>
-            <p style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>All clear</p>
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>All payments have been matched to students.</p>
+            <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px' }}>All clear</p>
+            <p style={{ fontSize: '13px', color: 'var(--ep-text-tertiary)', margin: 0 }}>All payments have been matched to students.</p>
           </div>
         )}
 
@@ -172,7 +172,7 @@ export default function Unmatched() {
             alignItems: 'center', gap: '16px', flexWrap: 'wrap' as const,
           }}>
             <div>
-              <p style={{ fontSize: '14px', fontWeight: 700, color: '#0a1f4e', margin: '0 0 3px' }}>
+              <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: '0 0 3px' }}>
                 {autoMatchPairs.length} payment{autoMatchPairs.length !== 1 ? 's' : ''} can be matched by admission number
               </p>
               <p style={{ fontSize: '12px', color: '#3d2a00', margin: 0, opacity: 0.8 }}>
@@ -206,7 +206,7 @@ export default function Unmatched() {
               const isDropdownOpen = openDropdown === payment.id && !sel && results.length > 0
 
               return (
-                <div key={payment.id} style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', position: 'relative', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                <div key={payment.id} style={{ background: 'var(--ep-card-bg)', borderRadius: '10px', border: '1px solid var(--ep-border)', position: 'relative', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
 
                   {/* Payment info */}
                   {(() => {
@@ -259,7 +259,7 @@ export default function Unmatched() {
 
                   {/* Match section */}
                   <div style={{ padding: '16px 20px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' as const, letterSpacing: '0.5px', marginBottom: '10px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--ep-text-tertiary)', textTransform: 'uppercase' as const, letterSpacing: '0.5px', marginBottom: '10px' }}>
                       Match to student
                     </p>
 
@@ -293,7 +293,7 @@ export default function Unmatched() {
                       {isDropdownOpen && (
                         <div style={{
                           position: 'absolute' as const, top: '100%', left: 0, right: 0,
-                          background: '#ffffff', border: '1px solid #e2e8f0',
+                          background: '#ffffff', border: '1px solid var(--ep-border)',
                           borderRadius: '0 0 6px 6px',
                           boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 9999,
                           maxHeight: '220px', overflowY: 'auto' as const, width: '100%',
@@ -308,12 +308,12 @@ export default function Unmatched() {
                                 onMouseDown={e => { e.preventDefault(); selectStudent(payment.id, s) }}
                                 style={{
                                   display: 'block', width: '100%', padding: '10px 12px',
-                                  textAlign: 'left' as const, background: '#fff', border: 'none',
+                                  textAlign: 'left' as const, background: 'var(--ep-card-bg)', border: 'none',
                                   cursor: 'pointer', borderBottom: '1px solid #f1f5f9',
                                 }}
                               >
-                                <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>{s.name}</div>
-                                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                                <div style={{ fontWeight: 600, color: 'var(--ep-text-primary)', fontSize: '14px' }}>{s.name}</div>
+                                <div style={{ fontSize: '12px', color: 'var(--ep-text-tertiary)', marginTop: '2px' }}>
                                   {s.admNo} · {s.class}{s.stream ? ' ' + s.stream : ''}
                                   {s.parentName && ` · ${s.parentName}`}
                                   <span style={{ color: balance > 0 ? '#e24b4a' : '#0a7c3e', fontWeight: 600 }}>
@@ -332,11 +332,11 @@ export default function Unmatched() {
                       <div style={{ marginTop: '12px', background: '#f0f7ff', border: '2px solid #0a1f4e', borderRadius: '8px', padding: '14px 16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
-                            <p style={{ fontSize: '11px', fontWeight: 700, color: '#0a1f4e', textTransform: 'uppercase' as const, letterSpacing: '0.5px', margin: '0 0 4px' }}>
+                            <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--ep-text-primary)', textTransform: 'uppercase' as const, letterSpacing: '0.5px', margin: '0 0 4px' }}>
                               Matched to
                             </p>
-                            <p style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: '0 0 2px' }}>{sel.name}</p>
-                            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
+                            <p style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: '0 0 2px' }}>{sel.name}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--ep-text-secondary)', margin: 0 }}>
                               {sel.admNo} · {sel.class}{sel.stream ? ' ' + sel.stream : ''}
                               {' · '}
                               <span style={{ color: (sel.feeRequired - ((sel.payments || []).reduce((s: number, p: any) => s + p.amount, 0))) > 0 ? '#e24b4a' : '#0a7c3e', fontWeight: 600 }}>
@@ -346,7 +346,7 @@ export default function Unmatched() {
                           </div>
                           <button
                             onClick={() => clearSelection(payment.id)}
-                            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '16px', padding: '2px', lineHeight: 1 }}
+                            style={{ background: 'none', border: 'none', color: 'var(--ep-text-tertiary)', cursor: 'pointer', fontSize: '16px', padding: '2px', lineHeight: 1 }}
                           >
                             x
                           </button>

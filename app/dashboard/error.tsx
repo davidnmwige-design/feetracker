@@ -9,11 +9,11 @@ export default function DashboardError({
 }) {
   return (
     <div style={{
-      background: '#f8f9fc', minHeight: '100vh', display: 'flex', alignItems: 'center',
+      background: 'var(--ep-bg-secondary)', minHeight: '100vh', display: 'flex', alignItems: 'center',
       justifyContent: 'center', fontFamily: 'Arial, sans-serif', padding: '24px',
     }}>
       <div style={{
-        background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0',
+        background: 'var(--ep-card-bg)', borderRadius: '10px', border: '1px solid var(--ep-border)',
         padding: '40px 32px', maxWidth: '480px', width: '100%', textAlign: 'center',
       }}>
         <div style={{
@@ -21,10 +21,10 @@ export default function DashboardError({
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           margin: '0 auto 20px', fontSize: '22px',
         }}>!</div>
-        <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+        <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '8px' }}>
           Something went wrong
         </h1>
-        <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '13px', color: 'var(--ep-text-secondary)', marginBottom: '24px', lineHeight: 1.6 }}>
           The dashboard couldn&apos;t load. This is usually a temporary issue. Please try again.
         </p>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -40,7 +40,7 @@ export default function DashboardError({
           <a
             href="/login"
             style={{
-              background: 'none', color: '#64748b', border: '1px solid #e2e8f0',
+              background: 'none', color: 'var(--ep-text-secondary)', border: '1px solid var(--ep-border)',
               padding: '10px 24px', borderRadius: '6px', fontSize: '13px', textDecoration: 'none',
             }}
           >

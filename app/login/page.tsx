@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -54,8 +54,8 @@ function LoginForm() {
   }
 
   return (
-    <main style={{background: '#f8f9fc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif', padding: '16px'}}>
-      <div style={{background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', width: '100%', maxWidth: '380px', overflow: 'hidden'}}>
+    <main style={{background: 'var(--ep-bg-secondary)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif', padding: '16px'}}>
+      <div style={{background: 'var(--ep-card-bg)', borderRadius: '10px', border: '1px solid var(--ep-border)', width: '100%', maxWidth: '380px', overflow: 'hidden'}}>
         <div style={{background: '#0a1f4e', padding: '28px 32px', textAlign: 'center'}}>
           <h1 style={{fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0}}><span style={{color: '#fff'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span></h1>
           <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '6px'}}>Sign in to your account</p>
@@ -63,7 +63,7 @@ function LoginForm() {
 
         <div style={{padding: '32px'}}>
           {registered && (
-            <div style={{background: '#f0f4f9', border: '1px solid #c8d8f0', color: '#0a1f4e', fontSize: '13px', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
+            <div style={{background: 'var(--ep-bg-tertiary)', border: '1px solid #c8d8f0', color: 'var(--ep-text-primary)', fontSize: '13px', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
               Account created! Sign in to get started.
             </div>
           )}
@@ -82,7 +82,7 @@ function LoginForm() {
 
           <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
             <div>
-              <label htmlFor="email" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Email address</label>
+              <label htmlFor="email" style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>Email address</label>
               <input
                 id="email"
                 name="email"
@@ -97,7 +97,7 @@ function LoginForm() {
             </div>
 
             <div>
-              <label htmlFor="password" style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>Password</label>
+              <label htmlFor="password" style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>Password</label>
               <div style={{position: 'relative'}}>
                 <input
                   id="password"
@@ -114,7 +114,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '12px', padding: '2px'}}
+                  style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ep-text-tertiary)', fontSize: '12px', padding: '2px'}}
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -134,10 +134,10 @@ function LoginForm() {
             </button>
 
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-              <Link href="/forgot-password" style={{fontSize: '12px', color: '#64748b', textDecoration: 'none'}}>
+              <Link href="/forgot-password" style={{fontSize: '12px', color: 'var(--ep-text-secondary)', textDecoration: 'none'}}>
                 Forgot password?
               </Link>
-              <p style={{fontSize: '12px', color: '#64748b', margin: 0}}>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', margin: 0}}>
                 No account?{' '}
                 <Link href="/signup" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>
                   Set up your school

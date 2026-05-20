@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import RoleGuard from '@/components/RoleGuard'
@@ -51,7 +51,7 @@ export default function Upload() {
       medium: { color: '#d97706', label: 'MED' },
       low:    { color: '#dc2626', label: 'LOW' },
     }
-    const s = map[level] || { color: '#94a3b8', label: '?' }
+    const s = map[level] || { color: 'var(--ep-text-tertiary)', label: '?' }
     return <span style={{ background: s.color, color: '#fff', fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '3px', marginRight: '4px' }}>{s.label}</span>
   }
 
@@ -77,11 +77,11 @@ export default function Upload() {
       </div>
 
       <div className="upl-content" style={{padding: '24px 32px', maxWidth: '640px'}}>
-        <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+        <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
 
           {/* Info banner */}
-          <div style={{background: '#f0f4f9', border: '1px solid #d4ddf0', borderRadius: '6px', padding: '12px 14px', marginBottom: '20px', fontSize: '12px', color: '#475569'}}>
-            <strong style={{color: '#0a1f4e'}}>Intelligent parsing:</strong> Upload any Kenyan bank statement in Excel, CSV, or PDF format. The system automatically detects the format, skips debit transactions, and matches payments to students by name or admission number.
+          <div style={{background: 'var(--ep-bg-tertiary)', border: '1px solid #d4ddf0', borderRadius: '6px', padding: '12px 14px', marginBottom: '20px', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>
+            <strong style={{color: 'var(--ep-text-primary)'}}>Intelligent parsing:</strong> Upload any Kenyan bank statement in Excel, CSV, or PDF format. The system automatically detects the format, skips debit transactions, and matches payments to students by name or admission number.
           </div>
 
           <div
@@ -104,18 +104,18 @@ export default function Upload() {
             {file ? (
               <div>
                 <div style={{fontSize: '28px', marginBottom: '8px'}}>{isPdf ? 'PDF' : 'Sheet'}</div>
-                <p style={{fontWeight: 700, color: '#0a1f4e', fontSize: '14px', margin: '0 0 4px'}}>{file.name}</p>
-                <p style={{fontSize: '12px', color: '#94a3b8'}}>{formatBytes(file.size)} · {isPdf ? 'PDF bank statement' : 'Spreadsheet'}</p>
+                <p style={{fontWeight: 700, color: 'var(--ep-text-primary)', fontSize: '14px', margin: '0 0 4px'}}>{file.name}</p>
+                <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)'}}>{formatBytes(file.size)} · {isPdf ? 'PDF bank statement' : 'Spreadsheet'}</p>
                 <button onClick={e => { e.stopPropagation(); setFile(null) }}
-                  style={{marginTop: '8px', background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', textDecoration: 'underline'}}>
+                  style={{marginTop: '8px', background: 'none', border: 'none', color: 'var(--ep-text-tertiary)', fontSize: '11px', cursor: 'pointer', textDecoration: 'underline'}}>
                   Change file
                 </button>
               </div>
             ) : (
               <div>
                 <div style={{fontSize: '32px', marginBottom: '12px'}}></div>
-                <p style={{color: '#0a1f4e', fontSize: '14px', fontWeight: 600, margin: '0 0 6px'}}>Click to select your statement</p>
-                <p style={{fontSize: '12px', color: '#94a3b8', margin: 0}}>Supports .xlsx, .xls, .csv, .pdf · Max 4MB</p>
+                <p style={{color: 'var(--ep-text-primary)', fontSize: '14px', fontWeight: 600, margin: '0 0 6px'}}>Click to select your statement</p>
+                <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', margin: 0}}>Supports .xlsx, .xls, .csv, .pdf · Max 4MB</p>
                 <p style={{fontSize: '11px', color: '#c8a84b', margin: '6px 0 0', fontWeight: 600}}>Works with any Kenyan bank</p>
               </div>
             )}
@@ -150,7 +150,7 @@ export default function Upload() {
         )}
 
         {results && !results.error && (
-          <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px'}}>
+          <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px'}}>
 
             {/* Format detection banner */}
             <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#166534'}}>
@@ -161,36 +161,36 @@ export default function Upload() {
 
             {/* Summary KPI row */}
             <div className="upl-results-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px'}}>
-              <div style={{background: '#f8f9fc', borderRadius: '6px', padding: '12px', textAlign: 'center', border: '1px solid #e2e8f0'}}>
-                <p style={{fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0}}>{results.total}</p>
-                <p style={{fontSize: '10px', color: '#94a3b8', margin: '4px 0 0', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Transactions</p>
+              <div style={{background: 'var(--ep-bg-secondary)', borderRadius: '6px', padding: '12px', textAlign: 'center', border: '1px solid var(--ep-border)'}}>
+                <p style={{fontSize: '22px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>{results.total}</p>
+                <p style={{fontSize: '10px', color: 'var(--ep-text-tertiary)', margin: '4px 0 0', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Transactions</p>
               </div>
               <div style={{background: '#e1f5ee', borderRadius: '6px', padding: '12px', textAlign: 'center', border: '1px solid #bbf7d0'}}>
                 <p style={{fontSize: '22px', fontWeight: 700, color: '#16a34a', margin: 0}}>{results.matched}</p>
-                <p style={{fontSize: '10px', color: '#94a3b8', margin: '4px 0 0', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Auto-matched</p>
+                <p style={{fontSize: '10px', color: 'var(--ep-text-tertiary)', margin: '4px 0 0', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Auto-matched</p>
               </div>
               <div style={{background: '#fcebeb', borderRadius: '6px', padding: '12px', textAlign: 'center', border: '1px solid #fecaca'}}>
                 <p style={{fontSize: '22px', fontWeight: 700, color: '#dc2626', margin: 0}}>{results.unmatched}</p>
-                <p style={{fontSize: '10px', color: '#94a3b8', margin: '4px 0 0', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Needs review</p>
+                <p style={{fontSize: '10px', color: 'var(--ep-text-tertiary)', margin: '4px 0 0', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Needs review</p>
               </div>
             </div>
 
             {/* Confidence breakdown */}
             {results.confidence && (
-              <div style={{background: '#f8f9fc', borderRadius: '6px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px'}}>
-                <p style={{fontWeight: 700, color: '#0f172a', margin: '0 0 8px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Match confidence</p>
+              <div style={{background: 'var(--ep-bg-secondary)', borderRadius: '6px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px'}}>
+                <p style={{fontWeight: 700, color: 'var(--ep-text-primary)', margin: '0 0 8px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>Match confidence</p>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                     <ConfidenceDot level="high" />
-                    <span style={{color: '#475569'}}><strong>{results.confidence.high}</strong> matched by admission number (fully automatic)</span>
+                    <span style={{color: 'var(--ep-text-secondary)'}}><strong>{results.confidence.high}</strong> matched by admission number (fully automatic)</span>
                   </div>
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                     <ConfidenceDot level="medium" />
-                    <span style={{color: '#475569'}}><strong>{results.confidence.medium}</strong> matched by name (automatic)</span>
+                    <span style={{color: 'var(--ep-text-secondary)'}}><strong>{results.confidence.medium}</strong> matched by name (automatic)</span>
                   </div>
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                     <ConfidenceDot level="low" />
-                    <span style={{color: '#475569'}}><strong>{results.confidence.low}</strong> possible match — review recommended</span>
+                    <span style={{color: 'var(--ep-text-secondary)'}}><strong>{results.confidence.low}</strong> possible match — review recommended</span>
                   </div>
                 </div>
               </div>
@@ -199,12 +199,12 @@ export default function Upload() {
             {/* WhatsApp notifications */}
             {results.notifications?.length > 0 && (
               <div style={{marginBottom: '16px'}}>
-                <h3 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px'}}>
+                <h3 style={{fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: '0 0 8px'}}>
                   WhatsApp notifications — {results.notifications.filter((n: any) => n.phone).length} parents
                 </h3>
                 <div style={{display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto'}}>
                   {results.notifications.map((n: any, i: number) => (
-                    <div key={i} style={{background: '#f8f9fc', borderLeft: '3px solid #c8a84b', padding: '10px 12px', borderRadius: '0 4px 4px 0', fontSize: '12px', color: '#64748b'}}>
+                    <div key={i} style={{background: 'var(--ep-bg-secondary)', borderLeft: '3px solid #c8a84b', padding: '10px 12px', borderRadius: '0 4px 4px 0', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>
                       <p style={{margin: '0 0 6px', lineHeight: 1.6}}>{n.msg}</p>
                       {n.phone && (
                         <a href={`https://wa.me/${n.phone}?text=${encodeURIComponent(n.msg)}`} target="_blank" rel="noopener noreferrer"
@@ -219,7 +219,7 @@ export default function Upload() {
             )}
 
             <div style={{display: 'flex', gap: '16px', justifyContent: 'center'}}>
-              <Link href="/dashboard" style={{color: '#0a1f4e', fontSize: '13px', fontWeight: 600, textDecoration: 'none'}}>
+              <Link href="/dashboard" style={{color: 'var(--ep-text-primary)', fontSize: '13px', fontWeight: 600, textDecoration: 'none'}}>
                 View dashboard →
               </Link>
               {results.unmatched > 0 && (

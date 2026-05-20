@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -72,12 +72,12 @@ function ResetPasswordForm() {
       {done ? (
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: '48px', height: '48px', background: '#e1f5ee', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '22px' }}>Done</div>
-          <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>Password updated</h2>
-          <p style={{ fontSize: '13px', color: '#64748b' }}>Redirecting you to sign in...</p>
+          <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '8px' }}>Password updated</h2>
+          <p style={{ fontSize: '13px', color: 'var(--ep-text-secondary)' }}>Redirecting you to sign in...</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>
+          <p style={{ fontSize: '13px', color: 'var(--ep-text-secondary)', lineHeight: '1.6', margin: 0 }}>
             Choose a strong new password for your account.
           </p>
 
@@ -88,7 +88,7 @@ function ResetPasswordForm() {
           )}
 
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px' }}>New password</label>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px' }}>New password</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -101,7 +101,7 @@ function ResetPasswordForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(v => !v)}
-                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', color: '#64748b', fontWeight: 600 }}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', color: 'var(--ep-text-secondary)', fontWeight: 600 }}
               >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
@@ -117,7 +117,7 @@ function ResetPasswordForm() {
           </div>
 
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px' }}>Confirm password</label>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px' }}>Confirm password</label>
             <input
               type={showPassword ? 'text' : 'password'}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
@@ -142,7 +142,7 @@ function ResetPasswordForm() {
             {loading ? 'Updating...' : 'Set new password'}
           </button>
 
-          <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
+          <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--ep-text-secondary)' }}>
             <Link href="/login" style={{ color: '#c8a84b', fontWeight: 600, textDecoration: 'none' }}>
               ← Back to sign in
             </Link>
@@ -155,13 +155,13 @@ function ResetPasswordForm() {
 
 export default function ResetPassword() {
   return (
-    <div style={{ background: '#f8f9fc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', width: '100%', maxWidth: '380px', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--ep-bg-secondary)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ background: 'var(--ep-card-bg)', borderRadius: '10px', border: '1px solid var(--ep-border)', width: '100%', maxWidth: '380px', overflow: 'hidden' }}>
         <div style={{ background: '#0a1f4e', padding: '28px 32px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '22px', fontWeight: 700, fontFamily: 'Georgia, serif', margin: 0 }}><span style={{ color: '#fff' }}>Elimu</span><span style={{ color: '#c8a84b' }}> Pay</span></h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '6px' }}>Set a new password</p>
         </div>
-        <Suspense fallback={<div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>}>
+        <Suspense fallback={<div style={{ padding: '32px', textAlign: 'center', color: 'var(--ep-text-tertiary)' }}>Loading...</div>}>
           <ResetPasswordForm />
         </Suspense>
       </div>
