@@ -71,7 +71,7 @@ export default function StatusPage() {
                 { label: 'Environment', value: health.environment || '—', ok: true },
                 { label: 'Version', value: health.version || '—', ok: true },
               ].map(row => (
-                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--ep-border)' }}>
                   <span style={{ fontSize: '13px', color: 'var(--ep-text-secondary)' }}>{row.label}</span>
                   <span style={{ fontSize: '13px', fontWeight: 600, color: row.ok ? 'var(--ep-text-primary)' : '#e24b4a' }}>{row.value}</span>
                 </div>

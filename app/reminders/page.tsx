@@ -512,14 +512,14 @@ export default function Reminders() {
           onClick={e => { if (e.target === e.currentTarget && !bulkSending) { setBulkModal(false); setBulkResult(null) } }}
         >
           <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', width: '540px', maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column' as const}}>
-            <div style={{padding: '24px 24px 16px', borderBottom: '1px solid #f1f5f9', flexShrink: 0}}>
+            <div style={{padding: '24px 24px 16px', borderBottom: '1px solid var(--ep-border)', flexShrink: 0}}>
               <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Send email reminders to all parents</h3>
               <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', margin: 0}}>{withBalance.length} parents with outstanding balances · fill in missing emails before sending</p>
             </div>
 
             <div style={{overflowY: 'auto', flex: 1, padding: '16px 24px'}}>
               {withBalance.map(student => (
-                <div key={student.id} style={{display: 'flex', gap: '10px', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f8fafc'}}>
+                <div key={student.id} style={{display: 'flex', gap: '10px', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--ep-border)'}}>
                   <div style={{flex: 1, minWidth: 0}}>
                     <p style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const}}>{student.name}</p>
                     <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', margin: 0}}>KES {getBalance(student).toLocaleString()} outstanding</p>
@@ -538,7 +538,7 @@ export default function Reminders() {
               ))}
             </div>
 
-            <div style={{padding: '16px 24px', borderTop: '1px solid #f1f5f9', flexShrink: 0}}>
+            <div style={{padding: '16px 24px', borderTop: '1px solid var(--ep-border)', flexShrink: 0}}>
               {bulkResult && (
                 <p style={{fontSize: '13px', color: bulkResult.sent > 0 ? '#0a7c3e' : 'var(--ep-text-secondary)', marginBottom: '12px', fontWeight: 600}}>
                   {bulkResult.sent > 0 ? `${bulkResult.sent} email${bulkResult.sent > 1 ? 's' : ''} sent` : ''}

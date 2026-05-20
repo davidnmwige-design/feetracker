@@ -30,7 +30,7 @@ export default function TrialExpired() {
                 {name: '201–400 students',    monthly: Math.round(80000/12),  setup: '35,000'},
                 {name: '401–700 students',    monthly: Math.round(140000/12), setup: '50,000'},
               ].map((tier, i) => (
-                <div key={tier.name} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none'}}>
+                <div key={tier.name} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 2 ? '1px solid var(--ep-border)' : 'none'}}>
                   <span style={{fontSize: '12px', color: 'var(--ep-text-secondary)'}}>{tier.name}</span>
                   <span style={{fontSize: '13px', fontWeight: 700, color: '#c8a84b'}}>~KES {tier.monthly.toLocaleString()}/mo</span>
                 </div>

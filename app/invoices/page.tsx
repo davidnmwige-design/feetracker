@@ -468,7 +468,7 @@ export default function Invoices() {
 
         {/* Bulk progress / summary */}
         {bulkState && (
-          <div style={{ background: bulkState.running ? '#fff' : '#e1f5ee', border: `1px solid ${bulkState.running ? '#e2e8f0' : '#bbf7d0'}`, borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+          <div style={{ background: bulkState.running ? 'var(--ep-card-bg)' : '#e1f5ee', border: `1px solid ${bulkState.running ? 'var(--ep-border)' : '#bbf7d0'}`, borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
             {bulkState.running ? (
               <p style={{ fontSize: '13px', color: 'var(--ep-text-primary)', margin: 0 }}>
                 Sending invoices… {bulkState.done} / {bulkState.total}
@@ -512,7 +512,7 @@ export default function Invoices() {
             <div className="inv-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '860px' }}>
                 <thead>
-                  <tr style={{ textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9' }}>
+                  <tr style={{ textAlign: 'left' as const, borderBottom: '1px solid var(--ep-border)', background: 'var(--ep-bg-tertiary)' }}>
                     {['Student', 'Class', 'Fee breakdown', 'Paid', 'Due', 'Status', 'Actions'].map(h => (
                       <th key={h} style={{ padding: '10px 14px', color: 'var(--ep-text-tertiary)', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
@@ -530,7 +530,7 @@ export default function Invoices() {
                     const hasFeeBreakdown = student.tuitionFee > 0 || student.sportsFee > 0 || student.clubsFee > 0 || student.otherFee > 0
 
                     return (
-                      <tr key={student.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                      <tr key={student.id} style={{ borderBottom: '1px solid var(--ep-border)' }}>
                         <td style={{ padding: '10px 14px' }}>
                           <div style={{ fontWeight: 600, color: 'var(--ep-text-primary)' }}>{student.name}</div>
                           <div style={{ fontSize: '11px', color: 'var(--ep-text-tertiary)' }}>{student.admNo}</div>

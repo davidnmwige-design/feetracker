@@ -623,7 +623,7 @@ export default function Students() {
         </div>
 
         <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)'}}>
-          <div className="stu-search-row" style={{padding: '14px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px'}}>
+          <div className="stu-search-row" style={{padding: '14px 16px', borderBottom: '1px solid var(--ep-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px'}}>
             <h2 style={{fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)', whiteSpace: 'nowrap'}}>All students</h2>
             <input
               type="text"
@@ -644,14 +644,14 @@ export default function Students() {
             <div className="stu-table-wrap" style={{overflowX: 'auto', overflowY: 'auto', maxHeight: '640px', WebkitOverflowScrolling: 'touch' as any, width: '100%'}}>
               <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '900px', tableLayout: 'fixed' as const}}>
                 <thead style={{position: 'sticky', top: 0, zIndex: 1}}>
-                  <tr style={{textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9', background: 'var(--ep-card-bg)'}}>
+                  <tr style={{textAlign: 'left' as const, borderBottom: '1px solid var(--ep-border)', background: 'var(--ep-table-header, var(--ep-bg-tertiary))'}}>
                     {[
                       {h: 'Name', w: '160px'}, {h: 'Adm No', w: '80px'}, {h: 'Class', w: '80px'},
                       {h: 'Fee Required', w: '100px'}, {h: '', w: '36px'},
                       {h: 'Paid', w: '90px'}, {h: 'Balance', w: '90px'}, {h: 'Status', w: '72px'},
                       {h: 'Parent Email', w: '160px'}, {h: '', w: '140px'},
                     ].map(({h, w}, i) => (
-                      <th key={i} style={{padding: '10px 10px', color: 'var(--ep-text-tertiary)', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap', background: 'var(--ep-card-bg)', width: w}}>{h}</th>
+                      <th key={i} style={{padding: '10px 10px', color: 'var(--ep-text-secondary)', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap', background: 'var(--ep-table-header, var(--ep-bg-tertiary))', width: w}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -666,7 +666,7 @@ export default function Students() {
 
                     return (
                       <>
-                        <tr key={student.id} style={{borderBottom: isFeeEdit ? 'none' : '1px solid #f8fafc', cursor: 'pointer', background: isFeeEdit ? '#fffdf5' : undefined}} onClick={() => router.push('/students/' + student.id)}>
+                        <tr key={student.id} style={{borderBottom: isFeeEdit ? 'none' : '1px solid var(--ep-border)', cursor: 'pointer', background: isFeeEdit ? 'var(--ep-bg-tertiary)' : undefined}} onClick={() => router.push('/students/' + student.id)}>
                           <td style={{padding: '9px 10px', fontWeight: 600, color: 'var(--ep-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{student.name}</td>
                           <td style={{padding: '9px 10px', color: 'var(--ep-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis'}}>{student.admNo || '—'}</td>
                           <td style={{padding: '9px 10px', color: 'var(--ep-text-secondary)', whiteSpace: 'nowrap'}}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>
@@ -674,7 +674,7 @@ export default function Students() {
                           {/* Pencil edit button */}
                           <td style={{padding: '4px 4px', textAlign: 'center'}} onClick={e => e.stopPropagation()}>
                             <button onClick={() => isFeeEdit ? closeFeeEditor() : openFeeEditor(student)} title="Edit fee categories"
-                              style={{background: isFeeEdit ? '#c8a84b' : 'none', border: isFeeEdit ? 'none' : '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', cursor: 'pointer', fontSize: '12px', color: isFeeEdit ? 'var(--ep-text-primary)' : 'var(--ep-text-tertiary)', fontWeight: isFeeEdit ? 700 : 400, lineHeight: 1}}>
+                              style={{background: isFeeEdit ? '#c8a84b' : 'none', border: isFeeEdit ? 'none' : '1px solid var(--ep-border)', borderRadius: '4px', padding: '4px 6px', cursor: 'pointer', fontSize: '12px', color: isFeeEdit ? '#0a1f4e' : 'var(--ep-text-tertiary)', fontWeight: isFeeEdit ? 700 : 400, lineHeight: 1}}>
                               Edit
                             </button>
                           </td>
@@ -721,9 +721,9 @@ export default function Students() {
                         {/* Inline fee editor accordion */}
                         {isFeeEdit && (
                           <tr key={student.id + '-feeedit'}>
-                            <td colSpan={10} style={{padding: 0, background: '#fdf8ee', borderBottom: '2px solid #c8a84b', overflow: 'hidden'}}>
+                            <td colSpan={10} style={{padding: 0, background: 'var(--ep-bg-tertiary)', borderBottom: '2px solid #c8a84b', overflow: 'hidden'}}>
                               <div style={{padding: '16px 20px'}}>
-                                <p style={{fontSize: '12px', fontWeight: 700, color: '#92681a', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>
+                                <p style={{fontSize: '12px', fontWeight: 700, color: '#c8a84b', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px'}}>
                                   Edit fee categories — {student.name}
                                 </p>
                                 <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px'}}>
@@ -733,7 +733,7 @@ export default function Students() {
                                         value={row.name}
                                         onChange={e => setFeeEditRows(prev => prev.map((r, j) => j === i ? { ...r, name: e.target.value } : r))}
                                         placeholder="Category name"
-                                        style={{flex: 2, border: '1px solid #e2d9b8', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', background: 'var(--ep-card-bg)', minWidth: '100px'}}
+                                        style={{flex: 2, border: '1px solid var(--ep-border)', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', background: 'var(--ep-card-bg)', minWidth: '100px'}}
                                       />
                                       <input
                                         type="number"
@@ -741,7 +741,7 @@ export default function Students() {
                                         onChange={e => setFeeEditRows(prev => prev.map((r, j) => j === i ? { ...r, amount: Number(e.target.value) } : r))}
                                         placeholder="0"
                                         min="0"
-                                        style={{flex: 1, border: '1px solid #e2d9b8', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', background: 'var(--ep-card-bg)', minWidth: '80px'}}
+                                        style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', background: 'var(--ep-card-bg)', minWidth: '80px'}}
                                       />
                                       <button onClick={() => setFeeEditRows(prev => prev.filter((_, j) => j !== i))}
                                         style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '14px', padding: '0 4px', flexShrink: 0}}>
@@ -752,10 +752,10 @@ export default function Students() {
                                 </div>
                                 <div style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' as const}}>
                                   <button onClick={() => setFeeEditRows(prev => [...prev, { name: '', amount: 0 }])}
-                                    style={{fontSize: '12px', background: 'none', border: '1px dashed #c8a84b', color: '#92681a', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer'}}>
+                                    style={{fontSize: '12px', background: 'none', border: '1px dashed #c8a84b', color: 'var(--ep-text-secondary)', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer'}}>
                                     + Add category
                                   </button>
-                                  <span style={{fontSize: '12px', color: '#92681a', fontWeight: 700}}>
+                                  <span style={{fontSize: '12px', color: '#c8a84b', fontWeight: 700}}>
                                     Total: KES {feeTotal.toLocaleString()}
                                   </span>
                                   <button onClick={() => saveFeeEdits(student.id)} disabled={feeEditSaving}
@@ -763,7 +763,7 @@ export default function Students() {
                                     {feeEditSaving ? 'Saving…' : 'Save fees'}
                                   </button>
                                   <button onClick={closeFeeEditor}
-                                    style={{background: 'none', border: '1px solid #e2d9b8', color: 'var(--ep-text-secondary)', padding: '6px 12px', borderRadius: '5px', fontSize: '12px', cursor: 'pointer'}}>
+                                    style={{background: 'none', border: '1px solid var(--ep-border)', color: 'var(--ep-text-secondary)', padding: '6px 12px', borderRadius: '5px', fontSize: '12px', cursor: 'pointer'}}>
                                     Cancel
                                   </button>
                                 </div>
@@ -786,7 +786,7 @@ export default function Students() {
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px'}}
           onClick={e => { if (e.target === e.currentTarget && !addSaving) setAddModal(false) }}>
           <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', width: '520px', maxWidth: '100%', maxHeight: '90vh', overflow: 'auto'}}>
-            <div style={{padding: '20px 24px', borderBottom: '1px solid #f1f5f9'}}>
+            <div style={{padding: '20px 24px', borderBottom: '1px solid var(--ep-border)'}}>
               <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>Add student</h3>
             </div>
             <div style={{padding: '20px 24px'}}>
@@ -863,7 +863,7 @@ export default function Students() {
               </div>
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
                 <button onClick={() => setAddCategories(p => [...p, {name: '', amount: 0}])}
-                  style={{fontSize: '12px', background: 'none', border: '1px dashed #c8a84b', color: '#92681a', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer'}}>
+                  style={{fontSize: '12px', background: 'none', border: '1px dashed #c8a84b', color: 'var(--ep-text-secondary)', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer'}}>
                   + Add category
                 </button>
                 <span style={{fontSize: '12px', color: 'var(--ep-text-primary)', fontWeight: 700}}>
@@ -904,7 +904,7 @@ export default function Students() {
               {(['update', 'add'] as const).map(m => (
                 <button key={m} onClick={() => { if (!bulkSaving) { setBulkMode(m); setBulkResult(null); setBulkSuccess(false) } }}
                   style={{flex: 1, padding: '8px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: bulkSaving ? 'not-allowed' : 'pointer', transition: 'all 0.15s',
-                    background: bulkMode === m ? '#fff' : 'transparent',
+                    background: bulkMode === m ? 'var(--ep-bg-tertiary)' : 'transparent',
                     color: bulkMode === m ? 'var(--ep-text-primary)' : 'var(--ep-text-secondary)',
                     boxShadow: bulkMode === m ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                   }}>

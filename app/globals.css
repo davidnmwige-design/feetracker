@@ -163,10 +163,15 @@
   --ep-text-primary:   #f1f5f9;
   --ep-text-secondary: #94a3b8;
   --ep-text-tertiary:  #64748b;
-  --ep-border:   #334155;
-  --ep-card-bg:  #1e293b;
-  --ep-input-bg: #1e293b;
-  --ep-shadow:   rgba(0,0,0,0.3);
+  --ep-border:       rgba(255,255,255,0.1);
+  --ep-card-bg:      #1e293b;
+  --ep-card-border:  rgba(255,255,255,0.08);
+  --ep-input-bg:     #0f172a;
+  --ep-input-border: rgba(255,255,255,0.15);
+  --ep-shadow:       rgba(0,0,0,0.4);
+  --ep-table-header: #334155;
+  --ep-table-row-alt: #162032;
+  --ep-hover:        rgba(255,255,255,0.05);
 }
 
 /* Pages that use ep- variables automatically pick up dark mode */
@@ -192,17 +197,17 @@
 [data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]) {
   background-color: var(--ep-input-bg) !important;
   color: var(--ep-text-primary) !important;
-  border-color: var(--ep-border) !important;
+  border-color: var(--ep-input-border) !important;
 }
 [data-theme="dark"] select {
   background-color: var(--ep-input-bg) !important;
   color: var(--ep-text-primary) !important;
-  border-color: var(--ep-border) !important;
+  border-color: var(--ep-input-border) !important;
 }
 [data-theme="dark"] textarea {
   background-color: var(--ep-input-bg) !important;
   color: var(--ep-text-primary) !important;
-  border-color: var(--ep-border) !important;
+  border-color: var(--ep-input-border) !important;
 }
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder {

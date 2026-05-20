@@ -86,9 +86,9 @@ export default function Upload() {
 
           <div
             style={{
-              border: '2px dashed ' + (file ? '#0a1f4e' : hovered ? '#c8a84b' : '#e2e8f0'),
+              border: '2px dashed ' + (file ? '#0a1f4e' : hovered ? '#c8a84b' : 'var(--ep-border)'),
               borderRadius: '8px', padding: '40px 32px', textAlign: 'center', cursor: 'pointer',
-              background: file ? '#f0f4f9' : '#fafbfc', transition: 'border-color 0.2s',
+              background: file ? 'var(--ep-bg-tertiary)' : 'var(--ep-bg-secondary)', transition: 'border-color 0.2s',
             }}
             onClick={() => document.getElementById('fileInput')?.click()}
             onMouseEnter={() => setHovered(true)}

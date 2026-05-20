@@ -404,7 +404,7 @@ export default function Reports() {
               const clsRate      = clsExpected > 0 ? Math.round(clsCollected / clsExpected * 100) : 0
               return (
                 <div key={cls} style={{ background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', marginBottom: '16px' }}>
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', background: 'var(--ep-bg-secondary)', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: '8px' }}>
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--ep-border)', background: 'var(--ep-bg-tertiary)', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: '8px' }}>
                     <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0 }}>
                       {cls} <span style={{ fontWeight: 400, color: 'var(--ep-text-tertiary)' }}>· {classStudents.length} students</span>
                     </h2>
@@ -419,7 +419,7 @@ export default function Reports() {
                   <div className="rpt-table-wrap" style={{ overflowX: 'auto', width: '100%' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '480px' }}>
                       <thead>
-                        <tr style={{ textAlign: 'left' as const, borderBottom: '1px solid #f1f5f9' }}>
+                        <tr style={{ textAlign: 'left' as const, borderBottom: '1px solid var(--ep-border)', background: 'var(--ep-bg-tertiary)' }}>
                           {['Name', 'Adm No', 'Fee Req', 'Paid', 'Balance', 'Status'].map(h => (
                             <th key={h} style={{ padding: '8px 14px', color: 'var(--ep-text-tertiary)', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
                           ))}
@@ -432,7 +432,7 @@ export default function Reports() {
                           const status = bal <= 0 ? 'Paid' : paid > 0 ? 'Partial' : 'Unpaid'
                           const st = status === 'Paid' ? { bg: '#e1f5ee', c: '#166534' } : status === 'Partial' ? { bg: '#fef9ec', c: '#92681a' } : { bg: '#fcebeb', c: '#a32d2d' }
                           return (
-                            <tr key={student.id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                            <tr key={student.id} style={{ borderBottom: '1px solid var(--ep-border)' }}>
                               <td style={{ padding: '9px 14px', fontWeight: 600, color: 'var(--ep-text-primary)' }}>{student.name}</td>
                               <td style={{ padding: '9px 14px', color: 'var(--ep-text-secondary)' }}>{student.admNo || '—'}</td>
                               <td style={{ padding: '9px 14px', whiteSpace: 'nowrap' }}>KES {student.feeRequired.toLocaleString()}</td>

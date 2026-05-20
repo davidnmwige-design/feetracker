@@ -124,7 +124,7 @@ export default function Unmatched() {
           .unm-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
           .unm-body { padding: 16px !important; }
         }
-        .unm-result-row:hover { background: #f0f4f9 !important; }
+        .unm-result-row:hover { background: var(--ep-hover, #f0f4f9) !important; }
         .unm-confirm-btn:hover:not(:disabled) { opacity: 0.92; }
       `}</style>
 
@@ -282,10 +282,10 @@ export default function Unmatched() {
                           if (!sel) setOpenDropdown(payment.id)
                         }}
                         style={{
-                          width: '100%', border: `2px solid ${sel ? '#c8a84b' : '#0a1f4e'}`,
+                          width: '100%', border: `2px solid ${sel ? '#c8a84b' : 'var(--ep-input-border)'}`,
                           borderRadius: '8px', padding: '10px 14px', fontSize: '14px',
                           outline: 'none', boxSizing: 'border-box' as const,
-                          background: sel ? '#fffdf5' : '#fff',
+                          background: sel ? 'rgba(200,168,75,0.08)' : 'var(--ep-input-bg)',
                         }}
                       />
 
@@ -293,9 +293,9 @@ export default function Unmatched() {
                       {isDropdownOpen && (
                         <div style={{
                           position: 'absolute' as const, top: '100%', left: 0, right: 0,
-                          background: '#ffffff', border: '1px solid var(--ep-border)',
+                          background: 'var(--ep-bg-tertiary)', border: '1px solid var(--ep-border)',
                           borderRadius: '0 0 6px 6px',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 9999,
+                          boxShadow: '0 4px 12px var(--ep-shadow)', zIndex: 9999,
                           maxHeight: '220px', overflowY: 'auto' as const, width: '100%',
                         }}>
                           {results.map((s, i) => {
@@ -308,8 +308,8 @@ export default function Unmatched() {
                                 onMouseDown={e => { e.preventDefault(); selectStudent(payment.id, s) }}
                                 style={{
                                   display: 'block', width: '100%', padding: '10px 12px',
-                                  textAlign: 'left' as const, background: 'var(--ep-card-bg)', border: 'none',
-                                  cursor: 'pointer', borderBottom: '1px solid #f1f5f9',
+                                  textAlign: 'left' as const, background: 'var(--ep-bg-tertiary)', border: 'none',
+                                  cursor: 'pointer', borderBottom: '1px solid var(--ep-border)',
                                 }}
                               >
                                 <div style={{ fontWeight: 600, color: 'var(--ep-text-primary)', fontSize: '14px' }}>{s.name}</div>
@@ -329,7 +329,7 @@ export default function Unmatched() {
 
                     {/* Selected student + confirm */}
                     {sel && (
-                      <div style={{ marginTop: '12px', background: '#f0f7ff', border: '2px solid #0a1f4e', borderRadius: '8px', padding: '14px 16px' }}>
+                      <div style={{ marginTop: '12px', background: 'rgba(200,168,75,0.08)', border: '2px solid rgba(200,168,75,0.4)', borderRadius: '8px', padding: '14px 16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
                             <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--ep-text-primary)', textTransform: 'uppercase' as const, letterSpacing: '0.5px', margin: '0 0 4px' }}>

@@ -852,7 +852,7 @@ export default function Settings() {
                     {label: 'Reply-to email', value: school?.replyToEmail || '—'},
                     {label: 'Plan', value: `${currentPlanName} (${studentCount} students)`},
                   ].map((row, i, arr) => (
-                    <div key={row.label} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none'}}>
+                    <div key={row.label} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--ep-border)' : 'none'}}>
                       <span style={{fontSize: '13px', color: 'var(--ep-text-secondary)'}}>{row.label}</span>
                       <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)', textAlign: 'right', maxWidth: '60%'}}>{row.value}</span>
                     </div>
@@ -1311,7 +1311,7 @@ export default function Settings() {
                 </div>
               ) : (
                 <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--ep-border)'}}>
                     <span style={{fontSize: '13px', color: 'var(--ep-text-secondary)'}}>Paybill number</span>
                     <span style={{fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)'}}>{school?.paybill}</span>
                   </div>
@@ -1505,9 +1505,9 @@ export default function Settings() {
               {examFeeLoading ? <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>Loading...</p> : examFees.length === 0 ? (
                 <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>No exam fees configured yet.</p>
               ) : (
-                <div style={{border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden'}}>
+                <div style={{border: '1px solid var(--ep-border)', borderRadius: '8px', overflow: 'hidden'}}>
                   {examFees.map((f, i) => (
-                    <div key={f.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < examFees.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '8px'}}>
+                    <div key={f.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < examFees.length - 1 ? '1px solid var(--ep-border)' : 'none', gap: '8px'}}>
                       <div style={{flex: 1, minWidth: 0}}>
                         <div style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>{f.name}</div>
                         <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', margin: '2px 0 0'}}>
@@ -1681,9 +1681,9 @@ export default function Settings() {
               ) : discounts.length === 0 ? (
                 <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>No discounts configured yet.</p>
               ) : (
-                <div style={{border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden', marginBottom: '16px'}}>
+                <div style={{border: '1px solid var(--ep-border)', borderRadius: '8px', overflow: 'hidden', marginBottom: '16px'}}>
                   {discounts.map((d, i) => (
-                    <div key={d.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < discounts.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '8px'}}>
+                    <div key={d.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < discounts.length - 1 ? '1px solid var(--ep-border)' : 'none', gap: '8px'}}>
                       <div style={{flex: 1, minWidth: 0}}>
                         <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
                           <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>{d.name}</span>
@@ -1711,7 +1711,7 @@ export default function Settings() {
               )}
 
               {/* Sibling discount detector */}
-              <div style={{borderTop: '1px solid #f1f5f9', paddingTop: '16px', marginTop: '4px'}}>
+              <div style={{borderTop: '1px solid var(--ep-border)', paddingTop: '16px', marginTop: '4px'}}>
                 <h3 style={{fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Sibling discount detector</h3>
                 <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '10px'}}>Find students who share a parent phone number and apply a sibling discount to the whole group.</p>
                 <button onClick={detectSiblingGroups} disabled={detectingGroups}
@@ -1792,7 +1792,7 @@ export default function Settings() {
                     <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>No team members yet. Invite a colleague to get started.</p>
                   )}
                   {teamMembers.length > 0 && (
-                    <div style={{marginBottom: '16px', border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden'}}>
+                    <div style={{marginBottom: '16px', border: '1px solid var(--ep-border)', borderRadius: '8px', overflow: 'hidden'}}>
                       {teamMembers.map((m, i) => {
                         const roleStyles: Record<string, { bg: string; color: string; label: string }> = {
                           admin:       { bg: '#c8a84b', color: 'var(--ep-text-primary)', label: 'Admin'       },
@@ -1808,7 +1808,7 @@ export default function Settings() {
                         }
                         const rs = roleStyles[m.role] || roleStyles.viewer
                         return (
-                          <div key={m.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderBottom: i < teamMembers.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '12px'}}>
+                          <div key={m.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderBottom: i < teamMembers.length - 1 ? '1px solid var(--ep-border)' : 'none', gap: '12px'}}>
                             <div style={{flex: 1, minWidth: 0}}>
                               <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px'}}>
                                 <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>{m.user?.name}</span>
@@ -1900,7 +1900,7 @@ export default function Settings() {
                 <p style={{fontSize: '13px', color: 'var(--ep-text-tertiary)'}}>No terms created yet.</p>
               ) : (
                 terms.map((term, i) => (
-                  <div key={term.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < terms.length - 1 ? '1px solid #f1f5f9' : 'none'}}>
+                  <div key={term.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < terms.length - 1 ? '1px solid var(--ep-border)' : 'none'}}>
                     <span style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>{term.name}</span>
                     <span style={{fontSize: '11px', color: 'var(--ep-text-tertiary)'}}>
                       {new Date(term.createdAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}

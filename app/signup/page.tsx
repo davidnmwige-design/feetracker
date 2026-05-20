@@ -262,7 +262,7 @@ export default function Signup() {
               )}
             </div>
 
-            <div style={{borderTop: '1px solid #f1f5f9', paddingTop: '16px'}}>
+            <div style={{borderTop: '1px solid var(--ep-border)', paddingTop: '16px'}}>
               <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: '14px'}}>School details</p>
               <div style={{display: 'flex', flexDirection: 'column', gap: '14px'}}>
                 <div>

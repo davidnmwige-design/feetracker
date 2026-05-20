@@ -154,7 +154,7 @@ async function buildCertificateDoc(data: any) {
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9'}}>
+    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--ep-border)'}}>
       <span style={{fontSize: '13px', color: '#64748b'}}>{label}</span>
       <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', textAlign: 'right', maxWidth: '60%'}}>{value || '—'}</span>
     </div>
@@ -701,7 +701,7 @@ export default function StudentDetail() {
               <h2 style={sectionTitle}>Parent / Guardian</h2>
               <p style={sectionSubtitle}>Contact information</p>
               <InfoRow label="Parent 1 name" value={student.parentName} />
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--ep-border)'}}>
                 <span style={{fontSize: '13px', color: '#64748b'}}>Parent 1 phone</span>
                 <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                   <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.parentPhone || '—'}</span>
@@ -713,7 +713,7 @@ export default function StudentDetail() {
                   )}
                 </div>
               </div>
-              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: student.parent2Name ? '1px solid #f1f5f9' : 'none'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: student.parent2Name ? '1px solid var(--ep-border)' : 'none'}}>
                 <span style={{fontSize: '13px', color: '#64748b'}}>Parent 1 email</span>
                 {student.parentEmail ? (
                   <a href={`mailto:${student.parentEmail}`} style={{fontSize: '13px', fontWeight: 600, color: '#0a1f4e', textDecoration: 'none'}}>{student.parentEmail}</a>
@@ -722,7 +722,7 @@ export default function StudentDetail() {
               {student.parent2Name && (
                 <>
                   <InfoRow label="Parent 2 name" value={student.parent2Name} />
-                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid #f1f5f9'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--ep-border)'}}>
                     <span style={{fontSize: '13px', color: '#64748b'}}>Parent 2 phone</span>
                     <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                       <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{student.parent2Phone || '—'}</span>
@@ -857,7 +857,7 @@ export default function StudentDetail() {
                 </thead>
                 <tbody>
                   {student.payments.map((p: any) => (
-                    <tr key={p.id} style={{borderBottom: '1px solid #f8fafc'}}>
+                    <tr key={p.id} style={{borderBottom: '1px solid var(--ep-border)'}}>
                       <td style={{padding: '8px 12px', color: '#64748b', whiteSpace: 'nowrap'}}>{new Date(p.paidAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                       <td style={{padding: '8px 12px', fontFamily: 'monospace', fontSize: '11px', color: '#64748b'}}>{p.mpesaRef || '—'}</td>
                       <td style={{padding: '8px 12px', fontWeight: 700, color: '#0a1f4e', whiteSpace: 'nowrap'}}>KES {p.amount.toLocaleString()}</td>
