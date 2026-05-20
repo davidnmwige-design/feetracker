@@ -64,7 +64,7 @@ export default function AppNav() {
         fontFamily: 'Georgia, serif', textDecoration: 'none',
         whiteSpace: 'nowrap', flexShrink: 0,
       }}>
-        <span style={{color: '#0a1f4e'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span>
+        <span style={{color: '#0a1f4e'}}>Elimu</span><span style={{color: '#8d7022'}}> Pay</span>
       </Link>
 
       <div className="appnav-links" style={{

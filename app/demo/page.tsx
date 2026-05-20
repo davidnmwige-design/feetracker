@@ -828,6 +828,7 @@ export default function Demo() {
 
   return (
     <div style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
+      <h1 className="sr-only">Elimu Pay Demo</h1>
       <style>{`
         @media (max-width: 640px) {
           .demo-content { padding: 16px !important; }

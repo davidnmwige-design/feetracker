@@ -36,33 +36,47 @@ export async function POST(req: Request) {
     if (!file || !/\.(xlsx|xls|csv|pdf)$/i.test(file.name)) {
       return NextResponse.json({ error: 'Only .xlsx, .xls, .csv, and .pdf files are accepted' }, { status: 400 })
     }
-    if (file.size > 20 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be under 20MB' }, { status: 400 })
+    if (file.size > 4 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File too large. Maximum 4MB. Please split your statement into smaller date ranges.' }, { status: 400 })
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer())
+    const arrayBuffer = await file.arrayBuffer()
+    if (arrayBuffer.byteLength > 4 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File too large. Maximum 4MB.' }, { status: 400 })
+    }
+    const buffer = Buffer.from(arrayBuffer)
     const students = await prisma.student.findMany({
       where: { schoolId },
       select: { id: true, name: true, admNo: true, parentName: true, parent2Name: true, parentPhone: true },
     })
 
-    // -- Parse the file ----------------------------------------------------
+    // -- Parse the file (with 25s timeout) ---------------------------------
     let parseResult
-
-    if (/\.pdf$/i.test(file.name)) {
-      // Dynamic import to avoid edge-runtime issues
-      const pdfModule = await import('pdf-parse')
-      const pdfParse = (pdfModule as any).default ?? pdfModule
-      const pdfData = await pdfParse(buffer)
-      parseResult = parseTextStatement(pdfData.text)
-      if (!parseResult.formatDetected.includes('Bank')) {
-        parseResult.formatDetected = 'Bank Statement (PDF)'
+    try {
+      const parsePromise = (async () => {
+        if (/\.pdf$/i.test(file.name)) {
+          const pdfModule = await import('pdf-parse')
+          const pdfParse = (pdfModule as any).default ?? pdfModule
+          const pdfData = await pdfParse(buffer)
+          const result = parseTextStatement(pdfData.text)
+          if (!result.formatDetected.includes('Bank')) result.formatDetected = 'Bank Statement (PDF)'
+          return result
+        } else {
+          const workbook = XLSX.read(buffer, { type: 'buffer' })
+          const sheet = workbook.Sheets[workbook.SheetNames[0]]
+          const rows = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[]
+          return parseJsonRows(rows)
+        }
+      })()
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Processing timeout')), 25000)
+      )
+      parseResult = await Promise.race([parsePromise, timeout])
+    } catch (parseError) {
+      if (parseError instanceof Error && parseError.message === 'Processing timeout') {
+        return NextResponse.json({ error: 'Processing took too long. Please try a smaller file or shorter date range.' }, { status: 408 })
       }
-    } else {
-      const workbook = XLSX.read(buffer, { type: 'buffer' })
-      const sheet = workbook.Sheets[workbook.SheetNames[0]]
-      const rows = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[]
-      parseResult = parseJsonRows(rows)
+      return NextResponse.json({ error: 'Unrecognized file format. Please upload a valid bank or MPESA statement.' }, { status: 400 })
     }
 
     // -- Match transactions to students ------------------------------------

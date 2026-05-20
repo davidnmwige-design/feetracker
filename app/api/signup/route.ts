@@ -4,6 +4,7 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
+import zxcvbn from 'zxcvbn'
 
 const RESERVED_PREFIXES = ['admin', 'support', 'billing', 'noreply', 'hello']
 
@@ -41,6 +42,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Password does not meet requirements' }, { status: 400 })
     }
 
+    const strength = zxcvbn(password)
+    if (strength.score < 2) {
+      return NextResponse.json({ error: 'Password is too weak. Please choose a stronger password.' }, { status: 400 })
+    }
+
     // Reserved prefix check — return generic success to prevent enumeration
     const localPart = email.split('@')[0]
     if (RESERVED_PREFIXES.includes(localPart)) {
@@ -51,6 +57,13 @@ export async function POST(req: Request) {
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } })
     if (existing) {
       return NextResponse.json({ success: true })
+    }
+
+    if (paybill && paybill.trim() !== '') {
+      const existingPaybill = await prisma.school.findFirst({ where: { paybill: paybill.trim() } })
+      if (existingPaybill) {
+        return NextResponse.json({ success: true })
+      }
     }
 
     const hashed = await bcrypt.hash(password, 10)

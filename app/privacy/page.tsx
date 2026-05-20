@@ -123,7 +123,74 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>9. Contact Us</h2>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>9. Lawful Basis for Processing (Kenya DPA 2019)</h2>
+            <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
+              <p style={{marginBottom: '12px'}}>We process personal data under the following lawful bases as defined by the <strong>Kenya Data Protection Act 2019</strong>:</p>
+              <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                <li><strong>Contract:</strong> Processing school administrator data is necessary to provide our services under our Terms of Service.</li>
+                <li><strong>Consent:</strong> We process parent contact information with the consent of the school, which acts as the data controller for their students and parents.</li>
+                <li><strong>Legitimate interests:</strong> We process usage data to improve our services and maintain platform security.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>10. Data Subject Rights (Kenya DPA 2019)</h2>
+            <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
+              <p style={{marginBottom: '12px'}}>Under the Kenya Data Protection Act 2019, you have the right to:</p>
+              <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                <li>Access your personal data</li>
+                <li>Correct inaccurate data</li>
+                <li>Delete your data (right to erasure)</li>
+                <li>Object to processing</li>
+                <li>Data portability</li>
+              </ul>
+              <p style={{marginTop: '12px'}}>To exercise these rights, contact us at <a href="mailto:support@elimupay.co.ke" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>support@elimupay.co.ke</a></p>
+            </div>
+          </section>
+
+          <section>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>11. ODPC Complaint Procedure</h2>
+            <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
+              <p style={{marginBottom: '12px'}}>If you believe we have violated your data protection rights, you may lodge a complaint with the Office of the Data Protection Commissioner (ODPC):</p>
+              <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                <li>Website: <a href="https://www.odpc.go.ke" target="_blank" rel="noopener noreferrer" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>www.odpc.go.ke</a></li>
+                <li>Email: <a href="mailto:info@odpc.go.ke" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>info@odpc.go.ke</a></li>
+                <li>Address: Upper Hill, Nairobi, Kenya</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>12. Third-Party Processors</h2>
+            <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
+              <p style={{marginBottom: '12px'}}>We share data with the following third-party processors:</p>
+              <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                <li>Neon (database hosting) — neon.tech</li>
+                <li>Vercel (application hosting) — vercel.com</li>
+                <li>Google (email delivery via Gmail SMTP) — google.com</li>
+                <li>Safaricom (MPESA payment notifications) — safaricom.co.ke</li>
+                <li>WhatsApp (parent notifications via deep links) — whatsapp.com</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>13. Data Retention Policy</h2>
+            <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
+              <p>We retain your data for the duration of your subscription plus 30 days after cancellation, during which you may export your data. After this period, all data is permanently deleted. Certain financial records may be retained for up to 7 years as required by Kenyan tax and financial regulations.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>14. Data Protection Officer</h2>
+            <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
+              <p>Our Data Protection Officer can be contacted at: <a href="mailto:support@elimupay.co.ke" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>support@elimupay.co.ke</a></p>
+            </div>
+          </section>
+
+          <section>
+            <h2 style={{fontSize: '16px', fontWeight: 700, color: '#0a1f4e', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #c8a84b', display: 'inline-block'}}>15. Contact Us</h2>
             <div style={{fontSize: '13px', color: '#475569', lineHeight: '1.8'}}>
               <p>If you have any questions about this Privacy Policy or how your data is handled, please reach us at:</p>
               <div style={{marginTop: '12px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px'}}>

@@ -5,11 +5,20 @@ import AppNav from '@/components/AppNav'
 
 const geist = Geist({ subsets: ['latin'] })
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
+
 export const metadata: Metadata = {
   title: 'Elimu Pay - School Fee Management',
   description: 'Elimu Pay - Smart school fee management for Kenyan schools. Automate MPESA payments, send instant parent notifications, and track fee collection in real time.',
   manifest: '/manifest.json',
   themeColor: '#0a1f4e',
+  alternates: {
+    canonical: APP_URL,
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

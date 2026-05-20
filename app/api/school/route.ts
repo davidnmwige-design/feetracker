@@ -44,6 +44,14 @@ export async function PATCH(req: Request) {
     if ('paybill' in body && body.paybill != null && body.paybill !== '' && !/^\d{5,7}$/.test(String(body.paybill))) {
       return NextResponse.json({ error: 'Paybill must be 5 to 7 digits' }, { status: 400 })
     }
+    if ('paybill' in body && body.paybill != null && body.paybill !== '') {
+      const conflict = await prisma.school.findFirst({
+        where: { paybill: String(body.paybill).trim(), id: { not: ctx.school.id } }
+      })
+      if (conflict) {
+        return NextResponse.json({ error: 'This paybill number is already registered to another school' }, { status: 400 })
+      }
+    }
 
     const data: Record<string, unknown> = {}
     const strings = ['name', 'paybill', 'accountNumberFormat', 'currentTerm', 'replyToEmail', 'emailSignature', 'whatsappNumber', 'penaltyType', 'billingCycle']

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
+import zxcvbn from 'zxcvbn'
 
 function PasswordRule({ met, label }: { met: boolean; label: string }) {
   return (
@@ -30,6 +31,7 @@ export default function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState('')
   const [agreedToPolicy, setAgreedToPolicy] = useState(false)
+  const [passwordStrength, setPasswordStrength] = useState(0)
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -40,8 +42,11 @@ export default function Signup() {
   })
 
   const rules = checkPassword(form.password)
-  const passwordValid = rules.length && rules.upper && rules.lower && rules.number
+  const passwordValid = rules.length && rules.upper && rules.lower && rules.number && passwordStrength >= 2
   const passwordsMatch = form.password.length > 0 && confirmPassword === form.password
+
+  const strengthLabel = ['Very weak', 'Weak', 'Fair', 'Strong', 'Very strong'][passwordStrength] || ''
+  const strengthColor = passwordStrength <= 1 ? '#e24b4a' : passwordStrength === 2 ? '#c8a84b' : '#0f6e56'
 
   async function handleSubmit() {
     if (!passwordValid) {
@@ -141,7 +146,10 @@ export default function Signup() {
                   style={{paddingRight: '40px'}}
                   placeholder="Create a strong password"
                   value={form.password}
-                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  onChange={e => {
+                    setForm({ ...form, password: e.target.value })
+                    setPasswordStrength(e.target.value ? zxcvbn(e.target.value).score : 0)
+                  }}
                 />
                 <button
                   type="button"
@@ -157,6 +165,14 @@ export default function Signup() {
                   <PasswordRule met={rules.upper} label="Uppercase letter" />
                   <PasswordRule met={rules.lower} label="Lowercase letter" />
                   <PasswordRule met={rules.number} label="Number" />
+                  <div style={{gridColumn: '1/-1', marginTop: '8px'}}>
+                    <div style={{display: 'flex', gap: '4px', marginBottom: '4px'}}>
+                      {[0,1,2,3].map(i => (
+                        <div key={i} style={{height: '4px', flex: 1, borderRadius: '2px', background: i < passwordStrength ? strengthColor : '#e2e8f0'}} />
+                      ))}
+                    </div>
+                    <p style={{fontSize: '11px', color: strengthColor, margin: 0, fontWeight: 600}}>{strengthLabel}</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -249,7 +265,7 @@ export default function Signup() {
               />
               <span style={{fontSize: '12px', color: '#64748b', lineHeight: '1.5'}}>
                 I have read and agree to the{' '}
-                <Link href="/privacy" target="_blank" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>
+                <Link href="/privacy" target="_blank" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>
                   Privacy Policy
                 </Link>
               </span>
@@ -269,7 +285,7 @@ export default function Signup() {
 
             <p style={{textAlign: 'center', fontSize: '12px', color: '#64748b'}}>
               Already have an account?{' '}
-              <Link href="/login" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>
+              <Link href="/login" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>
                 Sign in
               </Link>
             </p>

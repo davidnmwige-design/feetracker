@@ -139,7 +139,7 @@ function LoginForm() {
               </Link>
               <p style={{fontSize: '12px', color: '#64748b', margin: 0}}>
                 No account?{' '}
-                <Link href="/signup" style={{color: '#c8a84b', fontWeight: 600, textDecoration: 'none'}}>
+                <Link href="/signup" style={{color: '#8d7022', fontWeight: 600, textDecoration: 'none'}}>
                   Set up your school
                 </Link>
               </p>

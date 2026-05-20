@@ -23,9 +23,31 @@ export const metadata: Metadata = {
   },
 }
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Elimu Pay',
+  description: 'Smart fee management for schools',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  offers: {
+    '@type': 'Offer',
+    price: '200',
+    priceCurrency: 'KES',
+    description: 'KES 200 per student per year',
+  },
+  provider: {
+    '@type': 'Organization',
+    name: 'Elimu Pay',
+    email: 'support@elimupay.co.ke',
+    url: APP_URL,
+  },
+}
+
 export default function Home() {
   return (
     <div style={{fontFamily: 'Arial, sans-serif', background: '#fff', color: '#0f172a', overflowX: 'hidden'}}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <style>{`
         @media (max-width: 768px) {
           .land-nav { flex-wrap: wrap !important; gap: 12px !important; padding: 12px 16px !important; }

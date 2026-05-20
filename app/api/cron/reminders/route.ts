@@ -3,10 +3,7 @@ import { NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email'
 import { decrypt } from '@/lib/encrypt'
 import { getEffectiveFee } from '@/lib/feeCalculations'
-
-function buildWaPhone(phone: string) {
-  return '254' + phone.replace(/\s/g, '').replace(/^0/, '').replace(/^254/, '')
-}
+import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
 
 function buildWaMessage(studentName: string, cls: string, balance: number, schoolName: string, paybill?: string | null, acctFmt?: string | null) {
   let msg = `Dear Parent, this is a reminder that ${studentName} (${cls}) has an outstanding fee balance of KES ${balance.toLocaleString()} for this term. Please make payment at your earliest convenience. Thank you. — ${schoolName}`
@@ -116,7 +113,7 @@ export async function GET(req: Request) {
       const balance = getEffectiveFee(s.feeRequired, s.bursary) - paid
       const cls = `${s.class}${s.stream ? ' ' + s.stream : ''}`
       const waMsg = buildWaMessage(s.name, cls, balance, school.name, school.paybill, school.accountNumberFormat)
-      const waPhone = s.parentPhone ? buildWaPhone(s.parentPhone) : ''
+      const waPhone = s.parentPhone ? normalizePhoneForWhatsApp(s.parentPhone) : ''
       return {
         name: s.name, cls, balance,
         phone: s.parentPhone || null,

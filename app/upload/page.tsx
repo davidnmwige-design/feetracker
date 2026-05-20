@@ -11,8 +11,26 @@ export default function Upload() {
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<any>(null)
   const [hovered, setHovered] = useState(false)
+  const [fileError, setFileError] = useState('')
 
   const isPdf = file?.name.toLowerCase().endsWith('.pdf')
+  const MAX_SIZE = 4 * 1024 * 1024
+
+  function formatBytes(bytes: number) {
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+  }
+
+  function handleFileChange(selected: File | null) {
+    setFileError('')
+    if (!selected) { setFile(null); return }
+    if (selected.size > MAX_SIZE) {
+      setFileError(`File too large (${formatBytes(selected.size)}). Maximum is 4MB. Please split your statement into smaller date ranges.`)
+      setFile(null)
+      return
+    }
+    setFile(selected)
+  }
 
   async function handleUpload() {
     if (!file) return
@@ -22,7 +40,8 @@ export default function Upload() {
     formData.append('file', file)
     const res = await fetch('/api/upload', { method: 'POST', body: formData })
     const data = await res.json()
-    setResults(data)
+    if (!res.ok) setResults({ error: data.error || 'Upload failed' })
+    else setResults(data)
     setLoading(false)
   }
 
@@ -80,13 +99,13 @@ export default function Upload() {
               type="file"
               accept=".xlsx,.xls,.csv,.pdf"
               style={{display: 'none'}}
-              onChange={e => { setFile(e.target.files?.[0] || null); setResults(null) }}
+              onChange={e => { handleFileChange(e.target.files?.[0] || null); setResults(null) }}
             />
             {file ? (
               <div>
                 <div style={{fontSize: '28px', marginBottom: '8px'}}>{isPdf ? 'PDF' : 'Sheet'}</div>
                 <p style={{fontWeight: 700, color: '#0a1f4e', fontSize: '14px', margin: '0 0 4px'}}>{file.name}</p>
-                <p style={{fontSize: '12px', color: '#94a3b8'}}>{(file.size / 1024).toFixed(1)} KB · {isPdf ? 'PDF bank statement' : 'Spreadsheet'}</p>
+                <p style={{fontSize: '12px', color: '#94a3b8'}}>{formatBytes(file.size)} · {isPdf ? 'PDF bank statement' : 'Spreadsheet'}</p>
                 <button onClick={e => { e.stopPropagation(); setFile(null) }}
                   style={{marginTop: '8px', background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', cursor: 'pointer', textDecoration: 'underline'}}>
                   Change file
@@ -96,11 +115,17 @@ export default function Upload() {
               <div>
                 <div style={{fontSize: '32px', marginBottom: '12px'}}></div>
                 <p style={{color: '#0a1f4e', fontSize: '14px', fontWeight: 600, margin: '0 0 6px'}}>Click to select your statement</p>
-                <p style={{fontSize: '12px', color: '#94a3b8', margin: 0}}>Supports .xlsx, .xls, .csv, .pdf · Max 20MB</p>
+                <p style={{fontSize: '12px', color: '#94a3b8', margin: 0}}>Supports .xlsx, .xls, .csv, .pdf · Max 4MB</p>
                 <p style={{fontSize: '11px', color: '#c8a84b', margin: '6px 0 0', fontWeight: 600}}>Works with any Kenyan bank</p>
               </div>
             )}
           </div>
+
+          {fileError && (
+            <div style={{marginTop: '12px', background: '#fcebeb', border: '1px solid #f5c6c6', color: '#a32d2d', fontSize: '12px', padding: '10px 12px', borderRadius: '6px'}}>
+              {fileError}
+            </div>
+          )}
 
           <button
             onClick={handleUpload}

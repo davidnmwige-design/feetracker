@@ -4,7 +4,6 @@ const APP_URL = process.env.NEXTAUTH_URL || 'https://feetracker.co.ke'
 const VERCEL_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker-seven.vercel.app'
 const CUSTOM_DOMAIN = 'https://feetracker.co.ke'
 
-// Allow both the Vercel deployment URL and the custom domain
 const allowedOrigins = [...new Set([APP_URL, VERCEL_URL, CUSTOM_DOMAIN])].join(' ')
 
 const csp = [
@@ -20,6 +19,10 @@ const csp = [
 ].join('; ')
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Tree-shake unused exports from these packages to reduce bundle size
+    optimizePackageImports: ['recharts', 'xlsx', 'papaparse'],
+  },
   async headers() {
     return [
       {
@@ -27,9 +30,11 @@ const nextConfig: NextConfig = {
         headers: [
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          // 0 is correct for modern browsers — the old '1; mode=block' value can cause issues
+          { key: 'X-XSS-Protection', value: '0' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          // preload added — submit to https://hstspreload.org after domain is live
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'Content-Security-Policy', value: csp },
         ],
