@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import AdminSidebar from '@/components/AdminSidebar'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const adminCount = await prisma.user.count({ where: { isAdmin: true } })
 
