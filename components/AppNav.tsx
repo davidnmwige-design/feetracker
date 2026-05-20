@@ -54,8 +54,8 @@ export default function AppNav() {
 
   return (
     <nav style={{
-      background: 'var(--ep-card-bg)',
-      borderBottom: '1px solid var(--ep-border)',
+      background: '#0a1f4e',
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -76,11 +76,11 @@ export default function AppNav() {
         {logoUrl ? (
           <>
             <img src={logoUrl} alt="School logo" style={{maxHeight: '32px', maxWidth: '100px', objectFit: 'contain'}} />
-            <span style={{fontSize: '9px', color: 'var(--ep-text-tertiary)', letterSpacing: '0.3px'}}>Powered by Elimu Pay</span>
+            <span style={{fontSize: '9px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.3px'}}>Powered by Elimu Pay</span>
           </>
         ) : (
           <span style={{fontSize: '16px', fontWeight: 700, fontFamily: 'Georgia, serif'}}>
-            <span style={{color: 'var(--ep-text-primary)'}}>Elimu</span><span style={{color: '#8d7022'}}> Pay</span>
+            <span style={{color: '#fff'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span>
           </span>
         )}
       </Link>
@@ -98,7 +98,7 @@ export default function AppNav() {
         {visibleLinks.map(({ href, label }) => (
           <Link key={href} href={href} style={{
             fontSize: '13px',
-            color: pathname === href ? 'var(--ep-text-primary)' : 'var(--ep-text-secondary)',
+            color: pathname === href ? '#ffffff' : 'rgba(255,255,255,0.65)',
             fontWeight: pathname === href ? 700 : 400,
             textDecoration: 'none',
             whiteSpace: 'nowrap',
@@ -111,8 +111,8 @@ export default function AppNav() {
 
         {showRoleBadge && (
           <span style={{
-            fontSize: '10px', fontWeight: 600, color: 'var(--ep-text-secondary)',
-            background: 'var(--ep-bg-tertiary)', border: '1px solid var(--ep-border)',
+            fontSize: '10px', fontWeight: 600, color: 'rgba(255,255,255,0.8)',
+            background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
             padding: '2px 8px', borderRadius: '999px', whiteSpace: 'nowrap', flexShrink: 0,
           }}>
             {ROLE_LABELS[role] ?? role}
