@@ -5,6 +5,7 @@ import LogoutButton from '@/components/LogoutButton'
 import { useRole } from '@/hooks/useRole'
 import { ROLE_PERMISSIONS } from '@/lib/roleContext'
 import { useState, useEffect } from 'react'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const ALL_NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', page: 'dashboard' },
@@ -53,8 +54,8 @@ export default function AppNav() {
 
   return (
     <nav style={{
-      background: '#fff',
-      borderBottom: '1px solid #e2e8f0',
+      background: 'var(--ep-card-bg)',
+      borderBottom: '1px solid var(--ep-border)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -118,6 +119,7 @@ export default function AppNav() {
           </span>
         )}
 
+        <ThemeToggle />
         <div style={{flexShrink: 0}}>
           <LogoutButton />
         </div>

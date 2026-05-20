@@ -140,3 +140,50 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* ─── Elimu Pay theme variables ─────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  --ep-bg-primary:   #ffffff;
+  --ep-bg-secondary: #f8f9fc;
+  --ep-bg-tertiary:  #f1f5f9;
+  --ep-text-primary:   #0f172a;
+  --ep-text-secondary: #64748b;
+  --ep-text-tertiary:  #94a3b8;
+  --ep-border:   #e2e8f0;
+  --ep-card-bg:  #ffffff;
+  --ep-input-bg: #ffffff;
+  --ep-shadow:   rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] {
+  --ep-bg-primary:   #0f172a;
+  --ep-bg-secondary: #1e293b;
+  --ep-bg-tertiary:  #334155;
+  --ep-text-primary:   #f1f5f9;
+  --ep-text-secondary: #94a3b8;
+  --ep-text-tertiary:  #64748b;
+  --ep-border:   #334155;
+  --ep-card-bg:  #1e293b;
+  --ep-input-bg: #1e293b;
+  --ep-shadow:   rgba(0,0,0,0.3);
+}
+
+/* Pages that use ep- variables automatically pick up dark mode */
+[data-theme="dark"] .ep-page {
+  background: var(--ep-bg-secondary);
+  color: var(--ep-text-primary);
+}
+[data-theme="dark"] .ep-card {
+  background: var(--ep-card-bg);
+  border-color: var(--ep-border);
+}
+[data-theme="dark"] .ep-nav {
+  background: #020617;
+  border-color: #1e293b;
+}
+[data-theme="dark"] .ep-input {
+  background: var(--ep-input-bg);
+  border-color: var(--ep-border);
+  color: var(--ep-text-primary);
+}

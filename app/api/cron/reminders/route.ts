@@ -63,7 +63,7 @@ export async function GET(req: Request) {
     include: {
       school: {
         include: {
-          students: { include: { payments: true, bursary: true } },
+          students: { include: { payments: true, bursary: true, studentDiscounts: { include: { discount: true } } } },
           user: true,
         }
       }
@@ -94,7 +94,7 @@ export async function GET(req: Request) {
 
     const studentsWithBalance = school.students.filter(s => {
       const paid = s.payments.reduce((sum, p) => sum + p.amount, 0)
-      return getEffectiveFee(s.feeRequired, s.bursary) - paid > 0
+      return getEffectiveFee(s.feeRequired, s.bursary, s.studentDiscounts) - paid > 0
     })
 
     if (studentsWithBalance.length === 0) {
@@ -110,7 +110,7 @@ export async function GET(req: Request) {
     }
     const rows: StudentRow[] = studentsWithBalance.map(s => {
       const paid = s.payments.reduce((sum, p) => sum + p.amount, 0)
-      const balance = getEffectiveFee(s.feeRequired, s.bursary) - paid
+      const balance = getEffectiveFee(s.feeRequired, s.bursary, s.studentDiscounts) - paid
       const cls = `${s.class}${s.stream ? ' ' + s.stream : ''}`
       const waMsg = buildWaMessage(s.name, cls, balance, school.name, school.paybill, school.accountNumberFormat)
       const waPhone = s.parentPhone ? normalizePhoneForWhatsApp(s.parentPhone) : ''

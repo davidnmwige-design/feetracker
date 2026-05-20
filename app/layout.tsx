@@ -41,6 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem('ep-theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)})()` }} />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="theme-color" content="#0a1f4e" />
         <PlausibleAnalytics />

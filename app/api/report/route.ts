@@ -32,12 +32,12 @@ export async function GET(req: Request) {
 
     const students = await prisma.student.findMany({
       where,
-      include: { payments: true, bursary: true },
+      include: { payments: true, bursary: true, studentDiscounts: { include: { discount: true } } },
       orderBy: { name: 'asc' }
     })
 
     const rows = students.map(student => {
-      const effectiveFee = getEffectiveFee(student.feeRequired, student.bursary)
+      const effectiveFee = getEffectiveFee(student.feeRequired, student.bursary, student.studentDiscounts)
       const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0)
       const balance = effectiveFee - totalPaid
       const status = balance <= 0 ? 'Paid' : totalPaid > 0 ? 'Partial' : 'Unpaid'
@@ -55,7 +55,7 @@ export async function GET(req: Request) {
       }
     })
 
-    const totalExpected = students.reduce((sum, s) => sum + getEffectiveFee(s.feeRequired, s.bursary), 0)
+    const totalExpected = students.reduce((sum, s) => sum + getEffectiveFee(s.feeRequired, s.bursary, s.studentDiscounts), 0)
     const totalCollected = students.reduce((sum, s) => sum + s.payments.reduce((p, pay) => p + pay.amount, 0), 0)
 
     rows.push({

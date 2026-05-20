@@ -425,7 +425,7 @@ export default function Invoices() {
 
   return (
     <RoleGuard requiredPermission="canManageInvoices">
-    <main style={{ background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
+    <main style={{ background: 'var(--ep-bg-secondary)', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
       <style>{`
         @media (max-width: 768px) {
           .inv-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }

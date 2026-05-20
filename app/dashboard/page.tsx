@@ -69,10 +69,10 @@ export default async function Dashboard() {
 
   const students = await prisma.student.findMany({
     where: { schoolId: school.id },
-    include: { payments: true, bursary: true }
+    include: { payments: true, bursary: true, studentDiscounts: { include: { discount: true } } }
   })
 
-  const totalExpected = students.reduce((sum, s) => sum + getEffectiveFee(s.feeRequired, s.bursary), 0)
+  const totalExpected = students.reduce((sum, s) => sum + getEffectiveFee(s.feeRequired, s.bursary, s.studentDiscounts), 0)
   const totalCollected = students.reduce((sum, s) =>
     sum + s.payments.reduce((p, pay) => p + pay.amount, 0), 0)
   const outstanding = totalExpected - totalCollected
@@ -81,7 +81,7 @@ export default async function Dashboard() {
   const collectionRate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0
 
   return (
-    <main style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
+    <main style={{background: 'var(--ep-bg-secondary)', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
       <style>{`
         @media (max-width: 640px) {
           .dash-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }

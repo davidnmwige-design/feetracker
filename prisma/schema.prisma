@@ -70,6 +70,10 @@ model School {
   schoolUsers         SchoolUser[]
   reminderSchedule    ReminderSchedule?
   feeDiscounts        FeeDiscount[]
+  academicYears       AcademicYear[]
+  examFees            ExamFee[]
+  testimonial         Testimonial?
+  testimonialRequestSent Boolean @default(false)
 
   @@index([paybill])
   @@index([currentPlan])
@@ -138,6 +142,7 @@ model Student {
   feeCategories    FeeCategory[]
   bursary          Bursary?
   studentDiscounts StudentDiscount[]
+  studentExamFees  StudentExamFee[]
 
   @@unique([admNo, schoolId])
   @@index([schoolId])
@@ -348,4 +353,74 @@ model StudentDiscount {
   @@unique([studentId, discountId])
   @@index([studentId])
   @@index([discountId])
+}
+
+model AcademicYear {
+  id         Int       @id @default(autoincrement())
+  schoolId   Int
+  year       Int
+  isActive   Boolean   @default(false)
+  term1Start DateTime?
+  term1End   DateTime?
+  term2Start DateTime?
+  term2End   DateTime?
+  term3Start DateTime?
+  term3End   DateTime?
+  createdAt  DateTime  @default(now())
+  school     School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, year])
+  @@index([schoolId])
+  @@index([schoolId, isActive])
+}
+
+model ExamFee {
+  id              Int              @id @default(autoincrement())
+  schoolId        Int
+  name            String
+  examType        String
+  amount          Float
+  targetClass     String
+  academicYear    Int?
+  dueDate         DateTime?
+  active          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  school          School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentExamFees StudentExamFee[]
+
+  @@index([schoolId])
+  @@index([schoolId, active])
+}
+
+model StudentExamFee {
+  id          Int       @id @default(autoincrement())
+  studentId   Int
+  examFeeId   Int
+  paid        Boolean   @default(false)
+  paidAt      DateTime?
+  paidAmount  Float?
+  createdAt   DateTime  @default(now())
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  examFee     ExamFee   @relation(fields: [examFeeId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, examFeeId])
+  @@index([studentId])
+  @@index([examFeeId])
+}
+
+model Testimonial {
+  id              Int       @id @default(autoincrement())
+  schoolId        Int       @unique
+  quote           String?
+  authorName      String?
+  authorTitle     String?
+  schoolName      String?
+  rating          Int?
+  approved        Boolean   @default(false)
+  requestSentAt   DateTime?
+  submittedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  school          School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([approved])
 }

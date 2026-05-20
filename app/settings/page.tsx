@@ -98,6 +98,23 @@ export default function Settings() {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
 
+  // Academic year state
+  const [academicYears, setAcademicYears] = useState<any[]>([])
+  const [acYearLoading, setAcYearLoading] = useState(true)
+  const [showAcYearForm, setShowAcYearForm] = useState(false)
+  const [acYearForm, setAcYearForm] = useState({ year: new Date().getFullYear() + 1, isActive: false, term1Start: '', term1End: '', term2Start: '', term2End: '', term3Start: '', term3End: '' })
+  const [acYearSaving, setAcYearSaving] = useState(false)
+  const [acYearError, setAcYearError] = useState('')
+
+  // Exam fee state
+  const [examFees, setExamFees] = useState<any[]>([])
+  const [examFeeLoading, setExamFeeLoading] = useState(true)
+  const [showExamFeeForm, setShowExamFeeForm] = useState(false)
+  const [examFeeForm, setExamFeeForm] = useState({ name: '', examType: 'KCSE', amount: '', targetClass: '', dueDate: '' })
+  const [examFeeSaving, setExamFeeSaving] = useState(false)
+  const [examFeeError, setExamFeeError] = useState('')
+  const [examFeeAssigning, setExamFeeAssigning] = useState<number | null>(null)
+
   // Branding state
   const [brandColor, setBrandColor] = useState('#c8a84b')
   const [schoolMotto, setSchoolMotto] = useState('')
@@ -133,6 +150,8 @@ export default function Settings() {
       fetch('/api/account'),
     ])
     fetch('/api/discounts').then(r => r.json()).then(d => { setDiscounts(Array.isArray(d) ? d : []); setDiscountsLoading(false) }).catch(() => setDiscountsLoading(false))
+    fetch('/api/academic-years').then(r => r.json()).then(d => { setAcademicYears(Array.isArray(d) ? d : []); setAcYearLoading(false) }).catch(() => setAcYearLoading(false))
+    fetch('/api/exam-fees').then(r => r.json()).then(d => { setExamFees(Array.isArray(d) ? d : []); setExamFeeLoading(false) }).catch(() => setExamFeeLoading(false))
     fetch('/api/team').then(r => r.json()).then(d => { setTeamMembers(Array.isArray(d) ? d : []); setTeamLoading(false) })
     const schoolData = await schoolRes.json()
     const termsData = await termsRes.json()
@@ -433,6 +452,56 @@ export default function Settings() {
     setTwoFADisabling(false)
   }
 
+  async function saveAcademicYear() {
+    if (acYearSaving) return
+    setAcYearSaving(true); setAcYearError('')
+    try {
+      const res = await fetch('/api/academic-years', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(acYearForm) })
+      const d = await res.json()
+      if (!res.ok) { setAcYearError(d.error || 'Failed to save') }
+      else { setAcademicYears(prev => acYearForm.isActive ? [...prev.map(y => ({...y, isActive: false})), d] : [...prev, d]); setShowAcYearForm(false) }
+    } catch { setAcYearError('Something went wrong') }
+    setAcYearSaving(false)
+  }
+
+  async function activateAcademicYear(id: number) {
+    const res = await fetch(`/api/academic-years/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activate: true }) })
+    if (res.ok) setAcademicYears(prev => prev.map(y => ({ ...y, isActive: y.id === id })))
+  }
+
+  async function deleteAcademicYear(id: number) {
+    const res = await fetch(`/api/academic-years/${id}`, { method: 'DELETE' })
+    const d = await res.json()
+    if (!res.ok) { alert(d.error || 'Cannot delete'); return }
+    setAcademicYears(prev => prev.filter(y => y.id !== id))
+  }
+
+  async function saveExamFee() {
+    if (examFeeSaving) return
+    setExamFeeSaving(true); setExamFeeError('')
+    try {
+      const res = await fetch('/api/exam-fees', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(examFeeForm) })
+      const d = await res.json()
+      if (!res.ok) { setExamFeeError(d.error || 'Failed to save') }
+      else { setExamFees(prev => [...prev, d]); setShowExamFeeForm(false); setExamFeeForm({ name: '', examType: 'KCSE', amount: '', targetClass: '', dueDate: '' }) }
+    } catch { setExamFeeError('Something went wrong') }
+    setExamFeeSaving(false)
+  }
+
+  async function assignExamFeeToClass(id: number) {
+    setExamFeeAssigning(id)
+    const res = await fetch(`/api/exam-fees/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ assign: true }) })
+    const d = await res.json()
+    if (res.ok) alert(`Assigned to ${d.assigned} students`)
+    setExamFeeAssigning(null)
+  }
+
+  async function deleteExamFee(id: number) {
+    if (!confirm('Delete this exam fee? This removes all student assignments.')) return
+    const res = await fetch(`/api/exam-fees/${id}`, { method: 'DELETE' })
+    if (res.ok) setExamFees(prev => prev.filter(f => f.id !== id))
+  }
+
   async function saveBranding() {
     setBrandingSaving(true); setBrandingSaved(false)
     try {
@@ -728,7 +797,7 @@ export default function Settings() {
 
   return (
     <RoleGuard requiredPermission="canChangeSettings">
-    <main style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
+    <main style={{background: 'var(--ep-bg-secondary)', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
       <style>{`
         @media (max-width: 640px) {
           .set-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px !important; }
@@ -1283,6 +1352,183 @@ export default function Settings() {
               >
                 {signingOut ? 'Signing out...' : 'Sign out of all devices'}
               </button>
+            </div>
+
+            {/* Academic Year */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
+                <div>
+                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Academic Year</h2>
+                  <p style={{fontSize: '12px', color: '#94a3b8', margin: '0 0 16px'}}>Track term dates and set the active academic year</p>
+                </div>
+                {!showAcYearForm && (
+                  <button onClick={() => { setShowAcYearForm(true); setAcYearError('') }}
+                    style={{background: '#0a1f4e', color: '#fff', padding: '7px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0}}>
+                    + Add year
+                  </button>
+                )}
+              </div>
+
+              {/* Active year badge */}
+              {academicYears.find(y => y.isActive) && (
+                <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '8px 14px', marginBottom: '14px', fontSize: '13px', color: '#0a7c3e', fontWeight: 600}}>
+                  Active: {academicYears.find(y => y.isActive)?.year}
+                </div>
+              )}
+
+              {showAcYearForm && (
+                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
+                  <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '12px'}}>New academic year</p>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                      <div style={{flex: 1}}>
+                        <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '4px'}}>Year</label>
+                        <input type="number" value={acYearForm.year} onChange={e => setAcYearForm(f => ({...f, year: parseInt(e.target.value)}))}
+                          style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                      </div>
+                      <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', marginTop: '14px'}}>
+                        <input type="checkbox" checked={acYearForm.isActive} onChange={e => setAcYearForm(f => ({...f, isActive: e.target.checked}))} style={{accentColor: '#0a1f4e'}} />
+                        Set as active
+                      </label>
+                    </div>
+                    {(['term1', 'term2', 'term3'] as const).map(t => (
+                      <div key={t} style={{display: 'flex', gap: '10px'}}>
+                        <div style={{flex: 1}}>
+                          <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>{t === 'term1' ? 'Term 1' : t === 'term2' ? 'Term 2' : 'Term 3'} Start</label>
+                          <input type="date" value={(acYearForm as any)[t + 'Start']} onChange={e => setAcYearForm(f => ({...f, [t + 'Start']: e.target.value}))}
+                            style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                        </div>
+                        <div style={{flex: 1}}>
+                          <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '4px'}}>End</label>
+                          <input type="date" value={(acYearForm as any)[t + 'End']} onChange={e => setAcYearForm(f => ({...f, [t + 'End']: e.target.value}))}
+                            style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {acYearError && <p style={{color: '#e24b4a', fontSize: '12px', margin: '8px 0 0'}}>{acYearError}</p>}
+                  <div style={{display: 'flex', gap: '8px', marginTop: '12px'}}>
+                    <button onClick={saveAcademicYear} disabled={acYearSaving}
+                      style={{background: acYearSaving ? '#94a3b8' : '#c8a84b', color: acYearSaving ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}>
+                      {acYearSaving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={() => setShowAcYearForm(false)}
+                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {acYearLoading ? <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading...</p> : academicYears.length === 0 ? (
+                <p style={{fontSize: '13px', color: '#94a3b8'}}>No academic years configured yet.</p>
+              ) : (
+                <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                  {academicYears.map(y => (
+                    <div key={y.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 14px', gap: '8px'}}>
+                      <div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                          <span style={{fontSize: '14px', fontWeight: 700, color: '#0f172a'}}>{y.year}</span>
+                          {y.isActive && <span style={{fontSize: '10px', background: '#c8a84b', color: '#0a1f4e', padding: '2px 8px', borderRadius: '999px', fontWeight: 700}}>Active</span>}
+                        </div>
+                        {y.term1Start && <p style={{fontSize: '11px', color: '#64748b', margin: '2px 0 0'}}>T1: {new Date(y.term1Start).toLocaleDateString('en-KE', {month:'short',day:'numeric'})} – {y.term1End ? new Date(y.term1End).toLocaleDateString('en-KE', {month:'short',day:'numeric'}) : '?'}</p>}
+                      </div>
+                      <div style={{display: 'flex', gap: '6px'}}>
+                        {!y.isActive && <button onClick={() => activateAcademicYear(y.id)}
+                          style={{fontSize: '11px', color: '#0a7c3e', background: 'none', border: '1px solid #bbf7d0', padding: '3px 10px', borderRadius: '4px', cursor: 'pointer'}}>Activate</button>}
+                        {!y.isActive && <button onClick={() => deleteAcademicYear(y.id)}
+                          style={{fontSize: '11px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer'}}>Delete</button>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Exam Fees */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
+                <div>
+                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Exam Fees</h2>
+                  <p style={{fontSize: '12px', color: '#94a3b8', margin: '0 0 16px'}}>Track KCSE, KCPE, and mock exam fees separately from regular school fees</p>
+                </div>
+                {!showExamFeeForm && (
+                  <button onClick={() => { setShowExamFeeForm(true); setExamFeeError('') }}
+                    style={{background: '#0a1f4e', color: '#fff', padding: '7px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0}}>
+                    + Add exam fee
+                  </button>
+                )}
+              </div>
+
+              {showExamFeeForm && (
+                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
+                  <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '12px'}}>New exam fee</p>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <input type="text" placeholder="Name (e.g. KCSE Registration 2026)" value={examFeeForm.name} onChange={e => setExamFeeForm(f => ({...f, name: e.target.value}))}
+                      style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}} />
+                    <div style={{display: 'flex', gap: '10px'}}>
+                      <select value={examFeeForm.examType} onChange={e => setExamFeeForm(f => ({...f, examType: e.target.value}))}
+                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}>
+                        <option value="KCSE">KCSE</option>
+                        <option value="KCPE">KCPE</option>
+                        <option value="Mock Exam">Mock Exam</option>
+                        <option value="Cambridge">Cambridge</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      <input type="number" placeholder="Amount (KES)" value={examFeeForm.amount} onChange={e => setExamFeeForm(f => ({...f, amount: e.target.value}))}
+                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                    </div>
+                    <div style={{display: 'flex', gap: '10px'}}>
+                      <input type="text" placeholder="Target class (e.g. Form 4)" value={examFeeForm.targetClass} onChange={e => setExamFeeForm(f => ({...f, targetClass: e.target.value}))}
+                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                      <div style={{flex: 1}}>
+                        <label style={{fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px'}}>Due date (optional)</label>
+                        <input type="date" value={examFeeForm.dueDate} onChange={e => setExamFeeForm(f => ({...f, dueDate: e.target.value}))}
+                          style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
+                      </div>
+                    </div>
+                  </div>
+                  {examFeeError && <p style={{color: '#e24b4a', fontSize: '12px', margin: '8px 0 0'}}>{examFeeError}</p>}
+                  <div style={{display: 'flex', gap: '8px', marginTop: '12px'}}>
+                    <button onClick={saveExamFee} disabled={examFeeSaving}
+                      style={{background: examFeeSaving ? '#94a3b8' : '#c8a84b', color: examFeeSaving ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}>
+                      {examFeeSaving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={() => setShowExamFeeForm(false)}
+                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {examFeeLoading ? <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading...</p> : examFees.length === 0 ? (
+                <p style={{fontSize: '13px', color: '#94a3b8'}}>No exam fees configured yet.</p>
+              ) : (
+                <div style={{border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden'}}>
+                  {examFees.map((f, i) => (
+                    <div key={f.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < examFees.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '8px'}}>
+                      <div style={{flex: 1, minWidth: 0}}>
+                        <div style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{f.name}</div>
+                        <p style={{fontSize: '12px', color: '#64748b', margin: '2px 0 0'}}>
+                          {f.examType} · KES {f.amount.toLocaleString()} · {f.targetClass}
+                          {f.dueDate ? ` · Due: ${new Date(f.dueDate).toLocaleDateString('en-KE')}` : ''}
+                        </p>
+                      </div>
+                      <div style={{display: 'flex', gap: '6px', flexShrink: 0}}>
+                        <button onClick={() => assignExamFeeToClass(f.id)} disabled={examFeeAssigning === f.id}
+                          style={{fontSize: '11px', color: '#0a1f4e', background: 'none', border: '1px solid #0a1f4e', padding: '3px 10px', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap'}}>
+                          {examFeeAssigning === f.id ? 'Assigning...' : 'Assign to class'}
+                        </button>
+                        <button onClick={() => deleteExamFee(f.id)}
+                          style={{fontSize: '11px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer'}}>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* School Branding */}

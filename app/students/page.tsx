@@ -553,7 +553,7 @@ export default function Students() {
 
   return (
     <RoleGuard requiredPermission="canManageStudents">
-    <main style={{background: '#f8f9fc', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden', maxWidth: '100vw'}}>
+    <main style={{background: 'var(--ep-bg-secondary)', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden', maxWidth: '100vw'}}>
       <style>{`
         @media (max-width: 640px) {
           .stu-header { flex-direction: column !important; gap: 14px !important; padding: 16px !important; }

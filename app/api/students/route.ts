@@ -29,7 +29,7 @@ export async function GET(req: Request) {
 
     const students = await prisma.student.findMany({
       where: { schoolId: ctx.school.id },
-      include: { payments: true, feeCategories: true, bursary: true },
+      include: { payments: true, feeCategories: true, bursary: true, studentDiscounts: { include: { discount: true } } },
       orderBy: { name: 'asc' }
     })
 
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
       ...s,
       parentEmail: s.parentEmail ? decrypt(s.parentEmail) : s.parentEmail,
       parent2Email: s.parent2Email ? decrypt(s.parent2Email) : s.parent2Email,
-      effectiveFee: getEffectiveFee(s.feeRequired, s.bursary),
+      effectiveFee: getEffectiveFee(s.feeRequired, s.bursary, s.studentDiscounts),
     }))
 
     return NextResponse.json(decrypted)
