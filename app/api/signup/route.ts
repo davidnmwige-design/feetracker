@@ -5,6 +5,7 @@ import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 import zxcvbn from 'zxcvbn'
+import { isPasswordBreached, formatBreachMessage } from '@/lib/hibp'
 
 const RESERVED_PREFIXES = ['admin', 'support', 'billing', 'noreply', 'hello']
 
@@ -45,6 +46,11 @@ export async function POST(req: Request) {
     const strength = zxcvbn(password)
     if (strength.score < 2) {
       return NextResponse.json({ error: 'Password is too weak. Please choose a stronger password.' }, { status: 400 })
+    }
+
+    const breachResult = await isPasswordBreached(password)
+    if (breachResult.breached) {
+      return NextResponse.json({ error: formatBreachMessage(breachResult.count) }, { status: 400 })
     }
 
     // Reserved prefix check — return generic success to prevent enumeration

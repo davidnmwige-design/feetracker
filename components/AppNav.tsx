@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import LogoutButton from '@/components/LogoutButton'
 import { useRole } from '@/hooks/useRole'
 import { ROLE_PERMISSIONS } from '@/lib/roleContext'
+import { useState, useEffect } from 'react'
 
 const ALL_NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', page: 'dashboard' },
@@ -26,6 +27,15 @@ const ROLE_LABELS: Record<string, string> = {
 export default function AppNav() {
   const pathname = usePathname()
   const { role, loading } = useRole()
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [brandColor, setBrandColor] = useState('#c8a84b')
+
+  useEffect(() => {
+    fetch('/api/school').then(r => r.json()).then(d => {
+      if (d?.logoUrl) setLogoUrl(d.logoUrl)
+      if (d?.brandColor) setBrandColor(d.brandColor)
+    }).catch(() => {})
+  }, [])
 
   if (pathname.startsWith('/admin')) return null
   const hideNav = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-2fa', '/trial-expired', '/demo', '/privacy'].some(
@@ -60,11 +70,18 @@ export default function AppNav() {
       `}</style>
 
       <Link href="/dashboard" style={{
-        fontSize: '16px', fontWeight: 700, color: '#0f2d6e',
-        fontFamily: 'Georgia, serif', textDecoration: 'none',
-        whiteSpace: 'nowrap', flexShrink: 0,
+        textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1px',
       }}>
-        <span style={{color: '#0a1f4e'}}>Elimu</span><span style={{color: '#8d7022'}}> Pay</span>
+        {logoUrl ? (
+          <>
+            <img src={logoUrl} alt="School logo" style={{maxHeight: '32px', maxWidth: '100px', objectFit: 'contain'}} />
+            <span style={{fontSize: '9px', color: '#94a3b8', letterSpacing: '0.3px'}}>Powered by Elimu Pay</span>
+          </>
+        ) : (
+          <span style={{fontSize: '16px', fontWeight: 700, fontFamily: 'Georgia, serif'}}>
+            <span style={{color: '#0a1f4e'}}>Elimu</span><span style={{color: '#8d7022'}}> Pay</span>
+          </span>
+        )}
       </Link>
 
       <div className="appnav-links" style={{
@@ -84,7 +101,7 @@ export default function AppNav() {
             fontWeight: pathname === href ? 700 : 400,
             textDecoration: 'none',
             whiteSpace: 'nowrap',
-            borderBottom: pathname === href ? '2px solid #c8a84b' : '2px solid transparent',
+            borderBottom: pathname === href ? `2px solid ${brandColor}` : '2px solid transparent',
             padding: '2px 0',
           }}>
             {label}

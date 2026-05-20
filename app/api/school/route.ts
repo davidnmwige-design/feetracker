@@ -53,8 +53,17 @@ export async function PATCH(req: Request) {
       }
     }
 
+    if ('brandColor' in body && body.brandColor != null && body.brandColor !== '') {
+      if (!/^#[0-9A-Fa-f]{6}$/.test(String(body.brandColor))) {
+        return NextResponse.json({ error: 'Brand colour must be a valid hex colour (e.g. #c8a84b)' }, { status: 400 })
+      }
+    }
+    if ('schoolMotto' in body && body.schoolMotto != null && String(body.schoolMotto).length > 120) {
+      return NextResponse.json({ error: 'School motto must be 120 characters or less' }, { status: 400 })
+    }
+
     const data: Record<string, unknown> = {}
-    const strings = ['name', 'paybill', 'accountNumberFormat', 'currentTerm', 'replyToEmail', 'emailSignature', 'whatsappNumber', 'penaltyType', 'billingCycle']
+    const strings = ['name', 'paybill', 'accountNumberFormat', 'currentTerm', 'replyToEmail', 'emailSignature', 'whatsappNumber', 'penaltyType', 'billingCycle', 'brandColor', 'schoolMotto']
     const booleans = ['penaltyEnabled']
     const numbers = ['penaltyAmount', 'penaltyDueDate']
     for (const key of strings) {

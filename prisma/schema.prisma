@@ -49,6 +49,9 @@ model School {
   penaltyType         String               @default("fixed")
   penaltyAmount       Float                @default(0)
   penaltyDueDate      Int                  @default(15)
+  logoUrl             String?
+  brandColor          String?              @default("#c8a84b")
+  schoolMotto         String?
   userId              Int                  @unique
   user                User                 @relation(fields: [userId], references: [id])
   students            Student[]
@@ -61,6 +64,7 @@ model School {
   contract            Contract?
   schoolUsers         SchoolUser[]
   reminderSchedule    ReminderSchedule?
+  feeDiscounts        FeeDiscount[]
 }
 
 model SchoolUser {
@@ -116,10 +120,11 @@ model Student {
   createdAt    DateTime     @default(now())
   schoolId     Int
   school       School       @relation(fields: [schoolId], references: [id])
-  payments     Payment[]
-  invoices     Invoice[]
-  feeCategories FeeCategory[]
-  bursary      Bursary?
+  payments         Payment[]
+  invoices         Invoice[]
+  feeCategories    FeeCategory[]
+  bursary          Bursary?
+  studentDiscounts StudentDiscount[]
 
   @@unique([admNo, schoolId])
 }
@@ -272,4 +277,32 @@ model AdminAnnouncement {
   recipientCount Int     @default(0)
   sentBy        String
   createdAt     DateTime @default(now())
+}
+
+model FeeDiscount {
+  id               Int               @id @default(autoincrement())
+  schoolId         Int
+  name             String
+  description      String?
+  discountType     String            // 'percentage' or 'fixed'
+  discountValue    Float
+  applicableTo     String            @default("individual")
+  className        String?
+  active           Boolean           @default(true)
+  isSiblingDiscount Boolean          @default(false)
+  createdAt        DateTime          @default(now())
+  school           School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentDiscounts StudentDiscount[]
+}
+
+model StudentDiscount {
+  id         Int         @id @default(autoincrement())
+  studentId  Int
+  discountId Int
+  appliedAt  DateTime    @default(now())
+  appliedBy  String?
+  student    Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  discount   FeeDiscount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, discountId])
 }

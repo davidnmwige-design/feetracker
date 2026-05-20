@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import bcrypt from 'bcryptjs'
+import { isPasswordBreached, formatBreachMessage } from '@/lib/hibp'
 
 export async function POST(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -20,6 +21,11 @@ export async function POST(req: Request) {
 
     if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
       return NextResponse.json({ error: 'Password does not meet requirements' }, { status: 400 })
+    }
+
+    const breachResult = await isPasswordBreached(newPassword)
+    if (breachResult.breached) {
+      return NextResponse.json({ error: formatBreachMessage(breachResult.count) }, { status: 400 })
     }
 
     const resetRecord = await prisma.passwordReset.findUnique({ where: { token } })

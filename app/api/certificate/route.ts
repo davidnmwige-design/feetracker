@@ -5,7 +5,7 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { logAudit } from '@/lib/audit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
-import { getEffectiveFee } from '@/lib/feeCalculations'
+import { calculateFeeBreakdown } from '@/lib/feeCalculations'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -34,7 +34,7 @@ export async function GET(req: Request) {
 
     const student = await prisma.student.findUnique({
       where: { id: studentId },
-      include: { payments: true, school: true, bursary: true }
+      include: { payments: true, school: true, bursary: true, studentDiscounts: { include: { discount: true } } }
     })
 
     if (!student) {
@@ -46,7 +46,8 @@ export async function GET(req: Request) {
     }
 
     const totalPaid = student.payments.reduce((sum, p) => sum + p.amount, 0)
-    const effectiveFee = getEffectiveFee(student.feeRequired, student.bursary)
+    const breakdown = calculateFeeBreakdown(student.feeRequired, student.bursary, student.studentDiscounts)
+    const effectiveFee = breakdown.effectiveFee
     const balance = effectiveFee - totalPaid
 
     logAudit({ userId: ctx.userId, schoolId: ctx.school.id, action: 'CERTIFICATE_GENERATED', details: `Student: ${student.name} (${student.admNo})`, ipAddress: getIp(req) }).catch(() => {})
@@ -64,7 +65,11 @@ export async function GET(req: Request) {
       },
       school: {
         name: student.school.name,
-        term: student.school.currentTerm
+        term: student.school.currentTerm,
+        currentTerm: student.school.currentTerm,
+        brandColor: student.school.brandColor || '#c8a84b',
+        logoUrl: student.school.logoUrl || null,
+        schoolMotto: student.school.schoolMotto || null,
       }
     })
   } catch (err) {

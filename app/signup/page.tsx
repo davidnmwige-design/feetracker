@@ -1,9 +1,17 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import zxcvbn from 'zxcvbn'
+import { formatBreachMessage } from '@/lib/hibpMessages'
+
+async function sha1Hash(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message)
+  const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
 
 function PasswordRule({ met, label }: { met: boolean; label: string }) {
   return (
@@ -41,8 +49,42 @@ export default function Signup() {
     term: 'Term 2 2026'
   })
 
+  const [breachStatus, setBreachStatus] = useState<'unchecked' | 'checking' | 'safe' | 'breached'>('unchecked')
+  const [breachCount, setBreachCount] = useState(0)
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const checkBreach = useCallback((pwd: string) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    if (pwd.length < 8) { setBreachStatus('unchecked'); return }
+    setBreachStatus('checking')
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const hash = await sha1Hash(pwd)
+        const prefix = hash.substring(0, 5).toUpperCase()
+        const suffix = hash.substring(5).toUpperCase()
+        const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+          headers: { 'User-Agent': 'Elimu-Pay-Password-Check' },
+        })
+        if (!res.ok) { setBreachStatus('unchecked'); return }
+        const text = await res.text()
+        for (const line of text.split('\n')) {
+          const [hashSuffix, countStr] = line.split(':')
+          if (hashSuffix.trim().toUpperCase() === suffix) {
+            setBreachStatus('breached')
+            setBreachCount(parseInt(countStr.trim(), 10))
+            return
+          }
+        }
+        setBreachStatus('safe')
+      } catch {
+        setBreachStatus('unchecked')
+      }
+    }, 800)
+  }, [])
+
   const rules = checkPassword(form.password)
-  const passwordValid = rules.length && rules.upper && rules.lower && rules.number && passwordStrength >= 2
+  const passwordRulesOk = rules.length && rules.upper && rules.lower && rules.number && passwordStrength >= 2
+  const passwordValid = passwordRulesOk && breachStatus !== 'breached'
   const passwordsMatch = form.password.length > 0 && confirmPassword === form.password
 
   const strengthLabel = ['Very weak', 'Weak', 'Fair', 'Strong', 'Very strong'][passwordStrength] || ''
@@ -147,8 +189,10 @@ export default function Signup() {
                   placeholder="Create a strong password"
                   value={form.password}
                   onChange={e => {
-                    setForm({ ...form, password: e.target.value })
-                    setPasswordStrength(e.target.value ? zxcvbn(e.target.value).score : 0)
+                    const val = e.target.value
+                    setForm({ ...form, password: val })
+                    setPasswordStrength(val ? zxcvbn(val).score : 0)
+                    checkBreach(val)
                   }}
                 />
                 <button
@@ -174,6 +218,15 @@ export default function Signup() {
                     <p style={{fontSize: '11px', color: strengthColor, margin: 0, fontWeight: 600}}>{strengthLabel}</p>
                   </div>
                 </div>
+              )}
+              {breachStatus === 'checking' && (
+                <p style={{fontSize: '11px', color: '#64748b', marginTop: '4px'}}>Checking password security...</p>
+              )}
+              {breachStatus === 'safe' && (
+                <p style={{fontSize: '11px', color: '#0f6e56', marginTop: '4px'}}>Password not found in any known data breaches.</p>
+              )}
+              {breachStatus === 'breached' && (
+                <p style={{fontSize: '11px', color: '#e24b4a', marginTop: '4px'}}>{formatBreachMessage(breachCount)}</p>
               )}
             </div>
 
@@ -273,9 +326,9 @@ export default function Signup() {
 
             <button
               onClick={handleSubmit}
-              disabled={loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !passwordsMatch || !agreedToPolicy}
+              disabled={loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !passwordsMatch || !agreedToPolicy || breachStatus === 'checking'}
               style={{
-                background: (loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !passwordsMatch || !agreedToPolicy) ? '#94a3b8' : '#0a1f4e',
+                background: (loading || !form.name || !form.email || !form.password || !form.schoolName || !passwordValid || !passwordsMatch || !agreedToPolicy || breachStatus === 'checking') ? '#94a3b8' : '#0a1f4e',
                 color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
                 border: 'none', cursor: 'pointer', width: '100%', marginTop: '4px'
               }}

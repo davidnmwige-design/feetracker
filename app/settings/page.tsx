@@ -98,6 +98,27 @@ export default function Settings() {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
 
+  // Branding state
+  const [brandColor, setBrandColor] = useState('#c8a84b')
+  const [schoolMotto, setSchoolMotto] = useState('')
+  const [brandingSaving, setBrandingSaving] = useState(false)
+  const [brandingSaved, setBrandingSaved] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoError, setLogoError] = useState('')
+
+  // Discount state
+  const [discounts, setDiscounts] = useState<any[]>([])
+  const [discountsLoading, setDiscountsLoading] = useState(true)
+  const [showDiscountForm, setShowDiscountForm] = useState(false)
+  const [discountForm, setDiscountForm] = useState({ name: '', description: '', discountType: 'percentage', discountValue: '', isSiblingDiscount: false })
+  const [discountSaving, setDiscountSaving] = useState(false)
+  const [discountError, setDiscountError] = useState('')
+  const [siblingGroups, setSiblingGroups] = useState<any[]>([])
+  const [detectingGroups, setDetectingGroups] = useState(false)
+  const [applyingSiblingDiscountId, setApplyingSiblingDiscountId] = useState<Record<string, string>>({})
+  const [siblingApplyResult, setSiblingApplyResult] = useState<Record<string, string>>({})
+
   useEffect(() => {
     fetchData()
   }, [])
@@ -111,6 +132,7 @@ export default function Settings() {
       fetch('/api/students'),
       fetch('/api/account'),
     ])
+    fetch('/api/discounts').then(r => r.json()).then(d => { setDiscounts(Array.isArray(d) ? d : []); setDiscountsLoading(false) }).catch(() => setDiscountsLoading(false))
     fetch('/api/team').then(r => r.json()).then(d => { setTeamMembers(Array.isArray(d) ? d : []); setTeamLoading(false) })
     const schoolData = await schoolRes.json()
     const termsData = await termsRes.json()
@@ -124,6 +146,9 @@ export default function Settings() {
     setPenaltyType(schoolData?.penaltyType || 'fixed')
     setPenaltyAmount(schoolData?.penaltyAmount || 0)
     setPenaltyDueDate(schoolData?.penaltyDueDate || 15)
+    setBrandColor(schoolData?.brandColor || '#c8a84b')
+    setSchoolMotto(schoolData?.schoolMotto || '')
+    setLogoUrl(schoolData?.logoUrl || null)
     setTerms(termsData)
     setStudentCount(Array.isArray(studentsData) ? studentsData.length : 0)
     const meData = await meRes.json().catch(() => ({}))
@@ -406,6 +431,92 @@ export default function Settings() {
       }
     } catch { setTwoFAError('Something went wrong') }
     setTwoFADisabling(false)
+  }
+
+  async function saveBranding() {
+    setBrandingSaving(true); setBrandingSaved(false)
+    try {
+      await fetch('/api/school', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ brandColor, schoolMotto }) })
+      setSchool((prev: any) => prev ? { ...prev, brandColor, schoolMotto } : prev)
+      setBrandingSaved(true); setTimeout(() => setBrandingSaved(false), 3000)
+    } finally { setBrandingSaving(false) }
+  }
+
+  async function uploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoError('')
+    if (file.size > 2 * 1024 * 1024) { setLogoError('File must be smaller than 2MB'); return }
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) { setLogoError('Only JPG, PNG, GIF, or WebP files are allowed'); return }
+    setLogoUploading(true)
+    try {
+      const form = new FormData(); form.append('logo', file)
+      const res = await fetch('/api/school/logo', { method: 'POST', body: form })
+      const data = await res.json()
+      if (res.ok) { setLogoUrl(data.logoUrl); setSchool((prev: any) => prev ? { ...prev, logoUrl: data.logoUrl } : prev) }
+      else setLogoError(data.error || 'Upload failed')
+    } catch { setLogoError('Upload failed') }
+    setLogoUploading(false)
+    e.target.value = ''
+  }
+
+  async function removeLogo() {
+    setLogoUploading(true)
+    await fetch('/api/school/logo', { method: 'DELETE' })
+    setLogoUrl(null); setSchool((prev: any) => prev ? { ...prev, logoUrl: null } : prev)
+    setLogoUploading(false)
+  }
+
+  async function saveDiscount() {
+    if (!discountForm.name.trim() || !discountForm.discountValue || discountSaving) return
+    setDiscountSaving(true); setDiscountError('')
+    try {
+      const res = await fetch('/api/discounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...discountForm, discountValue: parseFloat(discountForm.discountValue) }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setDiscountError(data.error || 'Failed to save') }
+      else {
+        setDiscounts(prev => [...prev, data])
+        setShowDiscountForm(false)
+        setDiscountForm({ name: '', description: '', discountType: 'percentage', discountValue: '', isSiblingDiscount: false })
+      }
+    } catch { setDiscountError('Something went wrong') }
+    setDiscountSaving(false)
+  }
+
+  async function toggleDiscountActive(id: number, active: boolean) {
+    const res = await fetch(`/api/discounts/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: !active }) })
+    if (res.ok) setDiscounts(prev => prev.map(d => d.id === id ? { ...d, active: !active } : d))
+  }
+
+  async function deleteDiscount(id: number) {
+    if (!confirm('Delete this discount? It will be removed from all students.')) return
+    const res = await fetch(`/api/discounts/${id}`, { method: 'DELETE' })
+    if (res.ok) setDiscounts(prev => prev.filter(d => d.id !== id))
+  }
+
+  async function detectSiblingGroups() {
+    setDetectingGroups(true); setSiblingGroups([])
+    try {
+      const res = await fetch('/api/discounts/detect-siblings', { method: 'POST' })
+      const data = await res.json()
+      setSiblingGroups(data.siblingGroups || [])
+    } catch { }
+    setDetectingGroups(false)
+  }
+
+  async function applySiblingDiscount(parentPhone: string, discountId: string) {
+    if (!discountId) return
+    const res = await fetch('/api/discounts/apply-sibling', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parentPhone, discountId: parseInt(discountId) }),
+    })
+    const data = await res.json()
+    if (res.ok) setSiblingApplyResult(prev => ({ ...prev, [parentPhone]: `Discount applied to ${data.applied} student(s).` }))
   }
 
   async function registerDaraja() {
@@ -1172,6 +1283,236 @@ export default function Settings() {
               >
                 {signingOut ? 'Signing out...' : 'Sign out of all devices'}
               </button>
+            </div>
+
+            {/* School Branding */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>School Branding</h2>
+              <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '20px'}}>Your logo and brand colour appear on certificates, invoices, and emails</p>
+
+              {/* Logo */}
+              <div style={{marginBottom: '20px'}}>
+                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '8px'}}>School logo</label>
+                {logoUrl ? (
+                  <div style={{display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px'}}>
+                    <img src={logoUrl} alt="School logo" style={{maxHeight: '64px', maxWidth: '160px', objectFit: 'contain', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px'}} />
+                    <button onClick={removeLogo} disabled={logoUploading}
+                      style={{fontSize: '12px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer'}}>
+                      Remove logo
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{width: '64px', height: '64px', background: '#0a1f4e', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px'}}>
+                    <span style={{color: '#fff', fontSize: '18px', fontWeight: 700}}>{school?.name?.substring(0, 2)?.toUpperCase() || 'EP'}</span>
+                  </div>
+                )}
+                {logoError && <p style={{fontSize: '12px', color: '#e24b4a', margin: '4px 0'}}>{logoError}</p>}
+                <label style={{display: 'inline-block', background: logoUploading ? '#94a3b8' : '#0a1f4e', color: '#fff', padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: logoUploading ? 'not-allowed' : 'pointer'}}>
+                  {logoUploading ? 'Uploading...' : 'Upload logo'}
+                  <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={uploadLogo} style={{display: 'none'}} disabled={logoUploading} />
+                </label>
+                <p style={{fontSize: '11px', color: '#94a3b8', marginTop: '4px'}}>JPG, PNG, or WebP · Max 2MB</p>
+              </div>
+
+              {/* Brand colour */}
+              <div style={{marginBottom: '20px'}}>
+                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '8px'}}>Brand accent colour</label>
+                <div style={{display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap'}}>
+                  <input
+                    type="color"
+                    value={brandColor}
+                    onChange={e => setBrandColor(e.target.value)}
+                    style={{width: '44px', height: '36px', padding: '2px', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', background: '#fff'}}
+                  />
+                  <span style={{fontSize: '13px', fontFamily: 'monospace', color: '#0f172a'}}>{brandColor}</span>
+                  <div style={{display: 'flex', gap: '6px', alignItems: 'center'}}>
+                    <span style={{background: brandColor, color: '#fff', padding: '4px 10px', borderRadius: '5px', fontSize: '12px', fontWeight: 700}}>Button</span>
+                    <span style={{background: brandColor, color: '#fff', padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 700}}>Badge</span>
+                  </div>
+                  <button onClick={() => setBrandColor('#c8a84b')} style={{fontSize: '11px', color: '#64748b', background: 'none', border: '1px solid #e2e8f0', padding: '4px 10px', borderRadius: '5px', cursor: 'pointer'}}>
+                    Reset to default
+                  </button>
+                </div>
+                <p style={{fontSize: '11px', color: '#94a3b8', marginTop: '4px'}}>This replaces the gold (#c8a84b) accent throughout your school's interface</p>
+              </div>
+
+              {/* School motto */}
+              <div style={{marginBottom: '20px'}}>
+                <label style={{fontSize: '12px', fontWeight: 600, color: '#0f172a', display: 'block', marginBottom: '6px'}}>School motto (optional)</label>
+                <p style={{fontSize: '11px', color: '#94a3b8', margin: '0 0 6px'}}>Appears on fee clearance certificates</p>
+                <input
+                  type="text"
+                  value={schoolMotto}
+                  onChange={e => setSchoolMotto(e.target.value.slice(0, 120))}
+                  placeholder="e.g. Excellence in Education"
+                  maxLength={120}
+                  style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', width: '100%', outline: 'none', boxSizing: 'border-box'}}
+                />
+                <p style={{fontSize: '11px', color: '#94a3b8', marginTop: '2px'}}>{schoolMotto.length}/120</p>
+              </div>
+
+              <button
+                onClick={saveBranding}
+                disabled={brandingSaving}
+                style={{background: brandingSaved ? '#0a7c3e' : '#c8a84b', color: brandingSaved ? '#fff' : '#0a1f4e', border: 'none', padding: '9px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: brandingSaving ? 'not-allowed' : 'pointer'}}
+              >
+                {brandingSaved ? 'Saved' : brandingSaving ? 'Saving...' : 'Save branding'}
+              </button>
+            </div>
+
+            {/* Student Discounts */}
+            <div style={{background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '24px', marginBottom: '16px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
+                <div>
+                  <h2 style={{fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Student Discounts</h2>
+                  <p style={{fontSize: '12px', color: '#94a3b8', margin: '0 0 16px'}}>Manage sibling, group, and individual discounts for your school</p>
+                </div>
+                {!showDiscountForm && (
+                  <button onClick={() => { setShowDiscountForm(true); setDiscountError('') }}
+                    style={{background: '#0a1f4e', color: '#fff', padding: '7px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0}}>
+                    + Add discount
+                  </button>
+                )}
+              </div>
+
+              {showDiscountForm && (
+                <div style={{background: '#f8f9fc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
+                  <p style={{fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '12px'}}>New discount</p>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <input
+                      type="text"
+                      placeholder="Discount name (e.g. Sibling discount, Staff child)"
+                      value={discountForm.name}
+                      onChange={e => setDiscountForm(f => ({...f, name: e.target.value}))}
+                      style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Description (optional)"
+                      value={discountForm.description}
+                      onChange={e => setDiscountForm(f => ({...f, description: e.target.value}))}
+                      style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}}
+                    />
+                    <div style={{display: 'flex', gap: '10px'}}>
+                      <select
+                        value={discountForm.discountType}
+                        onChange={e => setDiscountForm(f => ({...f, discountType: e.target.value}))}
+                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', background: '#fff', outline: 'none'}}
+                      >
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Fixed amount (KES)</option>
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder={discountForm.discountType === 'percentage' ? 'e.g. 10' : 'e.g. 5000'}
+                        value={discountForm.discountValue}
+                        onChange={e => setDiscountForm(f => ({...f, discountValue: e.target.value}))}
+                        style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}}
+                      />
+                    </div>
+                    <label style={{display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#0f172a', cursor: 'pointer'}}>
+                      <input type="checkbox" checked={discountForm.isSiblingDiscount} onChange={e => setDiscountForm(f => ({...f, isSiblingDiscount: e.target.checked}))} style={{accentColor: '#0a1f4e'}} />
+                      This is a sibling discount
+                    </label>
+                  </div>
+                  {discountError && <p style={{color: '#e24b4a', fontSize: '12px', margin: '8px 0 0'}}>{discountError}</p>}
+                  <div style={{display: 'flex', gap: '8px', marginTop: '12px'}}>
+                    <button onClick={saveDiscount} disabled={discountSaving || !discountForm.name.trim() || !discountForm.discountValue}
+                      style={{background: (discountSaving || !discountForm.name.trim() || !discountForm.discountValue) ? '#94a3b8' : '#c8a84b', color: (discountSaving || !discountForm.name.trim() || !discountForm.discountValue) ? '#fff' : '#0a1f4e', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}>
+                      {discountSaving ? 'Saving...' : 'Save discount'}
+                    </button>
+                    <button onClick={() => { setShowDiscountForm(false); setDiscountError('') }}
+                      style={{background: 'none', border: '1px solid #e2e8f0', color: '#64748b', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'}}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {discountsLoading ? (
+                <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading...</p>
+              ) : discounts.length === 0 ? (
+                <p style={{fontSize: '13px', color: '#94a3b8'}}>No discounts configured yet.</p>
+              ) : (
+                <div style={{border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden', marginBottom: '16px'}}>
+                  {discounts.map((d, i) => (
+                    <div key={d.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < discounts.length - 1 ? '1px solid #f1f5f9' : 'none', gap: '8px'}}>
+                      <div style={{flex: 1, minWidth: 0}}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+                          <span style={{fontSize: '13px', fontWeight: 600, color: '#0f172a'}}>{d.name}</span>
+                          {d.isSiblingDiscount && <span style={{fontSize: '10px', background: '#dbeafe', color: '#1e40af', padding: '1px 6px', borderRadius: '4px', fontWeight: 600}}>Sibling</span>}
+                          {!d.active && <span style={{fontSize: '10px', background: '#f1f5f9', color: '#94a3b8', padding: '1px 6px', borderRadius: '4px', fontWeight: 600}}>Inactive</span>}
+                        </div>
+                        <p style={{fontSize: '12px', color: '#64748b', margin: '2px 0 0'}}>
+                          {d.discountType === 'percentage' ? `${d.discountValue}% off` : `KES ${d.discountValue.toLocaleString()} off`}
+                          {d.description ? ` — ${d.description}` : ''}
+                        </p>
+                      </div>
+                      <div style={{display: 'flex', gap: '6px', flexShrink: 0}}>
+                        <button onClick={() => toggleDiscountActive(d.id, d.active)}
+                          style={{fontSize: '11px', color: d.active ? '#64748b' : '#0a7c3e', background: 'none', border: '1px solid #e2e8f0', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer'}}>
+                          {d.active ? 'Disable' : 'Enable'}
+                        </button>
+                        <button onClick={() => deleteDiscount(d.id)}
+                          style={{fontSize: '11px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer'}}>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sibling discount detector */}
+              <div style={{borderTop: '1px solid #f1f5f9', paddingTop: '16px', marginTop: '4px'}}>
+                <h3 style={{fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>Sibling discount detector</h3>
+                <p style={{fontSize: '12px', color: '#94a3b8', marginBottom: '10px'}}>Find students who share a parent phone number and apply a sibling discount to the whole group.</p>
+                <button onClick={detectSiblingGroups} disabled={detectingGroups}
+                  style={{background: detectingGroups ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: detectingGroups ? 'not-allowed' : 'pointer', marginBottom: '12px'}}>
+                  {detectingGroups ? 'Detecting...' : 'Detect sibling groups'}
+                </button>
+                {siblingGroups.length > 0 && (
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <p style={{fontSize: '12px', color: '#0a7c3e', fontWeight: 600}}>{siblingGroups.length} sibling group(s) found.</p>
+                    {siblingGroups.map((group, gi) => (
+                      <div key={gi} style={{border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px 14px', background: '#f8f9fc'}}>
+                        <p style={{fontSize: '12px', color: '#64748b', marginBottom: '4px'}}>
+                          {group.students.length} students share parent phone <strong>{group.parentPhone}</strong>:
+                        </p>
+                        <p style={{fontSize: '13px', color: '#0f172a', fontWeight: 600, marginBottom: '8px'}}>
+                          {group.students.map((s: any) => s.name).join(', ')}
+                        </p>
+                        {siblingApplyResult[group.parentPhone] ? (
+                          <p style={{fontSize: '12px', color: '#0a7c3e', fontWeight: 600}}>{siblingApplyResult[group.parentPhone]}</p>
+                        ) : (
+                          <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                            <select
+                              value={applyingSiblingDiscountId[group.parentPhone] || ''}
+                              onChange={e => setApplyingSiblingDiscountId(prev => ({...prev, [group.parentPhone]: e.target.value}))}
+                              style={{flex: 1, border: '1px solid #e2e8f0', borderRadius: '6px', padding: '6px 10px', fontSize: '12px', background: '#fff', outline: 'none'}}
+                            >
+                              <option value="">Select discount...</option>
+                              {discounts.filter(d => d.active).map((d: any) => (
+                                <option key={d.id} value={d.id}>{d.name} ({d.discountType === 'percentage' ? `${d.discountValue}%` : `KES ${d.discountValue.toLocaleString()}`})</option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => applySiblingDiscount(group.parentPhone, applyingSiblingDiscountId[group.parentPhone] || '')}
+                              disabled={!applyingSiblingDiscountId[group.parentPhone]}
+                              style={{background: applyingSiblingDiscountId[group.parentPhone] ? '#c8a84b' : '#94a3b8', color: applyingSiblingDiscountId[group.parentPhone] ? '#0a1f4e' : '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: applyingSiblingDiscountId[group.parentPhone] ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap'}}>
+                              Apply to all
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!detectingGroups && siblingGroups.length === 0 && (
+                  <p style={{fontSize: '12px', color: '#94a3b8'}}>Click the button above to detect sibling groups from parent phone numbers.</p>
+                )}
+              </div>
             </div>
 
             {/* Team members */}
