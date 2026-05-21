@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import LogoutButton from '@/components/LogoutButton'
+import ThemeToggle from '@/components/ThemeToggle'
 import { useRole } from '@/hooks/useRole'
 import { ROLE_PERMISSIONS } from '@/lib/roleContext'
 import { useState, useEffect } from 'react'
@@ -118,6 +119,7 @@ export default function AppNav() {
           </span>
         )}
 
+        <ThemeToggle />
         <div style={{flexShrink: 0}}>
           <LogoutButton />
         </div>

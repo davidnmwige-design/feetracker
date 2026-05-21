@@ -217,10 +217,3 @@
   background-color: var(--ep-input-bg);
   color: var(--ep-text-primary);
 }
-
-@media (max-width: 640px) {
-  .theme-toggle-fixed {
-    bottom: 80px !important;
-    left: 16px !important;
-  }
-}

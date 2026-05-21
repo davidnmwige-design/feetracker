@@ -2,78 +2,58 @@
 import { useState, useEffect } from 'react'
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
-  const [mounted, setMounted] = useState(false)
+  const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-    const saved = localStorage.getItem('ep-theme') as 'light' | 'dark' | null
-    const preferred = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    setTheme(preferred)
-    document.documentElement.setAttribute('data-theme', preferred)
+    const current = document.documentElement.getAttribute('data-theme')
+    setIsDark(current === 'dark')
   }, [])
 
   const toggle = () => {
-    const next = theme === 'light' ? 'dark' : 'light'
-    setTheme(next)
-    localStorage.setItem('ep-theme', next)
+    const next = isDark ? 'light' : 'dark'
+    setIsDark(!isDark)
     document.documentElement.setAttribute('data-theme', next)
+    localStorage.setItem('ep-theme', next)
   }
-
-  if (!mounted) return null
-
-  const isDark = theme === 'dark'
 
   return (
     <button
       onClick={toggle}
-      className="theme-toggle-fixed"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       style={{
-        position: 'fixed',
-        bottom: '24px',
-        left: '24px',
-        zIndex: 1000,
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '6px',
+        borderRadius: '6px',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        background: isDark ? '#1e293b' : '#0a1f4e',
-        border: '1px solid rgba(255,255,255,0.2)',
-        borderRadius: '24px',
-        padding: '8px 14px 8px 10px',
-        cursor: 'pointer',
-        color: '#ffffff',
-        fontSize: '12px',
-        fontWeight: 600,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-        transition: 'all 0.2s',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      <span style={{
-        display: 'inline-flex',
-        width: '28px',
-        height: '16px',
-        background: isDark ? '#c8a84b' : 'rgba(255,255,255,0.3)',
-        borderRadius: '8px',
-        position: 'relative',
-        transition: 'background 0.2s',
+        justifyContent: 'center',
+        color: 'rgba(255,255,255,0.8)',
         flexShrink: 0,
-      }}>
-        <span style={{
-          position: 'absolute',
-          top: '2px',
-          left: isDark ? '14px' : '2px',
-          width: '12px',
-          height: '12px',
-          background: '#ffffff',
-          borderRadius: '50%',
-          transition: 'left 0.2s',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-        }} />
-      </span>
-      {isDark ? 'Light' : 'Dark'}
+        transition: 'color 0.2s',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
+      onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}
+    >
+      {isDark ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      )}
     </button>
   )
 }

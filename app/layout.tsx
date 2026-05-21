@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Geist } from 'next/font/google'
 import './globals.css'
 import AppNav from '@/components/AppNav'
-import ThemeToggle from '@/components/ThemeToggle'
 import StagingBanner from '@/components/StagingBanner'
 import PWAInstallPrompt from '@/components/PWAInstallPrompt'
 import PlausibleAnalytics from '@/components/PlausibleAnalytics'
@@ -51,7 +50,6 @@ export default function RootLayout({
         <StagingBanner />
         <AppNav />
         {children}
-        <ThemeToggle />
         <PWAInstallPrompt />
         <CrispChat />
         <script dangerouslySetInnerHTML={{
