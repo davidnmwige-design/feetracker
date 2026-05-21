@@ -22,32 +22,41 @@ export default function ThemeToggle() {
 
   if (!mounted) return null
 
+  const isDark = theme === 'dark'
+
   return (
     <button
       onClick={toggle}
-      aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+      className="theme-toggle-fixed"
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       style={{
+        position: 'fixed',
+        bottom: '24px',
+        left: '24px',
+        zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.4)',
-        borderRadius: '20px',
-        padding: '4px 12px 4px 8px',
+        background: isDark ? '#1e293b' : '#0a1f4e',
+        border: '1px solid rgba(255,255,255,0.2)',
+        borderRadius: '24px',
+        padding: '8px 14px 8px 10px',
         cursor: 'pointer',
         color: '#ffffff',
         fontSize: '12px',
         fontWeight: 600,
-        flexShrink: 0,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        transition: 'all 0.2s',
         whiteSpace: 'nowrap',
       }}
     >
       <span style={{
         display: 'inline-flex',
-        width: '32px',
-        height: '18px',
-        background: theme === 'dark' ? '#c8a84b' : 'rgba(255,255,255,0.25)',
-        borderRadius: '9px',
+        width: '28px',
+        height: '16px',
+        background: isDark ? '#c8a84b' : 'rgba(255,255,255,0.3)',
+        borderRadius: '8px',
         position: 'relative',
         transition: 'background 0.2s',
         flexShrink: 0,
@@ -55,16 +64,16 @@ export default function ThemeToggle() {
         <span style={{
           position: 'absolute',
           top: '2px',
-          left: theme === 'dark' ? '16px' : '2px',
-          width: '14px',
-          height: '14px',
+          left: isDark ? '14px' : '2px',
+          width: '12px',
+          height: '12px',
           background: '#ffffff',
           borderRadius: '50%',
           transition: 'left 0.2s',
           boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
         }} />
       </span>
-      {theme === 'light' ? 'Dark' : 'Light'}
+      {isDark ? 'Light' : 'Dark'}
     </button>
   )
 }

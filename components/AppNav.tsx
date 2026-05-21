@@ -5,7 +5,6 @@ import LogoutButton from '@/components/LogoutButton'
 import { useRole } from '@/hooks/useRole'
 import { ROLE_PERMISSIONS } from '@/lib/roleContext'
 import { useState, useEffect } from 'react'
-import ThemeToggle from '@/components/ThemeToggle'
 
 const ALL_NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', page: 'dashboard' },
@@ -119,7 +118,6 @@ export default function AppNav() {
           </span>
         )}
 
-        <ThemeToggle />
         <div style={{flexShrink: 0}}>
           <LogoutButton />
         </div>
