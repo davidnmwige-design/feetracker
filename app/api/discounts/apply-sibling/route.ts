@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { resolveSchool } from '@/lib/schoolContext'
+import { parseBody, applySiblingDiscountSchema } from '@/lib/schemas'
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -10,13 +11,11 @@ export async function POST(req: Request) {
   const ctx = await resolveSchool(session.user.email)
   if (!ctx) return NextResponse.json({ error: 'School not found' }, { status: 404 })
 
-  const body = await req.json()
-  const discountId = parseInt(body.discountId)
-  const parentPhone = typeof body.parentPhone === 'string' ? body.parentPhone.trim() : ''
-
-  if (isNaN(discountId) || !parentPhone) {
-    return NextResponse.json({ error: 'discountId and parentPhone are required' }, { status: 400 })
-  }
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(applySiblingDiscountSchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const { discountId, parentPhone } = parsed.data
 
   const discount = await prisma.feeDiscount.findFirst({ where: { id: discountId, schoolId: ctx.school.id } })
   if (!discount) return NextResponse.json({ error: 'Discount not found' }, { status: 404 })

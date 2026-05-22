@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
-import { sanitize } from '@/lib/sanitize'
+import { parseBody, updateBursarySchema } from '@/lib/schemas'
 
 async function getBursaryCtx(req: Request, id: number) {
   if (!checkRateLimit(getIp(req))) return null
@@ -24,19 +24,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!hasPermission(data.ctx.role, 'students', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   try {
-    const body = await req.json()
-    const updated = await prisma.bursary.update({
-      where: { id: Number(id) },
-      data: {
-        type: body.type ? sanitize(body.type, 50) : undefined,
-        description: body.description !== undefined ? (body.description ? sanitize(body.description, 200) : null) : undefined,
-        discountType: body.discountType ? sanitize(body.discountType, 20) : undefined,
-        discountValue: body.discountValue !== undefined ? Number(body.discountValue) : undefined,
-        approvedBy: body.approvedBy !== undefined ? (body.approvedBy ? sanitize(body.approvedBy, 100) : null) : undefined,
-        endDate: body.endDate !== undefined ? (body.endDate ? new Date(body.endDate) : null) : undefined,
-        active: body.active !== undefined ? Boolean(body.active) : undefined,
-      },
-    })
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+    const parsed = parseBody(updateBursarySchema, rawBody)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+
+    const d = parsed.data
+    const patchData: Record<string, unknown> = {}
+    if (d.type !== undefined) patchData.type = d.type
+    if (d.description !== undefined) patchData.description = d.description || null
+    if (d.discountType !== undefined) patchData.discountType = d.discountType
+    if (d.discountValue !== undefined) patchData.discountValue = d.discountValue
+    if (d.approvedBy !== undefined) patchData.approvedBy = d.approvedBy || null
+    if (d.endDate !== undefined) patchData.endDate = d.endDate ? new Date(d.endDate) : null
+    if (d.active !== undefined) patchData.active = d.active
+    const updated = await prisma.bursary.update({ where: { id: Number(id) }, data: patchData })
     return NextResponse.json(updated)
   } catch (err) {
     console.error('bursary PATCH error:', err)

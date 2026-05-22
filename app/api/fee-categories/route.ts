@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
-import { sanitize } from '@/lib/sanitize'
+import { parseBody, createFeeCategorySchema } from '@/lib/schemas'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
 
@@ -37,27 +37,25 @@ export async function POST(req: Request) {
 
   if (!hasPermission(ctx.role, 'fee-categories', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
-  const body = await req.json()
-  const { studentId, categories } = body
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(createFeeCategorySchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const { studentId, categories } = parsed.data
 
-  const student = await prisma.student.findFirst({ where: { id: Number(studentId), schoolId: ctx.school.id } })
+  const student = await prisma.student.findFirst({ where: { id: studentId, schoolId: ctx.school.id } })
   if (!student) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  if (!Array.isArray(categories)) return NextResponse.json({ error: 'categories must be array' }, { status: 400 })
-
-  await prisma.feeCategory.deleteMany({ where: { studentId: Number(studentId) } })
+  await prisma.feeCategory.deleteMany({ where: { studentId } })
 
   const created = []
   let total = 0
   for (const cat of categories) {
-    const name = sanitize(String(cat.name || ''), 100)
-    const amount = Math.max(0, Number(cat.amount) || 0)
-    if (!name) continue
-    created.push(await prisma.feeCategory.create({ data: { studentId: Number(studentId), name, amount } }))
-    total += amount
+    created.push(await prisma.feeCategory.create({ data: { studentId, name: cat.name, amount: cat.amount } }))
+    total += cat.amount
   }
 
-  await prisma.student.update({ where: { id: Number(studentId) }, data: { feeRequired: total } })
+  await prisma.student.update({ where: { id: studentId }, data: { feeRequired: total } })
 
   return NextResponse.json({ categories: created, total })
 }

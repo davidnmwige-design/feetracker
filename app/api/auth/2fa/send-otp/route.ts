@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { sendEmail } from '@/lib/email'
 import { checkRateLimitAsync, getOtpLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
+import { parseBody, send2FAOTPSchema } from '@/lib/schemas'
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@')
@@ -22,9 +23,11 @@ export async function POST(req: NextRequest) {
   if (session?.user?.email) {
     userEmail = session.user.email
   } else {
-    const body = await req.json().catch(() => ({}))
-    if (typeof body?.email === 'string' && body.email) {
-      userEmail = body.email
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { rawBody = {} }
+    const parsed = parseBody(send2FAOTPSchema, rawBody)
+    if (parsed.success && parsed.data.email) {
+      userEmail = parsed.data.email
     }
   }
 

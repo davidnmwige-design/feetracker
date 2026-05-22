@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { checkRateLimitAsync, getPasswordResetLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
-import { sanitize } from '@/lib/sanitize'
+import { parseBody, resetPasswordSchema } from '@/lib/schemas'
 import bcrypt from 'bcryptjs'
 import { isPasswordBreached, formatBreachMessage } from '@/lib/hibp'
 
@@ -10,15 +10,13 @@ export async function POST(req: Request) {
   if (!rl.success) return rateLimitResponse(rl.reset)
 
   try {
-    const body = await req.json()
-    const token = sanitize(body.token, 200)
-    const newPassword = body.newPassword as string
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+    const parsed = parseBody(resetPasswordSchema, rawBody)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+    const { token, newPassword } = parsed.data
 
-    if (!token || !newPassword) {
-      return NextResponse.json({ error: 'Token and password are required' }, { status: 400 })
-    }
-
-    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
       return NextResponse.json({ error: 'Password does not meet requirements' }, { status: 400 })
     }
 

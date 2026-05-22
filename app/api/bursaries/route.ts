@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
-import { sanitize } from '@/lib/sanitize'
+import { parseBody, createBursarySchema } from '@/lib/schemas'
 
 export async function POST(req: Request) {
   if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -16,37 +16,26 @@ export async function POST(req: Request) {
     if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
     if (!hasPermission(ctx.role, 'students', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
-    const body = await req.json()
-    const { studentId, type, description, discountType, discountValue, approvedBy, endDate } = body
-
-    if (!studentId || !type || !discountType || discountValue === undefined) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+    const parsed = parseBody(createBursarySchema, rawBody)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+    const { studentId, type, description, discountType, discountValue, approvedBy, endDate, active = true } = parsed.data
 
     // Verify student belongs to this school
-    const student = await prisma.student.findUnique({ where: { id: Number(studentId) }, select: { schoolId: true } })
+    const student = await prisma.student.findUnique({ where: { id: studentId }, select: { schoolId: true } })
     if (!student || student.schoolId !== ctx.school.id) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
     // Upsert — each student has at most one bursary
     const bursary = await prisma.bursary.upsert({
-      where: { studentId: Number(studentId) },
+      where: { studentId },
       update: {
-        type: sanitize(type, 50),
-        description: description ? sanitize(description, 200) : null,
-        discountType: sanitize(discountType, 20),
-        discountValue: Number(discountValue),
-        approvedBy: approvedBy ? sanitize(approvedBy, 100) : null,
-        endDate: endDate ? new Date(endDate) : null,
-        active: true,
+        type, description: description || null, discountType, discountValue,
+        approvedBy: approvedBy || null, endDate: endDate ? new Date(endDate) : null, active,
       },
       create: {
-        studentId: Number(studentId),
-        type: sanitize(type, 50),
-        description: description ? sanitize(description, 200) : null,
-        discountType: sanitize(discountType, 20),
-        discountValue: Number(discountValue),
-        approvedBy: approvedBy ? sanitize(approvedBy, 100) : null,
-        endDate: endDate ? new Date(endDate) : null,
+        studentId, type, description: description || null, discountType, discountValue,
+        approvedBy: approvedBy || null, endDate: endDate ? new Date(endDate) : null,
       },
     })
     return NextResponse.json(bursary)

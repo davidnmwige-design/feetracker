@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { resolveSchool } from '@/lib/schoolContext'
-import { sanitize } from '@/lib/sanitize'
+import { parseBody, updateExamFeeSchema } from '@/lib/schemas'
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -16,7 +16,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const existing = await prisma.examFee.findFirst({ where: { id: feeId, schoolId: ctx.school.id } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const body = await req.json()
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(updateExamFeeSchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const body = parsed.data
 
   // Handle assign action separately
   if (body.assign === true) {
@@ -35,12 +39,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   const data: Record<string, unknown> = {}
-  if (body.name !== undefined) data.name = sanitize(body.name, 120)
-  if (body.examType !== undefined) data.examType = sanitize(body.examType, 50)
-  if (body.amount !== undefined) data.amount = parseFloat(body.amount) || 0
-  if (body.targetClass !== undefined) data.targetClass = sanitize(body.targetClass, 50)
-  if (body.dueDate !== undefined) data.dueDate = body.dueDate ? new Date(body.dueDate) : null
-  if (body.active !== undefined) data.active = body.active === true
+  if (body.name !== undefined) data.name = body.name
+  if (body.examType !== undefined) data.examType = body.examType
+  if (body.amount !== undefined) data.amount = body.amount
+  if (body.targetClass !== undefined) data.targetClass = body.targetClass
+  if (body.active !== undefined) data.active = body.active
 
   const updated = await prisma.examFee.update({ where: { id: feeId }, data })
   return NextResponse.json(updated)

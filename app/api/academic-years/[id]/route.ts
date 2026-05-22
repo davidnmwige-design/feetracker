@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { resolveSchool } from '@/lib/schoolContext'
+import { parseBody, updateAcademicYearSchema } from '@/lib/schemas'
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -15,7 +16,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const existing = await prisma.academicYear.findFirst({ where: { id: recordId, schoolId: ctx.school.id } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const body = await req.json()
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(updateAcademicYearSchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const body = parsed.data
 
   if (body.activate === true) {
     await prisma.academicYear.updateMany({ where: { schoolId: ctx.school.id }, data: { isActive: false } })

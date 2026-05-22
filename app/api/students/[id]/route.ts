@@ -2,8 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
-import { sanitize } from '@/lib/sanitize'
 import { encrypt, decrypt } from '@/lib/encrypt'
+import { parseBody, updateStudentSchema } from '@/lib/schemas'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { logAudit } from '@/lib/audit'
 import { resolveSchool } from '@/lib/schoolContext'
@@ -80,49 +80,29 @@ export async function PATCH(
     })
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
-    const body = await req.json()
-    const data: Record<string, string | null> = {}
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+    const parsed = parseBody(updateStudentSchema, rawBody)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-    if ('name' in body) {
-      const nameVal = sanitize(body.name || '', 200).trim()
-      if (!nameVal) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-      data.name = nameVal
+    const d = parsed.data
+    const data: Record<string, unknown> = {}
+    if (d.name !== undefined) data.name = d.name
+    if (d.admNo !== undefined) data.admNo = d.admNo
+    if (d.studentClass !== undefined) data['class'] = d.studentClass
+    if (d.stream !== undefined) data.stream = d.stream || null
+    if (d.parentName !== undefined) data.parentName = d.parentName || null
+    if (d.parentPhone !== undefined) {
+      data.parentPhone = d.parentPhone || null
+      data.parentPhoneHash = hashPhone(d.parentPhone || null)
     }
-    if ('admNo' in body) {
-      const admNoVal = sanitize(body.admNo || '', 100).trim()
-      if (!admNoVal) return NextResponse.json({ error: 'Admission number is required' }, { status: 400 })
-      data.admNo = admNoVal
+    if (d.parentEmail !== undefined) data.parentEmail = d.parentEmail ? encrypt(d.parentEmail) : null
+    if (d.parent2Name !== undefined) data.parent2Name = d.parent2Name || null
+    if (d.parent2Phone !== undefined) {
+      data.parent2Phone = d.parent2Phone || null
+      data.parent2PhoneHash = hashPhone(d.parent2Phone || null)
     }
-    if ('class' in body) {
-      data['class'] = sanitize(body['class'] || '', 100).trim() || null
-    }
-    if ('stream' in body) {
-      data.stream = sanitize(body.stream || '', 100).trim() || null
-    }
-    if ('parentName' in body) {
-      data.parentName = sanitize(body.parentName || '', 200).trim() || null
-    }
-    if ('parentPhone' in body) {
-      const phoneVal = sanitize(body.parentPhone || '', 50).trim() || null
-      data.parentPhone = phoneVal
-      ;(data as Record<string, unknown>).parentPhoneHash = hashPhone(phoneVal)
-    }
-    if ('parentEmail' in body) {
-      const raw = sanitize(body.parentEmail || '', 200).toLowerCase().trim() || null
-      data.parentEmail = raw ? encrypt(raw) : null
-    }
-    if ('parent2Name' in body) {
-      data.parent2Name = sanitize(body.parent2Name || '', 200).trim() || null
-    }
-    if ('parent2Phone' in body) {
-      const phone2Val = sanitize(body.parent2Phone || '', 50).trim() || null
-      data.parent2Phone = phone2Val
-      ;(data as Record<string, unknown>).parent2PhoneHash = hashPhone(phone2Val)
-    }
-    if ('parent2Email' in body) {
-      const raw2 = sanitize(body.parent2Email || '', 200).toLowerCase().trim() || null
-      data.parent2Email = raw2 ? encrypt(raw2) : null
-    }
+    if (d.parent2Email !== undefined) data.parent2Email = d.parent2Email ? encrypt(d.parent2Email) : null
 
     const updated = await prisma.student.update({
       where: { id: studentId },

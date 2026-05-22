@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { resolveSchool } from '@/lib/schoolContext'
-import { sanitize } from '@/lib/sanitize'
+import { parseBody, updateDiscountSchema } from '@/lib/schemas'
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -18,15 +18,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const existing = await prisma.feeDiscount.findFirst({ where: { id, schoolId: ctx.school.id } })
   if (!existing) return NextResponse.json({ error: 'Discount not found' }, { status: 404 })
 
-  const body = await req.json()
-  const data: Record<string, unknown> = {}
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(updateDiscountSchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-  if (body.name !== undefined) data.name = sanitize(body.name, 120)
-  if (body.description !== undefined) data.description = body.description ? sanitize(body.description, 255) : null
-  if (body.discountType !== undefined) data.discountType = body.discountType === 'fixed' ? 'fixed' : 'percentage'
-  if (body.discountValue !== undefined) data.discountValue = parseFloat(body.discountValue) || 0
-  if (body.isSiblingDiscount !== undefined) data.isSiblingDiscount = body.isSiblingDiscount === true
-  if (body.active !== undefined) data.active = body.active === true
+  const data: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(parsed.data)) {
+    if (v !== undefined) data[k] = v
+  }
 
   const updated = await prisma.feeDiscount.update({ where: { id }, data })
   return NextResponse.json(updated)

@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { checkRateLimitAsync, getAuthLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
-import { sanitize } from '@/lib/sanitize'
 import bcrypt from 'bcryptjs'
+import { parseBody, adminSetupSchema } from '@/lib/schemas'
 
 export async function GET() {
   const adminCount = await prisma.user.count({ where: { isAdmin: true } })
@@ -19,17 +19,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Setup failed' }, { status: 403 })
     }
 
-    const body = await req.json()
-    const name = sanitize(body.name, 100)
-    const email = sanitize(body.email, 200).toLowerCase()
-    const password = body.password as string
-    const secretKey = body.secretKey as string
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Setup failed' }, { status: 403 }) }
+    const parsed = parseBody(adminSetupSchema, rawBody)
+    if (!parsed.success) return NextResponse.json({ error: 'Setup failed' }, { status: 403 })
+    const { name, email, password, secretKey } = parsed.data
 
     if (secretKey !== process.env.ADMIN_SECRET_KEY) {
-      return NextResponse.json({ error: 'Setup failed' }, { status: 403 })
-    }
-
-    if (!name || !email || !password) {
       return NextResponse.json({ error: 'Setup failed' }, { status: 403 })
     }
 

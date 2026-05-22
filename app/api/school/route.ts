@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
-import { sanitize } from '@/lib/sanitize'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
 import { prisma } from '@/lib/prisma'
 import { getCache, setCache, invalidateCache, CacheKeys } from '@/lib/cache'
+import { parseBody, updateSchoolSchema } from '@/lib/schemas'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -43,44 +43,22 @@ export async function PATCH(req: Request) {
     if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
     if (!hasPermission(ctx.role, 'school', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
-    const body = await req.json()
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+    const parsed = parseBody(updateSchoolSchema, rawBody)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-    if ('name' in body && body.name != null && (String(body.name).length < 1 || String(body.name).length > 120)) {
-      return NextResponse.json({ error: 'School name must be between 1 and 120 characters' }, { status: 400 })
-    }
-    if ('paybill' in body && body.paybill != null && body.paybill !== '' && !/^\d{5,7}$/.test(String(body.paybill))) {
-      return NextResponse.json({ error: 'Paybill must be 5 to 7 digits' }, { status: 400 })
-    }
-    if ('paybill' in body && body.paybill != null && body.paybill !== '') {
+    if (parsed.data.paybill) {
       const conflict = await prisma.school.findFirst({
-        where: { paybill: String(body.paybill).trim(), id: { not: ctx.school.id } }
+        where: { paybill: parsed.data.paybill, id: { not: ctx.school.id } },
       })
-      if (conflict) {
-        return NextResponse.json({ error: 'This paybill number is already registered to another school' }, { status: 400 })
-      }
+      if (conflict) return NextResponse.json({ error: 'This paybill number is already registered to another school' }, { status: 400 })
     }
 
-    if ('brandColor' in body && body.brandColor != null && body.brandColor !== '') {
-      if (!/^#[0-9A-Fa-f]{6}$/.test(String(body.brandColor))) {
-        return NextResponse.json({ error: 'Brand colour must be a valid hex colour (e.g. #c8a84b)' }, { status: 400 })
-      }
-    }
-    if ('schoolMotto' in body && body.schoolMotto != null && String(body.schoolMotto).length > 120) {
-      return NextResponse.json({ error: 'School motto must be 120 characters or less' }, { status: 400 })
-    }
-
+    // Build update object from validated data, excluding undefined fields
     const data: Record<string, unknown> = {}
-    const strings = ['name', 'paybill', 'accountNumberFormat', 'currentTerm', 'replyToEmail', 'emailSignature', 'whatsappNumber', 'penaltyType', 'billingCycle', 'brandColor', 'schoolMotto']
-    const booleans = ['penaltyEnabled']
-    const numbers = ['penaltyAmount', 'penaltyDueDate']
-    for (const key of strings) {
-      if (key in body) data[key] = body[key] != null ? sanitize(String(body[key]), 200) : null
-    }
-    for (const key of booleans) {
-      if (key in body) data[key] = Boolean(body[key])
-    }
-    for (const key of numbers) {
-      if (key in body) data[key] = Number(body[key]) || 0
+    for (const [k, v] of Object.entries(parsed.data)) {
+      if (v !== undefined) data[k] = v
     }
 
     const school = await prisma.school.update({ where: { id: ctx.school.id }, data })

@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
+import { parseBody, reminderScheduleSchema } from '@/lib/schemas'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -29,13 +30,16 @@ export async function POST(req: Request) {
 
   if (!hasPermission(ctx.role, 'reminders/schedule', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
-  const body = await req.json()
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(reminderScheduleSchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
   const data = {
-    enabled: Boolean(body.enabled),
-    frequency: ['weekly', 'monthly'].includes(body.frequency) ? body.frequency : 'weekly',
-    dayOfWeek: Math.min(6, Math.max(0, Number(body.dayOfWeek) || 1)),
-    dayOfMonth: Math.min(31, Math.max(1, Number(body.dayOfMonth) || 1)),
-    time: String(body.time || '08:00').slice(0, 5),
+    enabled: parsed.data.enabled,
+    frequency: parsed.data.frequency ?? 'weekly',
+    dayOfWeek: parsed.data.dayOfWeek ?? 1,
+    dayOfMonth: parsed.data.dayOfMonth ?? 1,
+    time: parsed.data.time ?? '08:00',
   }
 
   const schedule = await prisma.reminderSchedule.upsert({

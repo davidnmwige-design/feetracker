@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { checkRateLimitAsync, getPasswordResetLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
-import { sanitize } from '@/lib/sanitize'
+import { parseBody, forgotPasswordSchema } from '@/lib/schemas'
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
 
@@ -22,10 +22,11 @@ export async function POST(req: Request) {
   if (!rl.success) return rateLimitResponse(rl.reset)
 
   try {
-    const body = await req.json()
-    const email = sanitize(body.email, 200).toLowerCase()
-
-    if (!email) return NextResponse.json({ success: true })
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ success: true }) }
+    const parsed = parseBody(forgotPasswordSchema, rawBody)
+    if (!parsed.success) return NextResponse.json({ success: true }) // don't reveal validation errors
+    const { email } = parsed.data
 
     const user = await prisma.user.findUnique({ where: { email } })
 

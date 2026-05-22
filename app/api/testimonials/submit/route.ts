@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
-import { sanitize } from '@/lib/sanitize'
 import crypto from 'crypto'
+import { parseBody, testimonialSubmitSchema } from '@/lib/schemas'
 
 function verifyToken(schoolId: string, token: string): boolean {
   const expected = crypto.createHash('sha256').update(schoolId + (process.env.NEXTAUTH_SECRET || '')).digest('hex').slice(0, 16)
@@ -9,23 +9,16 @@ function verifyToken(schoolId: string, token: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json()
-  const schoolId = parseInt(body.schoolId)
-  const token = String(body.token || '')
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid request' }, { status: 400 }) }
+  const parsed = parseBody(testimonialSubmitSchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const { schoolId, token, authorName, authorTitle, rating, quote } = parsed.data
 
-  if (!schoolId || !token) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   if (!verifyToken(String(schoolId), token)) return NextResponse.json({ error: 'Invalid token' }, { status: 403 })
 
   const school = await prisma.school.findUnique({ where: { id: schoolId } })
   if (!school) return NextResponse.json({ error: 'School not found' }, { status: 404 })
-
-  const quote = sanitize(body.quote, 500)
-  const authorName = sanitize(body.authorName, 120)
-  const authorTitle = sanitize(body.authorTitle, 120)
-  const rating = Math.min(5, Math.max(1, parseInt(body.rating) || 5))
-
-  if (!quote || quote.length < 20) return NextResponse.json({ error: 'Please write at least 20 characters' }, { status: 400 })
-  if (!authorName) return NextResponse.json({ error: 'Your name is required' }, { status: 400 })
 
   await prisma.testimonial.upsert({
     where: { schoolId },

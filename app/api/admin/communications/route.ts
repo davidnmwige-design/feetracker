@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { sendEmail } from '@/lib/email'
+import { parseBody, announcementSchema } from '@/lib/schemas'
 
 export async function GET() {
   const session = await auth()
@@ -22,10 +23,11 @@ export async function POST(req: Request) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user?.isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { subject, message, recipientType } = await req.json()
-  if (!subject?.trim() || !message?.trim()) {
-    return NextResponse.json({ error: 'Subject and message are required' }, { status: 400 })
-  }
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(announcementSchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const { subject, message, recipientType } = parsed.data
 
   // Determine recipient schools
   const now = new Date()

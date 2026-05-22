@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { resolveSchool } from '@/lib/schoolContext'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { parseBody, createAcademicYearSchema } from '@/lib/schemas'
 
 export async function GET() {
   const session = await auth()
@@ -25,11 +26,11 @@ export async function POST(req: Request) {
   const ctx = await resolveSchool(session.user.email)
   if (!ctx) return NextResponse.json({ error: 'School not found' }, { status: 404 })
 
-  const body = await req.json()
-  const year = parseInt(body.year)
-  if (!year || year < 2000 || year > 2100) return NextResponse.json({ error: 'Invalid year' }, { status: 400 })
-
-  const isActive = body.isActive === true
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(createAcademicYearSchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const { year, isActive = false, term1Start, term1End, term2Start, term2End, term3Start, term3End } = parsed.data
 
   if (isActive) {
     await prisma.academicYear.updateMany({ where: { schoolId: ctx.school.id }, data: { isActive: false } })
@@ -40,12 +41,12 @@ export async function POST(req: Request) {
       schoolId: ctx.school.id,
       year,
       isActive,
-      term1Start: body.term1Start ? new Date(body.term1Start) : null,
-      term1End: body.term1End ? new Date(body.term1End) : null,
-      term2Start: body.term2Start ? new Date(body.term2Start) : null,
-      term2End: body.term2End ? new Date(body.term2End) : null,
-      term3Start: body.term3Start ? new Date(body.term3Start) : null,
-      term3End: body.term3End ? new Date(body.term3End) : null,
+      term1Start: term1Start ? new Date(term1Start) : null,
+      term1End: term1End ? new Date(term1End) : null,
+      term2Start: term2Start ? new Date(term2Start) : null,
+      term2End: term2End ? new Date(term2End) : null,
+      term3Start: term3Start ? new Date(term3Start) : null,
+      term3End: term3End ? new Date(term3End) : null,
     },
   })
   return NextResponse.json(record, { status: 201 })

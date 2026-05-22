@@ -2,16 +2,17 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { checkRateLimitAsync, getAuthLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
+import { parseBody, verifyAndLoginSchema } from '@/lib/schemas'
 
 export async function POST(req: Request) {
   const rl = await checkRateLimitAsync(getAuthLimiter(), getIdentifier(req) + ':verify-login')
   if (!rl.success) return rateLimitResponse(rl.reset)
 
-  const { email, password, code } = await req.json()
-
-  if (!email || !password || !code) {
-    return NextResponse.json({ error: 'Email, password, and code are required' }, { status: 400 })
-  }
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(verifyAndLoginSchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const { email, password, code } = parsed.data
 
   const user = await prisma.user.findUnique({
     where: { email },

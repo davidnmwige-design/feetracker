@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimit, getIp } from '@/lib/ratelimit'
-import { sanitize } from '@/lib/sanitize'
+import { parseBody, bulkFeeCategorySchema } from '@/lib/schemas'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
 
@@ -26,31 +26,19 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const body = await req.json()
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+    const parsed = parseBody(bulkFeeCategorySchema, rawBody)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-    // mode: 'update' = update amount where category exists (skip students without it)
-    // mode: 'add'    = create category for students who don't have it yet
-    const mode: 'update' | 'add' = body.mode === 'add' ? 'add' : 'update'
-
-    // Accept both className (spec) and classFilter (legacy)
-    const className = body.className ?? body.classFilter ?? 'All'
-    const categoryName = body.categoryName
-    const newAmount = body.newAmount ?? body.amount
-
-    if (!categoryName || typeof categoryName !== 'string' || categoryName.trim() === '') {
-      return NextResponse.json({ error: 'categoryName is required' }, { status: 400 })
-    }
-    if (newAmount === undefined || newAmount === null || isNaN(Number(newAmount))) {
-      return NextResponse.json({ error: 'newAmount is required and must be a number' }, { status: 400 })
-    }
-
-    const amount = Math.max(0, Number(newAmount))
-    const name = sanitize(categoryName.trim(), 100)
+    const { mode, className, categoryName, newAmount } = parsed.data
+    const amount = newAmount
+    const name = categoryName
     const schoolId = ctx.school.id
 
     const studentWhere: Record<string, unknown> = { schoolId }
     if (className && className !== 'All' && className.trim() !== '') {
-      studentWhere.class = sanitize(className.trim(), 50)
+      studentWhere.class = className.trim()
     }
 
     const students = await prisma.student.findMany({

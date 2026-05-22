@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimitAsync, getOtpLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
+import { parseBody, verify2FASchema } from '@/lib/schemas'
 
 export async function POST(req: Request) {
   const rl = await checkRateLimitAsync(getOtpLimiter(), getIdentifier(req) + ':verify-otp')
@@ -12,10 +13,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { code } = await req.json()
-  if (!code) {
-    return NextResponse.json({ error: 'Code is required' }, { status: 400 })
-  }
+  let rawBody: unknown
+  try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+  const parsed = parseBody(verify2FASchema, rawBody)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+  const { code } = parsed.data
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },

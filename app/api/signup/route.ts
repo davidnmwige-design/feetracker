@@ -1,44 +1,26 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { checkRateLimitAsync, getSignupLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
-import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 import zxcvbn from 'zxcvbn'
 import { isPasswordBreached, formatBreachMessage } from '@/lib/hibp'
+import { parseBody, signupSchema } from '@/lib/schemas'
 
 const RESERVED_PREFIXES = ['admin', 'support', 'billing', 'noreply', 'hello']
-
-function isValidEmail(email: string): boolean {
-  if (!email || email.length > 254) return false
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-  return emailRegex.test(email)
-}
 
 export async function POST(req: Request) {
   const rl = await checkRateLimitAsync(getSignupLimiter(), getIdentifier(req) + ':signup')
   if (!rl.success) return rateLimitResponse(rl.reset)
 
   try {
-    const body = await req.json()
-    const name = sanitize(body.name, 120)
-    const email = sanitize(body.email, 254).toLowerCase()
-    const password = body.password as string
-    const schoolName = sanitize(body.schoolName, 120)
-    const paybill = sanitize(body.paybill, 50)
-    const term = sanitize(body.term, 100)
+    let rawBody: unknown
+    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
+    const parsed = parseBody(signupSchema, rawBody)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
+    const { name, email, password, schoolName, paybill, term } = parsed.data
 
-    if (!name || name.length > 120) return NextResponse.json({ error: 'Name must be between 1 and 120 characters' }, { status: 400 })
-    if (!email || email.length > 254) return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
-    if (!password || password.length < 8 || password.length > 128) return NextResponse.json({ error: 'Password must be between 8 and 128 characters' }, { status: 400 })
-    if (!schoolName || schoolName.length > 120) return NextResponse.json({ error: 'School name must be between 1 and 120 characters' }, { status: 400 })
-    if (paybill && !/^\d{5,7}$/.test(paybill)) return NextResponse.json({ error: 'Paybill must be 5 to 7 digits' }, { status: 400 })
-
-    if (!isValidEmail(email)) {
-      return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
-    }
-
-    if (!password || password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
       return NextResponse.json({ error: 'Password does not meet requirements' }, { status: 400 })
     }
 
