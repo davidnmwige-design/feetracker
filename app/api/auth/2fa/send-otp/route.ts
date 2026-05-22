@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { sendEmail } from '@/lib/email'
+import { checkRateLimitAsync, otpLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@')
@@ -9,6 +10,9 @@ function maskEmail(email: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  const rl = await checkRateLimitAsync(otpLimiter, getIdentifier(req) + ':send-otp')
+  if (!rl.success) return rateLimitResponse(rl.reset)
+
   // Two modes:
   // 1. Settings page (user already logged in) — identify via session
   // 2. Login 2FA flow (user not yet logged in) — email provided in request body

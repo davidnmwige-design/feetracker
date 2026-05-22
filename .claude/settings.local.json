@@ -53,7 +53,10 @@
       "Bash(ls app/api/health)",
       "Bash(ls app/status)",
       "Bash(ls public/sw.js)",
-      "Bash(ls components/StagingBanner.tsx components/PWAInstallPrompt.tsx components/CrispChat.tsx components/StudentAvatar.tsx)"
+      "Bash(ls components/StagingBanner.tsx components/PWAInstallPrompt.tsx components/CrispChat.tsx components/StudentAvatar.tsx)",
+      "Bash(git checkout *)",
+      "Bash(powershell *)",
+      "Bash(npm audit *)"
     ]
   }
 }

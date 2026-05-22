@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
-import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { checkRateLimitAsync, signupLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
@@ -16,9 +16,8 @@ function isValidEmail(email: string): boolean {
 }
 
 export async function POST(req: Request) {
-  if (!checkRateLimit(getIp(req))) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-  }
+  const rl = await checkRateLimitAsync(signupLimiter, getIdentifier(req) + ':signup')
+  if (!rl.success) return rateLimitResponse(rl.reset)
 
   try {
     const body = await req.json()
@@ -95,7 +94,7 @@ export async function POST(req: Request) {
     if (settings?.notifyNewSchool !== false) {
       const trialEnd = trialEndsAt.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
       sendEmail({
-        to: 'davidnmwige@gmail.com',
+        to: process.env.ADMIN_NOTIFICATION_EMAIL || 'davidnmwige@gmail.com',
         subject: `New school signup: ${schoolName}`,
         html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
           <div style="background:#050f2c;padding:20px 24px">

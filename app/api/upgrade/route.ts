@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     `
 
     sendEmail({
-      to: 'davidnmwige@gmail.com',
+      to: process.env.ADMIN_NOTIFICATION_EMAIL || 'davidnmwige@gmail.com',
       subject: `Plan Upgrade Request — ${ctx.school.name} (${ctx.school.currentPlan} → ${requestedPlan})`,
       html: adminHtml,
     }).catch(err => console.error('Upgrade email error:', err))

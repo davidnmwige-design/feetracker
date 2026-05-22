@@ -59,7 +59,7 @@ export async function DELETE(req: Request) {
     const settings = await prisma.platformSettings.findUnique({ where: { id: 1 } })
     if (settings?.notifyAccountDeleted !== false) {
       sendEmail({
-        to: 'davidnmwige@gmail.com',
+        to: process.env.ADMIN_NOTIFICATION_EMAIL || 'davidnmwige@gmail.com',
         subject: `Account deleted: ${user.school?.name || user.email}`,
         html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
           <div style="background:#050f2c;padding:20px 24px">

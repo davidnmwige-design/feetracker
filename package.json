@@ -17,6 +17,7 @@
     "@types/nodemailer": "^8.0.0",
     "@types/pdf-parse": "^1.1.5",
     "@types/zxcvbn": "^4.4.5",
+    "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "axios": "^1.16.1",
     "bcryptjs": "^3.0.3",

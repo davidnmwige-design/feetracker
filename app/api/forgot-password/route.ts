@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
-import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { checkRateLimitAsync, passwordResetLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
@@ -18,9 +18,8 @@ function createTransporter() {
 }
 
 export async function POST(req: Request) {
-  if (!checkRateLimit(getIp(req))) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-  }
+  const rl = await checkRateLimitAsync(passwordResetLimiter, getIdentifier(req) + ':forgot-password')
+  if (!rl.success) return rateLimitResponse(rl.reset)
 
   try {
     const body = await req.json()

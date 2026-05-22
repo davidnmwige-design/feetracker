@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        to: 'davidnmwige@gmail.com',
+        to: process.env.ADMIN_NOTIFICATION_EMAIL || 'davidnmwige@gmail.com',
         subject: `Elimu Pay Daily Backup Report — ${new Date().toLocaleDateString('en-KE')}`,
         html: emailBody,
       }),

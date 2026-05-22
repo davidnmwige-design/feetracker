@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
-import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { checkRateLimitAsync, authLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import bcrypt from 'bcryptjs'
 
@@ -10,9 +10,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  if (!checkRateLimit(getIp(req))) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-  }
+  const rl = await checkRateLimitAsync(authLimiter, getIdentifier(req) + ':admin-setup')
+  if (!rl.success) return rateLimitResponse(rl.reset)
 
   try {
     const adminCount = await prisma.user.count({ where: { isAdmin: true } })

@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -41,7 +41,7 @@ export default async function Dashboard() {
       if (settings?.notifyTrialExpiry !== false) {
         const trialEnd = school.trialEndsAt.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
         sendEmail({
-          to: 'davidnmwige@gmail.com',
+          to: process.env.ADMIN_NOTIFICATION_EMAIL || 'davidnmwige@gmail.com',
           subject: `Trial expiring soon: ${school.name}`,
           html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
             <div style="background:#050f2c;padding:20px 24px">

@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { resolveSchool } from '@/lib/schoolContext'
 import { sanitize } from '@/lib/sanitize'
+import { checkRateLimit, getIp } from '@/lib/ratelimit'
+import { validateName, validateEnum, validateAmount } from '@/lib/validation'
 
 export async function GET() {
   const session = await auth()
@@ -19,21 +21,30 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   const session = await auth()
   if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const ctx = await resolveSchool(session.user.email)
   if (!ctx) return NextResponse.json({ error: 'School not found' }, { status: 404 })
 
   const body = await req.json()
-  const name = sanitize(body.name, 120)
-  const examType = sanitize(body.examType, 50)
-  const amount = parseFloat(body.amount) || 0
-  const targetClass = sanitize(body.targetClass, 50)
 
-  if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-  if (!examType) return NextResponse.json({ error: 'Exam type is required' }, { status: 400 })
-  if (amount <= 0) return NextResponse.json({ error: 'Amount must be greater than 0' }, { status: 400 })
+  const nameResult = validateName(body.name, 'Exam fee name', 120)
+  if (!nameResult.valid) return NextResponse.json({ error: nameResult.error }, { status: 400 })
+
+  const typeResult = validateEnum(body.examType, ['KCSE', 'KCPE', 'Mock', 'Cambridge', 'Other'], 'Exam type')
+  if (!typeResult.valid) return NextResponse.json({ error: typeResult.error }, { status: 400 })
+
+  const amountResult = validateAmount(body.amount, 'Amount')
+  if (!amountResult.valid) return NextResponse.json({ error: amountResult.error }, { status: 400 })
+  if (amountResult.sanitized <= 0) return NextResponse.json({ error: 'Amount must be greater than 0' }, { status: 400 })
+
+  const targetClass = sanitize(body.targetClass, 50)
   if (!targetClass) return NextResponse.json({ error: 'Target class is required' }, { status: 400 })
+
+  const name = nameResult.sanitized
+  const examType = typeResult.sanitized as string
+  const amount = amountResult.sanitized as number
 
   const fee = await prisma.examFee.create({
     data: {
