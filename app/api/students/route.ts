@@ -85,7 +85,21 @@ export async function POST(req: Request) {
     }
 
     const buffer = await file.arrayBuffer()
-    const workbook = XLSX.read(buffer, { type: 'array' })
+
+    // NOTE: xlsx has known CVEs. File size is limited to 10MB and content is
+    // validated before processing. cellFormula/cellHTML disabled to reduce attack surface.
+    let workbook: ReturnType<typeof XLSX.read>
+    try {
+      workbook = await Promise.race([
+        Promise.resolve().then(() => XLSX.read(buffer, { type: 'array', cellFormula: false, cellHTML: false })),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('parse_timeout')), 10_000)),
+      ])
+    } catch (err) {
+      if (err instanceof Error && err.message === 'parse_timeout') {
+        return NextResponse.json({ error: 'File parsing timed out. Please try a smaller file.' }, { status: 408 })
+      }
+      return NextResponse.json({ error: 'Could not read file. Please check the format and try again.' }, { status: 400 })
+    }
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
     const rows = XLSX.utils.sheet_to_json(sheet) as any[]
 

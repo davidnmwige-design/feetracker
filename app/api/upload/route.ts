@@ -62,7 +62,9 @@ export async function POST(req: Request) {
           if (!result.formatDetected.includes('Bank')) result.formatDetected = 'Bank Statement (PDF)'
           return result
         } else {
-          const workbook = XLSX.read(buffer, { type: 'buffer' })
+          // NOTE: xlsx has known CVEs. File size is limited to 4MB and content is
+          // validated before processing. cellFormula/cellHTML disabled to reduce attack surface.
+          const workbook = XLSX.read(buffer, { type: 'buffer', cellFormula: false, cellHTML: false })
           const sheet = workbook.Sheets[workbook.SheetNames[0]]
           const rows = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[]
           return parseJsonRows(rows)

@@ -5,7 +5,7 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
 import { getEffectiveFee } from '@/lib/feeCalculations'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -71,10 +71,15 @@ export async function GET(req: Request) {
       'Status': ''
     })
 
-    const worksheet = XLSX.utils.json_to_sheet(rows)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Fee Report')
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Elimu Pay'
+    const sheet = workbook.addWorksheet('Fee Report')
+    if (rows.length > 0) {
+      sheet.columns = Object.keys(rows[0]).map(key => ({ header: key, key, width: 20 }))
+      sheet.getRow(1).font = { bold: true }
+    }
+    rows.forEach(row => sheet.addRow(row))
+    const buffer = await workbook.xlsx.writeBuffer()
 
     return new NextResponse(buffer, {
       headers: {

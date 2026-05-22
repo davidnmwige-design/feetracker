@@ -6,7 +6,7 @@ import { decrypt } from '@/lib/encrypt'
 import { logAudit } from '@/lib/audit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -65,12 +65,23 @@ export async function GET(req: Request) {
       'Sent At': inv.sentAt ? new Date(inv.sentAt).toLocaleDateString('en-KE') : '',
     }))
 
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(studentRows), 'Students')
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(paymentRows), 'Payments')
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(invoiceRows), 'Invoices')
+    const wb = new ExcelJS.Workbook()
+    wb.creator = 'Elimu Pay'
 
-    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
+    for (const [name, data] of [
+      ['Students', studentRows],
+      ['Payments', paymentRows],
+      ['Invoices', invoiceRows],
+    ] as const) {
+      const ws = wb.addWorksheet(name)
+      if (data.length > 0) {
+        ws.columns = Object.keys(data[0]).map(key => ({ header: key, key, width: 20 }))
+        ws.getRow(1).font = { bold: true }
+      }
+      data.forEach((row: Record<string, unknown>) => ws.addRow(row))
+    }
+
+    const buf = await wb.xlsx.writeBuffer()
 
     logAudit({ userId: ctx.userId, schoolId, action: 'DATA_EXPORT', details: `${students.length} students, ${payments.length} payments, ${invoices.length} invoices`, ipAddress: getIp(req) }).catch(() => {})
 
