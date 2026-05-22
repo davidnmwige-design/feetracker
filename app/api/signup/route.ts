@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
-import { checkRateLimitAsync, signupLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
+import { checkRateLimitAsync, getSignupLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import { sendEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
@@ -16,7 +16,7 @@ function isValidEmail(email: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const rl = await checkRateLimitAsync(signupLimiter, getIdentifier(req) + ':signup')
+  const rl = await checkRateLimitAsync(getSignupLimiter(), getIdentifier(req) + ':signup')
   if (!rl.success) return rateLimitResponse(rl.reset)
 
   try {

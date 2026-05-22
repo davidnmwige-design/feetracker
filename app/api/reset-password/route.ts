@@ -1,12 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
-import { checkRateLimitAsync, passwordResetLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
+import { checkRateLimitAsync, getPasswordResetLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 import { sanitize } from '@/lib/sanitize'
 import bcrypt from 'bcryptjs'
 import { isPasswordBreached, formatBreachMessage } from '@/lib/hibp'
 
 export async function POST(req: Request) {
-  const rl = await checkRateLimitAsync(passwordResetLimiter, getIdentifier(req) + ':reset-password')
+  const rl = await checkRateLimitAsync(getPasswordResetLimiter(), getIdentifier(req) + ':reset-password')
   if (!rl.success) return rateLimitResponse(rl.reset)
 
   try {

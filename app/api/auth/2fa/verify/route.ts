@@ -1,10 +1,10 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { checkRateLimitAsync, otpLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
+import { checkRateLimitAsync, getOtpLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 
 export async function POST(req: Request) {
-  const rl = await checkRateLimitAsync(otpLimiter, getIdentifier(req) + ':verify-otp')
+  const rl = await checkRateLimitAsync(getOtpLimiter(), getIdentifier(req) + ':verify-otp')
   if (!rl.success) return rateLimitResponse(rl.reset)
 
   const session = await auth()

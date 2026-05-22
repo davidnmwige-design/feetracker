@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { sendEmail } from '@/lib/email'
-import { checkRateLimitAsync, otpLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
+import { checkRateLimitAsync, getOtpLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@')
@@ -10,7 +10,7 @@ function maskEmail(email: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const rl = await checkRateLimitAsync(otpLimiter, getIdentifier(req) + ':send-otp')
+  const rl = await checkRateLimitAsync(getOtpLimiter(), getIdentifier(req) + ':send-otp')
   if (!rl.success) return rateLimitResponse(rl.reset)
 
   // Two modes:

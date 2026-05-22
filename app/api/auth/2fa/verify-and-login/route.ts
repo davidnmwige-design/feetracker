@@ -1,10 +1,10 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { checkRateLimitAsync, authLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
+import { checkRateLimitAsync, getAuthLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 
 export async function POST(req: Request) {
-  const rl = await checkRateLimitAsync(authLimiter, getIdentifier(req) + ':verify-login')
+  const rl = await checkRateLimitAsync(getAuthLimiter(), getIdentifier(req) + ':verify-login')
   if (!rl.success) return rateLimitResponse(rl.reset)
 
   const { email, password, code } = await req.json()

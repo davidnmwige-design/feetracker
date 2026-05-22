@@ -1,7 +1,7 @@
 import { Ratelimit, type Duration } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
-// ─── Upstash Redis client ────────────────────────────────────────────────────
+// ─── Upstash Redis client (created lazily on first use) ───────────────────────
 function getRedis(): Redis | null {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null
   return new Redis({
@@ -16,14 +16,51 @@ function createLimiter(requests: number, window: Duration): Ratelimit | null {
   return new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(requests, window), analytics: false })
 }
 
-// ─── Named limiters ──────────────────────────────────────────────────────────
-export const authLimiter          = createLimiter(5,  '15 m')   // login / admin-setup
-export const signupLimiter        = createLimiter(3,  '1 h')    // account creation
-export const passwordResetLimiter = createLimiter(3,  '1 h')    // forgot / reset password
-export const otpLimiter           = createLimiter(5,  '15 m')   // 2FA send + verify
-export const uploadLimiter        = createLimiter(10, '1 h')    // file uploads
-export const adminLimiter         = createLimiter(30, '1 m')    // admin panel
-export const apiLimiter           = createLimiter(60, '1 m')    // general API
+// ─── Lazy limiter getters ─────────────────────────────────────────────────────
+// Limiters are created on first call, NOT at module load time.
+// This prevents Upstash from being instantiated during Next.js static analysis.
+
+let _auth: Ratelimit | null | undefined
+export function getAuthLimiter(): Ratelimit | null {
+  if (_auth === undefined) _auth = createLimiter(5, '15 m')   // login / admin-setup
+  return _auth
+}
+
+let _signup: Ratelimit | null | undefined
+export function getSignupLimiter(): Ratelimit | null {
+  if (_signup === undefined) _signup = createLimiter(3, '1 h')  // account creation
+  return _signup
+}
+
+let _passwordReset: Ratelimit | null | undefined
+export function getPasswordResetLimiter(): Ratelimit | null {
+  if (_passwordReset === undefined) _passwordReset = createLimiter(3, '1 h')  // forgot / reset
+  return _passwordReset
+}
+
+let _otp: Ratelimit | null | undefined
+export function getOtpLimiter(): Ratelimit | null {
+  if (_otp === undefined) _otp = createLimiter(5, '15 m')   // 2FA send + verify
+  return _otp
+}
+
+let _upload: Ratelimit | null | undefined
+export function getUploadLimiter(): Ratelimit | null {
+  if (_upload === undefined) _upload = createLimiter(10, '1 h')  // file uploads
+  return _upload
+}
+
+let _admin: Ratelimit | null | undefined
+export function getAdminLimiter(): Ratelimit | null {
+  if (_admin === undefined) _admin = createLimiter(30, '1 m')   // admin panel
+  return _admin
+}
+
+let _api: Ratelimit | null | undefined
+export function getApiLimiter(): Ratelimit | null {
+  if (_api === undefined) _api = createLimiter(60, '1 m')    // general API
+  return _api
+}
 
 // ─── Async rate limit check ───────────────────────────────────────────────────
 export async function checkRateLimitAsync(
@@ -68,7 +105,7 @@ export function rateLimitResponse(reset: number): Response {
 
 // ─── Backward-compatible synchronous rate limiter ────────────────────────────
 // Used by ~40 existing routes via checkRateLimit(getIp(req)).
-// In-memory sliding window — still provides per-instance protection.
+// Pure in-memory sliding window — no external dependencies.
 const _memRequests = new Map<string, { count: number; resetAt: number }>()
 
 export function checkRateLimit(ip: string): boolean {
