@@ -23,15 +23,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
+        // Check account lockout
+        if (user.lockedUntil && user.lockedUntil > new Date()) {
+          logAudit({ userId: user.id, action: 'LOGIN_BLOCKED', details: `Account locked until ${user.lockedUntil.toISOString()}` }).catch(() => {})
+          return null
+        }
+
         const valid = await bcrypt.compare(
           credentials.password as string,
           user.password
         )
 
         if (!valid) {
-          logAudit({ userId: user.id, action: 'LOGIN_FAILURE', details: `Email: ${user.email}` }).catch(() => {})
+          const newAttempts = user.failedLoginAttempts + 1
+          const lockout = newAttempts >= 10
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              failedLoginAttempts: newAttempts,
+              lockedUntil: lockout ? new Date(Date.now() + 30 * 60 * 1000) : undefined,
+            },
+          }).catch(() => {})
+          logAudit({ userId: user.id, action: 'LOGIN_FAILURE', details: `Email: ${user.email}, attempt ${newAttempts}${lockout ? ' — account locked' : ''}` }).catch(() => {})
           return null
         }
+
+        // Reset lockout state on successful login
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginAttempts: 0, lockedUntil: null },
+        }).catch(() => {})
 
         logAudit({ userId: user.id, action: 'LOGIN_SUCCESS', details: `Email: ${user.email}` }).catch(() => {})
         return { id: String(user.id), name: user.name, email: user.email, sessionVersion: user.sessionVersion, twoFactorEnabled: user.twoFactorEnabled }
