@@ -62,6 +62,12 @@ export function getApiLimiter(): Ratelimit | null {
   return _api
 }
 
+let _daraja: Ratelimit | null | undefined
+export function getDarajaLimiter(): Ratelimit | null {
+  if (_daraja === undefined) _daraja = createLimiter(120, '1 m')  // M-Pesa C2B callbacks, keyed per paybill
+  return _daraja
+}
+
 // ─── Async rate limit check ───────────────────────────────────────────────────
 export async function checkRateLimitAsync(
   limiter: Ratelimit | null,

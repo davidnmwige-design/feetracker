@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { checkRateLimitAsync, getOtpLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 import { parseBody, verify2FASchema } from '@/lib/schemas'
+import { buildTwoFactorCookie } from '@/lib/check2fa'
+import bcrypt from 'bcryptjs'
 
 export async function POST(req: Request) {
   const rl = await checkRateLimitAsync(getOtpLimiter(), getIdentifier(req) + ':verify-otp')
@@ -37,20 +39,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid or expired code. Please request a new one.' }, { status: 400 })
   }
 
-  if (otpRecord.code !== String(code)) {
+  if (!(await bcrypt.compare(String(code), otpRecord.code))) {
     return NextResponse.json({ error: 'Invalid code. Please try again.' }, { status: 400 })
   }
 
   await prisma.oTPCode.update({ where: { id: otpRecord.id }, data: { used: true } })
 
   const expiry = Date.now() + 24 * 60 * 60 * 1000
-  const cookieValue = `${user.id}:${expiry}:valid`
 
   const response = NextResponse.json({ success: true })
-  response.cookies.set('ft_2fa', cookieValue, {
+  response.cookies.set('ft_2fa', buildTwoFactorCookie(user.id, expiry), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict',
     maxAge: 86400,
     path: '/',
   })

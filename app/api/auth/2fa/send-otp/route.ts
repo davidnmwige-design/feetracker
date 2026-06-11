@@ -4,6 +4,8 @@ import { auth } from '@/lib/auth'
 import { sendEmail } from '@/lib/email'
 import { checkRateLimitAsync, getOtpLimiter, getIdentifier, rateLimitResponse } from '@/lib/ratelimit'
 import { parseBody, send2FAOTPSchema } from '@/lib/schemas'
+import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@')
@@ -41,11 +43,14 @@ export async function POST(req: NextRequest) {
   })
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString()
+  // Cryptographically-secure 6-digit code. Sent to the user in plaintext below,
+  // but only its bcrypt hash is persisted so a DB leak does not expose live codes.
+  const code = crypto.randomInt(100000, 1000000).toString()
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
+  const codeHash = await bcrypt.hash(code, 10)
 
   await prisma.oTPCode.deleteMany({ where: { userId: user.id, used: false } })
-  await prisma.oTPCode.create({ data: { userId: user.id, code, expiresAt } })
+  await prisma.oTPCode.create({ data: { userId: user.id, code: codeHash, expiresAt } })
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
