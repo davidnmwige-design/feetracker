@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/email'
 import { decrypt } from '@/lib/encrypt'
 import { getEffectiveFee } from '@/lib/feeCalculations'
 import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
+import { isAuthorizedCron } from '@/lib/cronAuth'
 
 function buildWaMessage(studentName: string, cls: string, balance: number, schoolName: string, paybill?: string | null, acctFmt?: string | null) {
   let msg = `Dear Parent, this is a reminder that ${studentName} (${cls}) has an outstanding fee balance of KES ${balance.toLocaleString()} for this term. Please make payment at your earliest convenience. Thank you. — ${schoolName}`
@@ -49,8 +50,7 @@ function reminderHtml({
 }
 
 export async function GET(req: Request) {
-  const secret = req.headers.get('x-cron-secret') || new URL(req.url).searchParams.get('secret')
-  if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
+  if (!isAuthorizedCron(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

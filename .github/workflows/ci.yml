@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Typecheck · Test · Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      # Lint is informational for now — the codebase has pre-existing lint debt.
+      # Remove continue-on-error once `npm run lint` is clean to make it a hard gate.
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: feetracker_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/feetracker_ci
+      NEXTAUTH_SECRET: ci_dummy_nextauth_secret_0123456789abcdef
+      AUTH_SECRET: ci_dummy_auth_secret_0123456789abcdef0123
+      DATA_ENCRYPTION_KEY: ci_dummy_encryption_key_0123456789abc
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Runs `prisma generate && prisma migrate deploy && next build` against the
+      # fresh CI Postgres — also verifies migrations apply cleanly from scratch.
+      - name: Build
+        run: npm run build

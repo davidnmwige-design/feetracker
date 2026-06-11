@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email'
+import { isAuthorizedCron } from '@/lib/cronAuth'
 import crypto from 'crypto'
 
 function makeToken(schoolId: number): string {
@@ -8,8 +9,7 @@ function makeToken(schoolId: number): string {
 }
 
 export async function GET(req: Request) {
-  const secret = req.headers.get('x-cron-secret') || new URL(req.url).searchParams.get('secret')
-  if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
+  if (!isAuthorizedCron(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

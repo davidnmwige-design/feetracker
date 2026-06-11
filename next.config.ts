@@ -45,6 +45,14 @@ const nextConfig: NextConfig = {
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
         ],
       },
+      {
+        // Keep the *.vercel.app host (preview, and production before the custom-domain
+        // cutover) out of search indexes so it is not indexed under the wrong canonical.
+        // Once production is served from the custom domain, that host indexes normally.
+        source: '/:path*',
+        has: [{ type: 'host', value: '.*\\.vercel\\.app' }],
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
     ]
   },
 }

@@ -55,9 +55,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  if (pathname.startsWith('/admin')) return NextResponse.next()
-
-  const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
+  // `/admin` itself is the public admin login/setup page; everything under `/admin/`
+  // (dashboard, schools, billing, …) requires a session — gated server-side here so the
+  // page shell never renders for unauthenticated visitors (the API still enforces isAdmin).
+  const isAdminPanel = pathname.startsWith('/admin/')
+  const isProtected = isAdminPanel || PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
   if (!isProtected) return NextResponse.next()
 
   const secureCookie = process.env.NODE_ENV === 'production'
@@ -71,7 +73,7 @@ export async function middleware(req: NextRequest) {
 
   if (!token) {
     const url = req.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = isAdminPanel ? '/admin' : '/login'
     return NextResponse.redirect(url)
   }
 

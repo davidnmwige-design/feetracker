@@ -3,10 +3,23 @@ import { NextResponse } from 'next/server'
 import { decrypt } from '@/lib/encrypt'
 import { sendEmail, paymentConfirmationHtml } from '@/lib/email'
 import { logAudit } from '@/lib/audit'
+import { secureEqual } from '@/lib/secureCompare'
+import { checkRateLimitAsync, getDarajaLimiter } from '@/lib/ratelimit'
 
 const ACCEPTED = { ResultCode: 0, ResultDesc: 'Accepted' }
 
 export async function POST(req: Request) {
+  // Authenticate the Safaricom callback via the shared secret embedded in the URL we
+  // registered (see /api/daraja/register). Without it, anyone could inject fake payments.
+  // Fail closed: respond with the normal "accepted" shape but do no processing, so an
+  // attacker gets no signal and Safaricom is not triggered to retry.
+  const expectedToken = process.env.DARAJA_CALLBACK_SECRET
+  const providedToken = new URL(req.url).searchParams.get('t')
+  if (!expectedToken || !secureEqual(providedToken, expectedToken)) {
+    console.warn('[daraja] Rejected confirmation: invalid or missing callback token')
+    return NextResponse.json(ACCEPTED)
+  }
+
   try {
     const body = await req.json()
     const {
@@ -19,6 +32,13 @@ export async function POST(req: Request) {
       MiddleName,
       LastName,
     } = body
+
+    // Rate limit per paybill so one shortcode cannot flood the platform (or another tenant).
+    const rl = await checkRateLimitAsync(getDarajaLimiter(), `daraja:${BusinessShortCode}`)
+    if (!rl.success) {
+      console.warn('[daraja] Rate limit exceeded for paybill:', BusinessShortCode)
+      return NextResponse.json(ACCEPTED)
+    }
 
     // 1. Find school by paybill
     const school = await prisma.school.findFirst({

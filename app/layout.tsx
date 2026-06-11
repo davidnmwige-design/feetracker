@@ -12,6 +12,7 @@ const geist = Geist({ subsets: ['latin'] })
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: 'Elimu Pay - School Fee Management',
   description: 'Elimu Pay - Smart school fee management for Kenyan schools. Automate MPESA payments, send instant parent notifications, and track fee collection in real time.',
   manifest: '/manifest.json',
