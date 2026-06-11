@@ -82,8 +82,9 @@ export async function POST(req: Request) {
         } catch (emailErr) {
           console.error('Failed to send reset email:', emailErr)
         }
-      } else {
-        // Email not configured — log reset URL for development
+      } else if (process.env.NODE_ENV !== 'production') {
+        // Email not configured — log the reset URL for local development only.
+        // Never logged in production: the URL contains a single-use account-takeover token.
         console.log('[DEV] Password reset URL:', resetUrl)
       }
     }

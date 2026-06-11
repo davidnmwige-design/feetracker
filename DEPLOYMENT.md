@@ -36,8 +36,53 @@ Staging overrides:
 **Production:** Neon `main` branch  
 **Staging:** Create a Neon branch at neon.tech → your project → Branches → New Branch
 
-The build script runs `prisma db push` automatically on every Vercel deployment,
-so schema migrations apply to whichever database the branch connects to.
+### Migrations
+
+The build script runs `prisma migrate deploy` on every Vercel deployment (it replaced the
+previous `prisma db push --accept-data-loss`, which could silently drop columns/data). Migrations
+live in `prisma/migrations/` and are applied in order.
+
+**Day-to-day workflow:** when you change `prisma/schema.prisma`, create a migration locally with
+`npx prisma migrate dev --name <change>` and commit the generated folder. The next deploy applies it
+automatically. Never edit a migration that has already been deployed.
+
+**⚠️ ONE-TIME BASELINE (required before the first deploy with the new build script).**
+Production and staging were previously built with `db push`, so their `_prisma_migrations` history
+does not match the migration files. Before deploying, mark the existing migrations as already applied
+so `migrate deploy` does not try to recreate existing tables. Run **once per environment**, against
+that environment's `DATABASE_URL`:
+
+```
+npx prisma migrate resolve --applied 20260504055443_init
+npx prisma migrate resolve --applied 20260504063856_add_terms
+npx prisma migrate resolve --applied 20260504124803_add_admin
+npx prisma migrate resolve --applied 20260611134330_catchup_full_schema
+npx prisma migrate status   # should print "Database schema is up to date!"
+```
+
+If you skip this step, the deploy fails safely (it aborts before `next build`; no data is lost and the
+previous version stays live) with an "already exists" error — that is the signal to run the baseline.
+
+### Connection pooling (recommended for serverless)
+
+On Vercel each serverless invocation opens its own Postgres connection. Under load this can exhaust
+the database connection limit (queries start failing with "too many connections"). To avoid this, run
+the app through a pooled connection and keep migrations on a direct connection:
+
+1. In `prisma/schema.prisma`, add a direct URL alongside the pooled one:
+   ```prisma
+   datasource db {
+     provider  = "postgresql"
+     url       = env("DATABASE_URL") // pooled (pgbouncer) — used by the app at runtime
+     directUrl = env("DIRECT_URL")   // direct — used by prisma migrate/generate
+   }
+   ```
+2. In Vercel env vars: set `DATABASE_URL` to Neon's **pooled** connection string (the host with
+   `-pooler`), and `DIRECT_URL` to Neon's **direct** connection string.
+3. Set `DIRECT_URL` everywhere Prisma migrations run (Vercel build env and CI).
+
+Alternatively, use [Prisma Accelerate](https://www.prisma.io/accelerate) for managed pooling. Until one
+of these is configured, keep an eye on the Neon connection-count metric as schools onboard.
 
 ## Health Monitoring
 
