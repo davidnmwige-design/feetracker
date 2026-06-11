@@ -63,6 +63,11 @@ npx prisma migrate status   # should print "Database schema is up to date!"
 If you skip this step, the deploy fails safely (it aborts before `next build`; no data is lost and the
 previous version stays live) with an "already exists" error — that is the signal to run the baseline.
 
+**⚠️ Before the `add_paybill_unique` migration deploys:** it adds a unique index on `School.paybill`,
+which fails if two schools currently share a paybill (e.g. leftover QA/test schools). Remove duplicate
+paybills first — `SELECT paybill, count(*) FROM "School" WHERE paybill IS NOT NULL GROUP BY paybill
+HAVING count(*) > 1;` — then deploy. (NULL paybills are fine; many are allowed.)
+
 ### Connection pooling (recommended for serverless)
 
 On Vercel each serverless invocation opens its own Postgres connection. Under load this can exhaust
