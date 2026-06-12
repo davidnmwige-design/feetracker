@@ -182,21 +182,26 @@ model FeeCategory {
 }
 
 model Payment {
-  id          Int      @id @default(autoincrement())
-  mpesaRef    String?
-  amount      Float
-  paidAt      DateTime @default(now())
-  senderName  String?
-  senderPhone String?
-  matched     Boolean  @default(false)
-  notified    Boolean  @default(false)
-  source      String   @default("upload")
-  studentId   Int?
-  termId      Int?
-  schoolId    Int?
-  student     Student? @relation(fields: [studentId], references: [id])
-  term        Term?    @relation(fields: [termId], references: [id])
-  school      School?  @relation(fields: [schoolId], references: [id])
+  id                  Int      @id @default(autoincrement())
+  mpesaRef            String?
+  amount              Float
+  paidAt              DateTime @default(now())
+  senderName          String?
+  senderPhone         String?
+  matched             Boolean  @default(false)
+  notified            Boolean  @default(false)
+  source              String   @default("upload")
+  matchConfidence     String?  @default("unmatched")
+  paymentType         String?
+  originalDescription String?
+  suggestedStudents   String?
+  notes               String?
+  studentId           Int?
+  termId              Int?
+  schoolId            Int?
+  student             Student? @relation(fields: [studentId], references: [id])
+  term                Term?    @relation(fields: [termId], references: [id])
+  school              School?  @relation(fields: [schoolId], references: [id])
 
   @@index([schoolId])
   @@index([studentId])

@@ -56,6 +56,7 @@ export async function POST(req: Request) {
       const parsePromise = (async () => {
         if (/\.pdf$/i.test(file.name)) {
           const pdfModule = await import('pdf-parse')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const pdfParse = (pdfModule as any).default ?? pdfModule
           const pdfData = await pdfParse(buffer)
           const result = parseTextStatement(pdfData.text)
@@ -87,6 +88,8 @@ export async function POST(req: Request) {
     // -- Persist payments --------------------------------------------------
     const confidenceCounts = { high: 0, medium: 0, low: 0 }
     let unmatchedCount = 0
+    let multipleStudentsCount = 0
+    let activityPaymentsCount = 0
     const notifications: { msg: string; phone: string }[] = []
 
     for (const tx of matched) {
@@ -109,13 +112,28 @@ export async function POST(req: Request) {
           studentId: studentId ?? null,
           schoolId,
           source: 'upload',
+          matchConfidence: tx.confidence,
+          paymentType: tx.analysis.type,
+          originalDescription: tx.rawDescription || null,
+          suggestedStudents: tx.suggestedStudents ? JSON.stringify(tx.suggestedStudents) : null,
+          notes: tx.notes || null,
         },
       })
 
-      if (tx.confidence === 'high') confidenceCounts.high++
-      else if (tx.confidence === 'medium') confidenceCounts.medium++
-      else if (tx.confidence === 'low') confidenceCounts.low++
-      else unmatchedCount++
+      const type = tx.analysis.type
+      if (type === 'multiple_students') {
+        multipleStudentsCount++
+      } else if (type === 'kits_activity') {
+        activityPaymentsCount++
+      } else if (tx.confidence === 'high') {
+        confidenceCounts.high++
+      } else if (tx.confidence === 'medium') {
+        confidenceCounts.medium++
+      } else if (tx.confidence === 'low') {
+        confidenceCounts.low++
+      } else {
+        unmatchedCount++
+      }
 
       // Send email/WhatsApp notification for auto-matched payments
       if (isAutoMatched && studentId) {
@@ -168,12 +186,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // Also count low confidence as unmatched for review purposes
     const needsReview = confidenceCounts.low + unmatchedCount
 
     await logAudit({
       userId: ctx.userId, schoolId, action: 'MPESA_UPLOAD',
-      details: `${parseResult.formatDetected} | ${confidenceCounts.high} high, ${confidenceCounts.medium} medium confidence matched, ${needsReview} need review`,
+      details: `${parseResult.formatDetected} | ${confidenceCounts.high} high, ${confidenceCounts.medium} medium, ${needsReview} need review, ${multipleStudentsCount} multi-student, ${activityPaymentsCount} activity`,
       ipAddress: getIp(req),
     })
 
@@ -184,6 +201,8 @@ export async function POST(req: Request) {
       processedRows: parseResult.processedRows,
       matched: confidenceCounts.high + confidenceCounts.medium,
       unmatched: needsReview,
+      multipleStudents: multipleStudentsCount,
+      activityPayments: activityPaymentsCount,
       confidence: confidenceCounts,
       total: parseResult.processedRows,
       notifications,
