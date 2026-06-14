@@ -871,6 +871,90 @@ export default function StudentDetail() {
           )}
         </div>
 
+        {/* Student Discounts */}
+        <div style={sectionStyle}>
+          <h2 style={sectionTitle}>Additional Discounts</h2>
+          <p style={sectionSubtitle}>School-wide discounts applied to this student</p>
+
+          {/* Fee breakdown if any discounts/bursary exist */}
+          {feeBreakdown.discounts.length > 0 && (
+            <div style={{background: '#fefce8', border: '1px solid #fef08a', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px'}}>
+                <span style={{color: '#64748b'}}>Original fee</span>
+                <span style={{color: '#0f172a'}}>KES {feeBreakdown.originalFee.toLocaleString()}</span>
+              </div>
+              {feeBreakdown.discounts.map((d, i) => (
+                <div key={i} style={{display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px'}}>
+                  <span style={{color: '#64748b'}}>
+                    {d.name} ({d.discountType === 'percentage' ? `${d.discountValue}%` : `KES ${d.discountValue.toLocaleString()}`})
+                  </span>
+                  <span style={{color: '#16a34a', fontWeight: 600}}>-KES {d.discountAmount.toLocaleString()}</span>
+                </div>
+              ))}
+              <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderTop: '1px solid #fef08a', paddingTop: '8px', marginTop: '4px'}}>
+                <span style={{fontWeight: 700, color: '#0f172a'}}>Effective fee required</span>
+                <span style={{fontWeight: 700, color: '#c8a84b', fontSize: '15px'}}>KES {feeBreakdown.effectiveFee.toLocaleString()}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Currently applied discounts */}
+          {discountsLoading ? (
+            <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading...</p>
+          ) : (
+            <>
+              {studentDiscounts.length > 0 ? (
+                <div style={{marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                  {studentDiscounts.map((sd: any) => (
+                    <div key={sd.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px'}}>
+                      <span style={{color: '#0f172a', fontWeight: 600}}>
+                        {sd.discount.name}
+                        <span style={{color: '#64748b', fontWeight: 400, marginLeft: '6px'}}>
+                          ({sd.discount.discountType === 'percentage' ? `${sd.discount.discountValue}%` : `KES ${sd.discount.discountValue.toLocaleString()}`})
+                        </span>
+                      </span>
+                      <button onClick={() => removeDiscount(sd.discountId)}
+                        style={{fontSize: '11px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer'}}>
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{fontSize: '13px', color: '#94a3b8', marginBottom: '12px'}}>No additional discounts applied.</p>
+              )}
+
+              {/* Apply discount */}
+              {schoolDiscounts.filter(d => !studentDiscounts.find((sd: any) => sd.discountId === d.id)).length > 0 && (
+                <div style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap'}}>
+                  <select
+                    value={selectedDiscountId}
+                    onChange={e => setSelectedDiscountId(e.target.value)}
+                    style={{flex: 1, minWidth: '160px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', background: '#fff', outline: 'none'}}
+                  >
+                    <option value="">Select discount to apply...</option>
+                    {schoolDiscounts
+                      .filter(d => !studentDiscounts.find((sd: any) => sd.discountId === d.id))
+                      .map((d: any) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name} ({d.discountType === 'percentage' ? `${d.discountValue}%` : `KES ${d.discountValue.toLocaleString()}`})
+                        </option>
+                      ))
+                    }
+                  </select>
+                  <button
+                    onClick={applyDiscount}
+                    disabled={!selectedDiscountId || applyingDiscount}
+                    style={{background: !selectedDiscountId || applyingDiscount ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: !selectedDiscountId || applyingDiscount ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap'}}
+                  >
+                    {applyingDiscount ? 'Applying...' : 'Apply discount'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
         {/* Bursary / Scholarship */}
         <div style={sectionStyle}>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px'}}>
@@ -991,90 +1075,6 @@ export default function StudentDetail() {
             </div>
           ) : (
             <p style={{fontSize: '13px', color: '#94a3b8'}}>No bursary or scholarship on file for this student.</p>
-          )}
-        </div>
-
-        {/* Student Discounts */}
-        <div style={sectionStyle}>
-          <h2 style={sectionTitle}>Additional Discounts</h2>
-          <p style={sectionSubtitle}>School-wide discounts applied to this student</p>
-
-          {/* Fee breakdown if any discounts/bursary exist */}
-          {feeBreakdown.discounts.length > 0 && (
-            <div style={{background: '#fefce8', border: '1px solid #fef08a', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px'}}>
-              <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px'}}>
-                <span style={{color: '#64748b'}}>Original fee</span>
-                <span style={{color: '#0f172a'}}>KES {feeBreakdown.originalFee.toLocaleString()}</span>
-              </div>
-              {feeBreakdown.discounts.map((d, i) => (
-                <div key={i} style={{display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px'}}>
-                  <span style={{color: '#64748b'}}>
-                    {d.name} ({d.discountType === 'percentage' ? `${d.discountValue}%` : `KES ${d.discountValue.toLocaleString()}`})
-                  </span>
-                  <span style={{color: '#16a34a', fontWeight: 600}}>-KES {d.discountAmount.toLocaleString()}</span>
-                </div>
-              ))}
-              <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderTop: '1px solid #fef08a', paddingTop: '8px', marginTop: '4px'}}>
-                <span style={{fontWeight: 700, color: '#0f172a'}}>Effective fee required</span>
-                <span style={{fontWeight: 700, color: '#c8a84b', fontSize: '15px'}}>KES {feeBreakdown.effectiveFee.toLocaleString()}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Currently applied discounts */}
-          {discountsLoading ? (
-            <p style={{fontSize: '13px', color: '#94a3b8'}}>Loading...</p>
-          ) : (
-            <>
-              {studentDiscounts.length > 0 ? (
-                <div style={{marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
-                  {studentDiscounts.map((sd: any) => (
-                    <div key={sd.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '8px 12px', fontSize: '13px'}}>
-                      <span style={{color: '#0f172a', fontWeight: 600}}>
-                        {sd.discount.name}
-                        <span style={{color: '#64748b', fontWeight: 400, marginLeft: '6px'}}>
-                          ({sd.discount.discountType === 'percentage' ? `${sd.discount.discountValue}%` : `KES ${sd.discount.discountValue.toLocaleString()}`})
-                        </span>
-                      </span>
-                      <button onClick={() => removeDiscount(sd.discountId)}
-                        style={{fontSize: '11px', color: '#e24b4a', background: 'none', border: '1px solid #fecaca', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer'}}>
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{fontSize: '13px', color: '#94a3b8', marginBottom: '12px'}}>No additional discounts applied.</p>
-              )}
-
-              {/* Apply discount */}
-              {schoolDiscounts.filter(d => !studentDiscounts.find((sd: any) => sd.discountId === d.id)).length > 0 && (
-                <div style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap'}}>
-                  <select
-                    value={selectedDiscountId}
-                    onChange={e => setSelectedDiscountId(e.target.value)}
-                    style={{flex: 1, minWidth: '160px', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', background: '#fff', outline: 'none'}}
-                  >
-                    <option value="">Select discount to apply...</option>
-                    {schoolDiscounts
-                      .filter(d => !studentDiscounts.find((sd: any) => sd.discountId === d.id))
-                      .map((d: any) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name} ({d.discountType === 'percentage' ? `${d.discountValue}%` : `KES ${d.discountValue.toLocaleString()}`})
-                        </option>
-                      ))
-                    }
-                  </select>
-                  <button
-                    onClick={applyDiscount}
-                    disabled={!selectedDiscountId || applyingDiscount}
-                    style={{background: !selectedDiscountId || applyingDiscount ? '#94a3b8' : '#0a1f4e', color: '#fff', border: 'none', padding: '7px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: !selectedDiscountId || applyingDiscount ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap'}}
-                  >
-                    {applyingDiscount ? 'Applying...' : 'Apply discount'}
-                  </button>
-                </div>
-              )}
-            </>
           )}
         </div>
 

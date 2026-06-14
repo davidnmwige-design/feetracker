@@ -25,6 +25,8 @@ export default function Settings() {
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [selectedTerm, setSelectedTerm] = useState('')
+  const [carryForward, setCarryForward] = useState(true)
+  const [termResult, setTermResult] = useState<{ carried: number; zeroed: number } | null>(null)
 
   // School details edit state
   const [editingSchool, setEditingSchool] = useState(false)
@@ -114,6 +116,7 @@ export default function Settings() {
   const [examFeeSaving, setExamFeeSaving] = useState(false)
   const [examFeeError, setExamFeeError] = useState('')
   const [examFeeAssigning, setExamFeeAssigning] = useState<number | null>(null)
+  const [examFeeAssignResult, setExamFeeAssignResult] = useState<{id: number, count: number} | null>(null)
 
   // Branding state
   const [brandColor, setBrandColor] = useState('#c8a84b')
@@ -195,23 +198,29 @@ export default function Settings() {
     setSchoolSaving(true)
     setSchoolSaveError('')
     try {
+      const payload = {
+        ...editSchool,
+        paybill: editSchool.paybill.trim() || null,
+        whatsappNumber: editSchool.whatsappNumber.trim() || null,
+        replyToEmail: editSchool.replyToEmail.trim() || null,
+      }
       const res = await fetch('/api/school', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editSchool),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) {
         setSchoolSaveError(data.error || 'Failed to save changes')
       } else {
-        setSchool((prev: any) => prev ? { ...prev, ...editSchool } : prev)
+        setSchool((prev: any) => prev ? { ...prev, ...payload } : prev)
         setAcctFmt(editSchool.accountNumberFormat)
         setWhatsappNumber(editSchool.whatsappNumber)
         setReplyToEmail(editSchool.replyToEmail)
         setEmailSignature(editSchool.emailSignature)
         setEditingSchool(false)
         setSchoolSaveSuccess(true)
-        setTimeout(() => setSchoolSaveSuccess(false), 4000)
+        setTimeout(() => setSchoolSaveSuccess(false), 3000)
       }
     } catch {
       setSchoolSaveError('Something went wrong. Please try again.')
@@ -308,14 +317,37 @@ export default function Settings() {
   async function startNewTerm() {
     if (!selectedTerm) return
     setStarting(true)
-    await fetch('/api/terms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ termName: selectedTerm })
-    })
-    await fetchData()
-    setSelectedTerm('')
-    setStarting(false)
+    setTermResult(null)
+    try {
+      await fetch('/api/terms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ termName: selectedTerm }),
+      })
+
+      if (carryForward) {
+        const cfRes = await fetch('/api/carry-forward', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newTerm: selectedTerm }),
+        })
+        if (cfRes.ok) {
+          const cfData = await cfRes.json()
+          setTermResult({ carried: cfData.carried, zeroed: cfData.zeroed })
+        }
+      } else {
+        await fetch('/api/school', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ currentTerm: selectedTerm }),
+        })
+      }
+
+      await fetchData()
+      setSelectedTerm('')
+    } finally {
+      setStarting(false)
+    }
   }
 
   async function submitUpgrade() {
@@ -456,7 +488,17 @@ export default function Settings() {
     if (acYearSaving) return
     setAcYearSaving(true); setAcYearError('')
     try {
-      const res = await fetch('/api/academic-years', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(acYearForm) })
+      const toISO = (d: string) => d ? d + 'T00:00:00.000Z' : null
+      const payload = {
+        ...acYearForm,
+        term1Start: toISO(acYearForm.term1Start),
+        term1End: toISO(acYearForm.term1End),
+        term2Start: toISO(acYearForm.term2Start),
+        term2End: toISO(acYearForm.term2End),
+        term3Start: toISO(acYearForm.term3Start),
+        term3End: toISO(acYearForm.term3End),
+      }
+      const res = await fetch('/api/academic-years', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const d = await res.json()
       if (!res.ok) { setAcYearError(d.error || 'Failed to save') }
       else { setAcademicYears(prev => acYearForm.isActive ? [...prev.map(y => ({...y, isActive: false})), d] : [...prev, d]); setShowAcYearForm(false) }
@@ -472,7 +514,7 @@ export default function Settings() {
   async function deleteAcademicYear(id: number) {
     const res = await fetch(`/api/academic-years/${id}`, { method: 'DELETE' })
     const d = await res.json()
-    if (!res.ok) { alert(d.error || 'Cannot delete'); return }
+    if (!res.ok) { setAcYearError(d.error || 'Cannot delete this academic year'); return }
     setAcademicYears(prev => prev.filter(y => y.id !== id))
   }
 
@@ -480,7 +522,12 @@ export default function Settings() {
     if (examFeeSaving) return
     setExamFeeSaving(true); setExamFeeError('')
     try {
-      const res = await fetch('/api/exam-fees', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(examFeeForm) })
+      const payload = {
+        ...examFeeForm,
+        amount: Number(examFeeForm.amount),
+        dueDate: examFeeForm.dueDate ? examFeeForm.dueDate + 'T00:00:00.000Z' : null,
+      }
+      const res = await fetch('/api/exam-fees', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const d = await res.json()
       if (!res.ok) { setExamFeeError(d.error || 'Failed to save') }
       else { setExamFees(prev => [...prev, d]); setShowExamFeeForm(false); setExamFeeForm({ name: '', examType: 'KCSE', amount: '', targetClass: '', dueDate: '' }) }
@@ -490,9 +537,15 @@ export default function Settings() {
 
   async function assignExamFeeToClass(id: number) {
     setExamFeeAssigning(id)
+    setExamFeeAssignResult(null)
     const res = await fetch(`/api/exam-fees/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ assign: true }) })
     const d = await res.json()
-    if (res.ok) alert(`Assigned to ${d.assigned} students`)
+    if (res.ok) {
+      setExamFeeAssignResult({ id, count: d.assigned })
+      setTimeout(() => setExamFeeAssignResult(null), 4000)
+    } else {
+      setExamFeeError(d.error || 'Failed to assign to class')
+    }
     setExamFeeAssigning(null)
   }
 
@@ -1152,14 +1205,31 @@ export default function Settings() {
 
             <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
               <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Start a new term</h2>
-              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>
+              <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '12px'}}>
                 This will archive the current term and start fresh. All students stay in the system but payments reset for the new term.
               </p>
+
+              {/* Carry forward toggle */}
+              <label style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', cursor: 'pointer', userSelect: 'none' as const}}>
+                <input
+                  type="checkbox"
+                  checked={carryForward}
+                  onChange={e => setCarryForward(e.target.checked)}
+                  style={{width: '16px', height: '16px', cursor: 'pointer'}}
+                />
+                <span style={{fontSize: '13px', color: 'var(--ep-text-primary)', fontWeight: 600}}>Carry unpaid balances into next term</span>
+              </label>
+              {carryForward && (
+                <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', marginBottom: '16px', marginTop: '-8px'}}>
+                  Students with outstanding fees will have their balance added to their next-term total.
+                </p>
+              )}
+
               <div className="set-term-row" style={{display: 'flex', gap: '10px'}}>
                 <select
                   style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', color: 'var(--ep-text-primary)', background: 'var(--ep-card-bg)', outline: 'none'}}
                   value={selectedTerm}
-                  onChange={e => setSelectedTerm(e.target.value)}
+                  onChange={e => { setSelectedTerm(e.target.value); setTermResult(null) }}
                 >
                   <option value="">Select new term...</option>
                   {TERMS.filter(t => t !== school?.currentTerm).map(t => (
@@ -1178,6 +1248,11 @@ export default function Settings() {
                   {starting ? 'Starting...' : 'Start new term'}
                 </button>
               </div>
+              {termResult && (
+                <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '10px 14px', marginTop: '12px', fontSize: '12px', color: '#166534'}}>
+                  Term started. {termResult.carried} balance{termResult.carried !== 1 ? 's' : ''} carried forward, {termResult.zeroed} cleared.
+                </div>
+              )}
             </div>
 
             <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
@@ -1471,7 +1546,7 @@ export default function Settings() {
                         style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', background: 'var(--ep-card-bg)', outline: 'none'}}>
                         <option value="KCSE">KCSE</option>
                         <option value="KCPE">KCPE</option>
-                        <option value="Mock Exam">Mock Exam</option>
+                        <option value="Mock">Mock Exam</option>
                         <option value="Cambridge">Cambridge</option>
                         <option value="Other">Other</option>
                       </select>
@@ -1515,7 +1590,10 @@ export default function Settings() {
                           {f.dueDate ? ` · Due: ${new Date(f.dueDate).toLocaleDateString('en-KE')}` : ''}
                         </p>
                       </div>
-                      <div style={{display: 'flex', gap: '6px', flexShrink: 0}}>
+                      <div style={{display: 'flex', gap: '6px', flexShrink: 0, alignItems: 'center'}}>
+                        {examFeeAssignResult?.id === f.id && examFeeAssignResult && (
+                          <span style={{fontSize: '11px', color: '#0a7c3e', fontWeight: 600}}>Assigned to {examFeeAssignResult.count} students</span>
+                        )}
                         <button onClick={() => assignExamFeeToClass(f.id)} disabled={examFeeAssigning === f.id}
                           style={{fontSize: '11px', color: 'var(--ep-text-primary)', background: 'none', border: '1px solid #0a1f4e', padding: '3px 10px', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap'}}>
                           {examFeeAssigning === f.id ? 'Assigning...' : 'Assign to class'}
@@ -1611,13 +1689,23 @@ export default function Settings() {
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px'}}>
                 <div>
                   <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Student Discounts</h2>
-                  <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', margin: '0 0 16px'}}>Manage sibling, group, and individual discounts for your school</p>
+                  <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', margin: '0 0 8px'}}>Manage sibling, group, and individual discounts for your school</p>
                 </div>
                 {!showDiscountForm && (
                   <button onClick={() => { setShowDiscountForm(true); setDiscountError('') }}
                     style={{background: '#0a1f4e', color: '#fff', padding: '7px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0}}>
                     + Add discount
                   </button>
+                )}
+              </div>
+
+              <div style={{background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', fontSize: '12px', color: 'var(--ep-text-secondary)', lineHeight: 1.5}}>
+                Create discount types here (e.g. "Sibling discount", "Staff child"). Then go to each student's detail page to apply a discount to them. Each discount reduces the student's effective fee automatically.
+                {discounts.length > 0 && (
+                  <span style={{display: 'block', marginTop: '6px', fontWeight: 600, color: 'var(--ep-text-primary)'}}>
+                    {discounts.length} discount type{discounts.length !== 1 ? 's' : ''} configured
+                    {' · '}Applied to {discounts.reduce((sum: number, d: any) => sum + (d._count?.studentDiscounts ?? 0), 0)} student{discounts.reduce((sum: number, d: any) => sum + (d._count?.studentDiscounts ?? 0), 0) !== 1 ? 's' : ''}
+                  </span>
                 )}
               </div>
 
@@ -1639,22 +1727,25 @@ export default function Settings() {
                       onChange={e => setDiscountForm(f => ({...f, description: e.target.value}))}
                       style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}}
                     />
-                    <div style={{display: 'flex', gap: '10px'}}>
-                      <select
-                        value={discountForm.discountType}
-                        onChange={e => setDiscountForm(f => ({...f, discountType: e.target.value}))}
-                        style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', background: 'var(--ep-card-bg)', outline: 'none'}}
-                      >
-                        <option value="percentage">Percentage (%)</option>
-                        <option value="fixed">Fixed amount (KES)</option>
-                      </select>
+                    <div>
+                      <p style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '6px'}}>Discount type</p>
+                      <div style={{display: 'flex', gap: '16px', marginBottom: '8px'}}>
+                        <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--ep-text-primary)', cursor: 'pointer'}}>
+                          <input type="radio" name="discountType" value="percentage" checked={discountForm.discountType === 'percentage'} onChange={() => setDiscountForm(f => ({...f, discountType: 'percentage'}))} style={{accentColor: '#0a1f4e'}} />
+                          Percentage (%)
+                        </label>
+                        <label style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--ep-text-primary)', cursor: 'pointer'}}>
+                          <input type="radio" name="discountType" value="fixed" checked={discountForm.discountType === 'fixed'} onChange={() => setDiscountForm(f => ({...f, discountType: 'fixed'}))} style={{accentColor: '#0a1f4e'}} />
+                          Fixed amount (KES)
+                        </label>
+                      </div>
                       <input
                         type="number"
                         min="0"
-                        placeholder={discountForm.discountType === 'percentage' ? 'e.g. 10' : 'e.g. 5000'}
+                        placeholder={discountForm.discountType === 'percentage' ? 'e.g. 10 for 10% off' : 'e.g. 5000 for KES 5,000 off'}
                         value={discountForm.discountValue}
                         onChange={e => setDiscountForm(f => ({...f, discountValue: e.target.value}))}
-                        style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}}
+                        style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}}
                       />
                     </div>
                     <label style={{display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--ep-text-primary)', cursor: 'pointer'}}>

@@ -1,13 +1,19 @@
 import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import AppNav from '@/components/AppNav'
 import StagingBanner from '@/components/StagingBanner'
 import PWAInstallPrompt from '@/components/PWAInstallPrompt'
 import PlausibleAnalytics from '@/components/PlausibleAnalytics'
 import CrispChat from '@/components/CrispChat'
+import SessionRefreshHandler from '@/components/SessionRefreshHandler'
 
-const geist = Geist({ subsets: ['latin'] })
+const geist = localFont({
+  src: [
+    { path: '../public/fonts/geist-latin.woff2', weight: '100 900', style: 'normal' },
+    { path: '../public/fonts/geist-latin-ext.woff2', weight: '100 900', style: 'normal' },
+  ],
+})
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
 
@@ -52,6 +58,7 @@ export default function RootLayout({
         {children}
         <PWAInstallPrompt />
         <CrispChat />
+        <SessionRefreshHandler />
         <script dangerouslySetInnerHTML={{
           __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});})}`,
         }} />

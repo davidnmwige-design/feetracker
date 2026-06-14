@@ -10,6 +10,7 @@ import { resolveSchool } from '@/lib/schoolContext'
 import * as XLSX from 'xlsx'
 import { parseJsonRows, parseTextStatement, matchTransactions } from '@/lib/statementParser'
 import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
+import { buildReceiptWhatsAppUrl } from '@/lib/whatsappMessages'
 
 export async function POST(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -102,6 +103,32 @@ export async function POST(req: Request) {
       const isAutoMatched = tx.confidence === 'high' || tx.confidence === 'medium'
       const studentId = isAutoMatched ? tx.matchedStudentId : undefined
 
+      // Build WhatsApp receipt link for matched payments
+      let whatsappReceiptLink: string | null = null
+      if (isAutoMatched && studentId) {
+        const matchedStudent = students.find(s => s.id === studentId)
+        if (matchedStudent?.parentPhone) {
+          const totalPaidSoFar = await prisma.payment.aggregate({
+            where: { studentId, matched: true },
+            _sum: { amount: true },
+          })
+          const paidBefore = totalPaidSoFar._sum.amount ?? 0
+          const fullStudent = await prisma.student.findUnique({ where: { id: studentId } })
+          const balance = Math.max(0, (fullStudent?.feeRequired ?? 0) - paidBefore - tx.amount)
+          whatsappReceiptLink = buildReceiptWhatsAppUrl(matchedStudent.parentPhone, {
+            parentName: matchedStudent.parentName || 'Parent',
+            studentName: fullStudent?.name || matchedStudent.name,
+            studentClass: `${fullStudent?.class || ''} ${fullStudent?.stream || ''}`.trim(),
+            amount: tx.amount,
+            balance,
+            schoolName: ctx.school.name,
+            paybill: ctx.school.paybill,
+            accountNumberFormat: ctx.school.accountNumberFormat,
+            term: ctx.school.currentTerm,
+          })
+        }
+      }
+
       await prisma.payment.create({
         data: {
           mpesaRef: tx.reference || null,
@@ -117,6 +144,7 @@ export async function POST(req: Request) {
           originalDescription: tx.rawDescription || null,
           suggestedStudents: tx.suggestedStudents ? JSON.stringify(tx.suggestedStudents) : null,
           notes: tx.notes || null,
+          whatsappReceiptLink,
         },
       })
 

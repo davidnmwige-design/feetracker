@@ -27,11 +27,42 @@ export async function GET(req: Request) {
 
     if (!hasPermission(ctx.role, 'students', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
-    const students = await prisma.student.findMany({
+    const url = new URL(req.url)
+    const cursor = url.searchParams.get('cursor')
+    const paginate = url.searchParams.get('paginate') === 'true'
+    const PAGE_SIZE = 50
+
+    const baseQuery = {
       where: { schoolId: ctx.school.id },
       include: { payments: true, feeCategories: true, bursary: true, studentDiscounts: { include: { discount: true } } },
-      orderBy: { name: 'asc' }
-    })
+      orderBy: [{ name: 'asc' as const }, { id: 'asc' as const }],
+    }
+
+    if (paginate) {
+      const [students, total] = await Promise.all([
+        prisma.student.findMany({
+          ...baseQuery,
+          take: PAGE_SIZE + 1,
+          ...(cursor ? { cursor: { id: Number(cursor) }, skip: 1 } : {}),
+        }),
+        prisma.student.count({ where: { schoolId: ctx.school.id } }),
+      ])
+
+      const hasMore = students.length > PAGE_SIZE
+      const page = hasMore ? students.slice(0, PAGE_SIZE) : students
+      const nextCursor = hasMore ? page[page.length - 1].id : null
+
+      const decrypted = page.map(s => ({
+        ...s,
+        parentEmail: s.parentEmail ? decrypt(s.parentEmail) : s.parentEmail,
+        parent2Email: s.parent2Email ? decrypt(s.parent2Email) : s.parent2Email,
+        effectiveFee: getEffectiveFee(s.feeRequired, s.bursary, s.studentDiscounts),
+      }))
+
+      return NextResponse.json({ students: decrypted, nextCursor, hasMore, total })
+    }
+
+    const students = await prisma.student.findMany({ ...baseQuery })
 
     const decrypted = students.map(s => ({
       ...s,

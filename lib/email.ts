@@ -1,14 +1,13 @@
 import nodemailer from 'nodemailer'
 
 function createTransporter() {
+  const user = process.env.EMAIL_USER?.trim()
+  const pass = process.env.EMAIL_PASS?.trim()
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+    auth: { user, pass },
   })
 }
 
@@ -23,14 +22,38 @@ export interface EmailOptions {
 }
 
 export async function sendEmail(opts: EmailOptions): Promise<void> {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log('[DEV] Email not configured. Would send to:', opts.to, '| Subject:', opts.subject)
+  const user = process.env.EMAIL_USER?.trim()
+  const pass = process.env.EMAIL_PASS?.trim()
+
+  if (!user || !pass) {
+    console.log('[email] Not configured — would send to:', opts.to, '| Subject:', opts.subject)
     return
   }
+
+  const maskedUser = user.substring(0, 5) + '***'
+  console.log('[email] Attempting to send:', {
+    to: opts.to,
+    subject: opts.subject,
+    emailUser: maskedUser,
+  })
+
   const transporter = createTransporter()
+
+  // Verify connection before sending
+  try {
+    await transporter.verify()
+  } catch (verifyErr) {
+    const msg = verifyErr instanceof Error ? verifyErr.message : String(verifyErr)
+    console.error('[email] SMTP verification failed:', msg)
+    const detail = process.env.NODE_ENV === 'development'
+      ? `SMTP verify failed: ${msg}`
+      : 'Email server connection failed. Check server logs.'
+    throw new Error(detail)
+  }
+
   const fromName = opts.fromName || 'Elimu Pay'
   const mailOptions: nodemailer.SendMailOptions = {
-    from: `"${fromName}" <${process.env.EMAIL_USER}>`,
+    from: `"${fromName}" <${user}>`,
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
@@ -43,7 +66,16 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
       contentType: 'application/pdf',
     }]
   }
-  await transporter.sendMail(mailOptions)
+
+  try {
+    await transporter.sendMail(mailOptions)
+    console.log('[email] Sent successfully to:', opts.to)
+  } catch (sendErr) {
+    const msg = sendErr instanceof Error ? sendErr.message : String(sendErr)
+    console.error('[email] Send failed:', msg)
+    const detail = process.env.NODE_ENV === 'development' ? msg : 'Check server logs.'
+    throw new Error(`Email send failed: ${detail}`)
+  }
 }
 
 export function paymentConfirmationHtml({

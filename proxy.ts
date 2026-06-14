@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { isAdminIpAllowed } from '@/lib/ipAllowlist'
 
 const PROTECTED_PREFIXES = ['/dashboard', '/students', '/upload', '/reminders', '/settings', '/reports', '/unmatched', '/invoices', '/setup']
 
@@ -29,7 +30,7 @@ function tooManyResponse(retryAfterSec: number): NextResponse {
   )
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   // Rate limit sensitive endpoints before any handler processes them
@@ -55,7 +56,17 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  if (pathname.startsWith('/admin')) return NextResponse.next()
+  if (pathname.startsWith('/admin')) {
+    const ip =
+      req.headers.get('cf-connecting-ip') ||
+      req.headers.get('x-real-ip') ||
+      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      'unknown'
+    if (!isAdminIpAllowed(ip)) {
+      return new NextResponse('Forbidden', { status: 403 })
+    }
+    return NextResponse.next()
+  }
 
   const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p))
   if (!isProtected) return NextResponse.next()

@@ -230,9 +230,13 @@ export default function Students() {
   }, [])
   const router = useRouter()
   const [students, setStudents] = useState<any[]>([])
+  const [totalStudents, setTotalStudents] = useState(0)
+  const [nextCursor, setNextCursor] = useState<number | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
   const [search, setSearch] = useState('')
   const [uploadError, setUploadError] = useState('')
   const [expandedFees, setExpandedFees] = useState<number | null>(null)
@@ -277,10 +281,22 @@ export default function Students() {
 
   async function fetchStudents() {
     setLoading(true)
-    const res = await fetch('/api/students')
+    const res = await fetch('/api/students?paginate=true')
     const data = await res.json()
-    setStudents(data)
+    setStudents(data.students ?? data)
+    setTotalStudents(data.total ?? (data.students ?? data).length)
+    setNextCursor(data.nextCursor ?? null)
     setLoading(false)
+  }
+
+  async function loadMore() {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    const res = await fetch(`/api/students?paginate=true&cursor=${nextCursor}`)
+    const data = await res.json()
+    setStudents(prev => [...prev, ...(data.students ?? [])])
+    setNextCursor(data.nextCursor ?? null)
+    setLoadingMore(false)
   }
 
   async function downloadReport() {
@@ -300,8 +316,50 @@ export default function Students() {
     if (!file) return
     setUploading(true)
     setUploadError('')
+    setUploadProgress(null)
     const formData = new FormData()
     formData.append('file', file)
+
+    // Use SSE streaming for files likely > 100 rows (heuristic: > 30KB)
+    if (file.size > 30 * 1024) {
+      try {
+        const res = await fetch('/api/students/upload-large', { method: 'POST', body: formData })
+        if (!res.ok) {
+          const data = await res.json()
+          setUploadError(data.error || 'Upload failed')
+          setUploading(false)
+          return
+        }
+        const reader = res.body!.getReader()
+        const decoder = new TextDecoder()
+        let buf = ''
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) break
+          buf += decoder.decode(value, { stream: true })
+          const lines = buf.split('\n')
+          buf = lines.pop() || ''
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const payload = JSON.parse(line.slice(6))
+                if (payload.done !== undefined) {
+                  setUploadProgress({ done: payload.done, total: payload.total })
+                }
+              } catch { /* ignore parse errors */ }
+            }
+          }
+        }
+        setFile(null)
+        setUploadProgress(null)
+        await fetchStudents()
+      } catch {
+        setUploadError('Upload failed. Please try again.')
+      }
+      setUploading(false)
+      return
+    }
+
     const res = await fetch('/api/students', { method: 'POST', body: formData })
     const data = await res.json()
     if (!res.ok) {
@@ -569,7 +627,7 @@ export default function Students() {
       <div className="stu-header" style={{background: '#0a1f4e', padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px'}}>
         <div style={{flexShrink: 0}}>
           <h1 style={{fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'Georgia, serif', marginBottom: '3px', margin: 0}}>Students</h1>
-          <p style={{fontSize: '12px', color: '#94a3c8', margin: '4px 0 0'}}>{students.length} enrolled</p>
+          <p style={{fontSize: '12px', color: '#94a3c8', margin: '4px 0 0'}}>{students.length}{totalStudents > students.length ? ` of ${totalStudents}` : ''} enrolled</p>
         </div>
         <div className="stu-header-actions" style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' as const, justifyContent: 'flex-end'}}>
           <button onClick={openAddModal} style={{background: '#c8a84b', color: 'var(--ep-text-primary)', border: 'none', padding: '8px 14px', borderRadius: '5px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'}}>
@@ -617,7 +675,9 @@ export default function Students() {
                 border: 'none', cursor: (!file || uploading) ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap'
               }}
             >
-              {uploading ? 'Uploading...' : 'Import'}
+              {uploadProgress
+                ? `${uploadProgress.done} / ${uploadProgress.total}`
+                : uploading ? 'Uploading...' : 'Import'}
             </button>
           </div>
         </div>
@@ -776,6 +836,18 @@ export default function Students() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {nextCursor && (
+            <div style={{padding: '16px', textAlign: 'center', borderTop: '1px solid var(--ep-border)'}}>
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                style={{background: 'none', border: '1px solid var(--ep-border)', color: 'var(--ep-text-secondary)', padding: '8px 24px', borderRadius: '6px', fontSize: '13px', cursor: loadingMore ? 'not-allowed' : 'pointer', opacity: loadingMore ? 0.6 : 1}}
+              >
+                {loadingMore ? 'Loading…' : `Load more (${totalStudents - students.length} remaining)`}
+              </button>
             </div>
           )}
         </div>

@@ -16,6 +16,7 @@ export async function GET() {
   const discounts = await prisma.feeDiscount.findMany({
     where: { schoolId: ctx.school.id },
     orderBy: { createdAt: 'asc' },
+    include: { _count: { select: { studentDiscounts: true } } },
   })
   return NextResponse.json(discounts)
 }

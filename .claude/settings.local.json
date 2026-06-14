@@ -56,7 +56,11 @@
       "Bash(ls components/StagingBanner.tsx components/PWAInstallPrompt.tsx components/CrispChat.tsx components/StudentAvatar.tsx)",
       "Bash(git checkout *)",
       "Bash(powershell *)",
-      "Bash(npm audit *)"
+      "Bash(npm audit *)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(npm ls *)",
+      "Bash(python -c \"import json,sys; p=json.load\\(sys.stdin\\); deps={**p.get\\('dependencies',{}\\), **p.get\\('devDependencies',{}\\)}; [print\\(k,v\\) for k,v in sorted\\(deps.items\\(\\)\\)]\")",
+      "PowerShell(Head *)"
     ]
   }
 }

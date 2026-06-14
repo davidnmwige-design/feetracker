@@ -117,34 +117,36 @@ model Term {
 }
 
 model Student {
-  id               Int               @id @default(autoincrement())
-  name             String
-  admNo            String
-  class            String
-  stream           String?
-  parentName       String?
-  parentPhone      String?
-  parentEmail      String?
-  parent2Name      String?
-  parent2Phone     String?
-  parent2Email     String?
-  parentPhoneHash  String?
-  parent2PhoneHash String?
-  photoUrl         String?
-  feeRequired      Float             @default(0)
-  tuitionFee       Float             @default(0)
-  sportsFee        Float             @default(0)
-  clubsFee         Float             @default(0)
-  otherFee         Float             @default(0)
-  createdAt        DateTime          @default(now())
-  schoolId         Int
-  school           School            @relation(fields: [schoolId], references: [id])
-  payments         Payment[]
-  invoices         Invoice[]
-  feeCategories    FeeCategory[]
-  bursary          Bursary?
-  studentDiscounts StudentDiscount[]
-  studentExamFees  StudentExamFee[]
+  id                    Int               @id @default(autoincrement())
+  name                  String
+  admNo                 String
+  class                 String
+  stream                String?
+  parentName            String?
+  parentPhone           String?
+  parentEmail           String?
+  parent2Name           String?
+  parent2Phone          String?
+  parent2Email          String?
+  parentPhoneHash       String?
+  parent2PhoneHash      String?
+  photoUrl              String?
+  feeRequired           Float             @default(0)
+  tuitionFee            Float             @default(0)
+  sportsFee             Float             @default(0)
+  clubsFee              Float             @default(0)
+  otherFee              Float             @default(0)
+  carriedForwardBalance Float             @default(0)
+  createdAt             DateTime          @default(now())
+  schoolId              Int
+  school                School            @relation(fields: [schoolId], references: [id])
+  payments              Payment[]
+  invoices              Invoice[]
+  feeCategories         FeeCategory[]
+  bursary               Bursary?
+  studentDiscounts      StudentDiscount[]
+  studentExamFees       StudentExamFee[]
+  carryForwardRecords   CarryForwardRecord[]
 
   @@unique([admNo, schoolId])
   @@index([schoolId])
@@ -152,6 +154,18 @@ model Student {
   @@index([parentPhone])
   @@index([schoolId, parentPhone])
   @@index([parentPhoneHash])
+}
+
+model CarryForwardRecord {
+  id             Int      @id @default(autoincrement())
+  studentId      Int
+  fromTerm       String
+  toTerm         String
+  balance        Float
+  createdAt      DateTime @default(now())
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
 }
 
 model Bursary {
@@ -191,11 +205,12 @@ model Payment {
   matched             Boolean  @default(false)
   notified            Boolean  @default(false)
   source              String   @default("upload")
-  matchConfidence     String?  @default("unmatched")
-  paymentType         String?
-  originalDescription String?
-  suggestedStudents   String?
-  notes               String?
+  matchConfidence      String?  @default("unmatched")
+  paymentType          String?
+  originalDescription  String?
+  suggestedStudents    String?
+  notes                String?
+  whatsappReceiptLink  String?
   studentId           Int?
   termId              Int?
   schoolId            Int?

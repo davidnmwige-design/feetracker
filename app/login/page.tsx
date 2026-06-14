@@ -10,6 +10,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const registered = searchParams.get('registered')
   const message = searchParams.get('message')
+  const expired = searchParams.get('expired')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -65,6 +66,12 @@ function LoginForm() {
           {registered && (
             <div style={{background: 'var(--ep-bg-tertiary)', border: '1px solid #c8d8f0', color: 'var(--ep-text-primary)', fontSize: '13px', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
               Account created! Sign in to get started.
+            </div>
+          )}
+
+          {expired && (
+            <div style={{background: '#fef9ec', border: '1px solid #f5e19a', color: '#92681a', fontSize: '13px', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
+              Your session expired. Please sign in again.
             </div>
           )}
 
