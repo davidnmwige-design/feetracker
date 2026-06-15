@@ -10,57 +10,89 @@ import { parseBody, signupSchema } from '@/lib/schemas'
 const RESERVED_PREFIXES = ['admin', 'support', 'billing', 'noreply', 'hello']
 
 export async function POST(req: Request) {
-  console.log('[Signup] Request received')
+  console.log('[Signup] Step 1: Request received')
+
+  // ── Rate limit ────────────────────────────────────────────────────────────────
   const rl = await checkRateLimitAsync(getSignupLimiter(), getIdentifier(req) + ':signup')
   if (!rl.success) return rateLimitResponse(rl.reset)
 
+  // ── Parse + validate body ─────────────────────────────────────────────────────
+  let rawBody: unknown
   try {
-    let rawBody: unknown
-    try { rawBody = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 }) }
-    const parsed = parseBody(signupSchema, rawBody)
-    if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
-    const { name, email, password, schoolName, paybill, term } = parsed.data
-    console.log('[Signup] Validation passed for:', email.substring(0, 3) + '***')
+    rawBody = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+  }
 
-    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
-      return NextResponse.json({ error: 'Password does not meet requirements' }, { status: 400 })
-    }
+  const parsed = parseBody(signupSchema, rawBody)
+  if (!parsed.success) {
+    console.log('[Signup] Step 2: Validation failed:', parsed.error)
+    return NextResponse.json({ error: parsed.error }, { status: 400 })
+  }
 
-    const strength = zxcvbn(password)
-    if (strength.score < 2) {
-      return NextResponse.json({ error: 'Password is too weak. Please choose a stronger password.' }, { status: 400 })
-    }
+  const { name, email, password, schoolName, paybill, term } = parsed.data
+  console.log('[Signup] Step 2: Validation passed for:', email.substring(0, 3) + '***')
 
+  // ── Password complexity ───────────────────────────────────────────────────────
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    return NextResponse.json({ error: 'Password does not meet requirements' }, { status: 400 })
+  }
+
+  const strength = zxcvbn(password)
+  if (strength.score < 2) {
+    return NextResponse.json({ error: 'Password is too weak. Please choose a stronger password.' }, { status: 400 })
+  }
+
+  // ── HIBP breach check ─────────────────────────────────────────────────────────
+  try {
     const breachResult = await isPasswordBreached(password)
     if (breachResult.breached) {
       return NextResponse.json({ error: formatBreachMessage(breachResult.count) }, { status: 400 })
     }
-    console.log('[Signup] HIBP check passed')
+    console.log('[Signup] Step 3: HIBP check passed')
+  } catch (err) {
+    // Non-fatal — fail open and log
+    console.error('[Signup] Step 3: HIBP error (continuing):', err)
+  }
 
-    // Reserved prefix check — return generic success to prevent enumeration
-    const localPart = email.split('@')[0]
-    if (RESERVED_PREFIXES.includes(localPart)) {
-      return NextResponse.json({ success: true })
-    }
+  // ── Reserved prefix check ─────────────────────────────────────────────────────
+  const localPart = email.split('@')[0]
+  if (RESERVED_PREFIXES.includes(localPart)) {
+    return NextResponse.json({ success: true })
+  }
 
-    const normalizedEmail = email.toLowerCase().trim()
+  const normalizedEmail = email.toLowerCase().trim()
+
+  // ── Database duplicate checks ─────────────────────────────────────────────────
+  try {
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } })
     if (existing) {
-      console.log('[Signup] Duplicate email, returning silent success')
+      console.log('[Signup] Step 4: Duplicate email, returning silent success')
       return NextResponse.json({ success: true })
     }
 
     if (paybill && paybill.trim() !== '') {
       const existingPaybill = await prisma.school.findFirst({ where: { paybill: paybill.trim() } })
       if (existingPaybill) {
+        console.log('[Signup] Step 4: Duplicate paybill, returning silent success')
         return NextResponse.json({ success: true })
       }
     }
 
-    const hashed = await bcrypt.hash(password, 10)
-    const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    console.log('[Signup] Step 4: Duplicate checks passed')
+  } catch (err) {
+    console.error('[Signup] Step 4 FAILED — database error during duplicate check:', err)
+    return NextResponse.json({ error: 'Service temporarily unavailable. Please try again in a moment.' }, { status: 503 })
+  }
 
-    console.log('[Signup] Creating user...')
+  // ── Hash password ─────────────────────────────────────────────────────────────
+  const hashed = await bcrypt.hash(password, 10)
+  const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+  // ── Create user + school ──────────────────────────────────────────────────────
+  let userId: number
+  try {
+    console.log('[Signup] Step 5: Creating user + school...')
     const user = await prisma.user.create({
       data: {
         name,
@@ -69,15 +101,23 @@ export async function POST(req: Request) {
         school: {
           create: {
             name: schoolName,
-            paybill,
+            paybill: paybill || null,
             currentTerm: term || 'Term 1 2026',
-            trialEndsAt
+            trialEndsAt,
           }
         }
-      }
+      },
+      select: { id: true },
     })
-    console.log('[Signup] User created:', user.id)
+    userId = user.id
+    console.log('[Signup] Step 5: User created:', userId)
+  } catch (err) {
+    console.error('[Signup] Step 5 FAILED — user/school creation error:', err)
+    return NextResponse.json({ error: 'Failed to create your account. Please try again.' }, { status: 500 })
+  }
 
+  // ── Admin notification email (fire-and-forget, never blocks signup) ───────────
+  try {
     const settings = await prisma.platformSettings.findUnique({ where: { id: 1 } }).catch(() => null)
     if (settings?.notifyNewSchool !== false) {
       const trialEnd = trialEndsAt.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -103,13 +143,12 @@ export async function POST(req: Request) {
             <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay Platform &middot; Admin notification</p>
           </div>
         </div>`
-      }).catch(err => console.error('signup notification email error:', err))
+      }).catch(err => console.error('[Signup] Step 6: notification email error (non-fatal):', err))
     }
-
-    console.log('[Signup] Complete, returning success')
-    return NextResponse.json({ success: true, userId: user.id })
   } catch (err) {
-    console.error('signup error:', err)
-    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
+    console.error('[Signup] Step 6: notification setup error (non-fatal):', err)
   }
+
+  console.log('[Signup] Step 7: Complete, returning success for user:', userId)
+  return NextResponse.json({ success: true, userId })
 }

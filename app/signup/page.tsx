@@ -106,7 +106,7 @@ export default function Signup() {
       const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify({ ...form, paybill: form.paybill.trim() || null }),
       })
 
       const data = await res.json()
