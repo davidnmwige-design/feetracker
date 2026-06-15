@@ -45,7 +45,6 @@ export default function Signup() {
     email: '',
     password: '',
     schoolName: '',
-    paybill: '',
     term: 'Term 2 2026'
   })
 
@@ -106,7 +105,7 @@ export default function Signup() {
       const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, paybill: form.paybill.trim() || null }),
+        body: JSON.stringify(form),
       })
 
       const data = await res.json()
@@ -292,19 +291,6 @@ export default function Signup() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="paybill" style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>MPESA Paybill / Till number</label>
-                  <input
-                    id="paybill"
-                    name="paybill"
-                    type="text"
-                    autoComplete="off"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-                    placeholder="e.g. 123456"
-                    value={form.paybill}
-                    onChange={e => setForm({ ...form, paybill: e.target.value })}
-                  />
-                </div>
-                <div>
                   <label htmlFor="term" className="text-sm font-medium text-gray-700 block mb-1">Current term</label>
                   <select
                     id="term"
@@ -348,6 +334,10 @@ export default function Signup() {
             >
               {loading ? 'Creating account...' : 'Start free trial'}
             </button>
+
+            <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', textAlign: 'center', lineHeight: '1.5'}}>
+              You can add your M-PESA paybill number and other details after signing in under Settings.
+            </p>
 
             <p style={{textAlign: 'center', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>
               Already have an account?{' '}

@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error }, { status: 400 })
   }
 
-  const { name, email, password, schoolName, paybill, term } = parsed.data
+  const { name, email, password, schoolName, term } = parsed.data
   console.log('[Signup] Step 2: Validation passed for:', email.substring(0, 3) + '***')
 
   // ── Password complexity ───────────────────────────────────────────────────────
@@ -71,14 +71,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true })
     }
 
-    if (paybill && paybill.trim() !== '') {
-      const existingPaybill = await prisma.school.findFirst({ where: { paybill: paybill.trim() } })
-      if (existingPaybill) {
-        console.log('[Signup] Step 4: Duplicate paybill, returning silent success')
-        return NextResponse.json({ success: true })
-      }
-    }
-
     console.log('[Signup] Step 4: Duplicate checks passed')
   } catch (err) {
     console.error('[Signup] Step 4 FAILED — database error during duplicate check:', err)
@@ -101,7 +93,6 @@ export async function POST(req: Request) {
         school: {
           create: {
             name: schoolName,
-            paybill: paybill || null,
             currentTerm: term || 'Term 1 2026',
             trialEndsAt,
           }
@@ -135,7 +126,6 @@ export async function POST(req: Request) {
               <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">School</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${schoolName}</td></tr>
               <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">Admin name</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${name}</td></tr>
               <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">Email</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${email}</td></tr>
-              <tr><td style="padding:8px 0;color:#64748b;border-bottom:1px solid #f1f5f9">Paybill</td><td style="padding:8px 0;font-weight:600;color:#0f172a;text-align:right;border-bottom:1px solid #f1f5f9">${paybill || '—'}</td></tr>
               <tr><td style="padding:8px 0;color:#64748b">Trial ends</td><td style="padding:8px 0;font-weight:600;color:#0a1f4e;text-align:right">${trialEnd}</td></tr>
             </table>
           </div>
