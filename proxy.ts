@@ -13,6 +13,7 @@ async function upstashRateLimit(key: string, max: number, windowMs: number): Pro
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify([['INCR', key], ['PEXPIRE', key, windowMs]]),
+      signal: AbortSignal.timeout(3000),
     })
     if (!res.ok) return true
     const data = await res.json()

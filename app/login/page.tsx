@@ -75,6 +75,12 @@ function LoginForm() {
             </div>
           )}
 
+          {message === 'account-created' && (
+            <div style={{background: '#e1f5ee', border: '1px solid #bbf7d0', color: '#166534', fontSize: '13px', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
+              Your account was created successfully. Please sign in to continue.
+            </div>
+          )}
+
           {message === 'account-exists' && (
             <div style={{background: '#fef9ec', border: '1px solid #f5e19a', color: '#92681a', fontSize: '13px', padding: '12px', borderRadius: '6px', marginBottom: '16px'}}>
               An account with this email already exists. Please sign in.

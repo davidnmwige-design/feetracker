@@ -10,6 +10,7 @@ import { parseBody, signupSchema } from '@/lib/schemas'
 const RESERVED_PREFIXES = ['admin', 'support', 'billing', 'noreply', 'hello']
 
 export async function POST(req: Request) {
+  console.log('[Signup] Request received')
   const rl = await checkRateLimitAsync(getSignupLimiter(), getIdentifier(req) + ':signup')
   if (!rl.success) return rateLimitResponse(rl.reset)
 
@@ -19,6 +20,7 @@ export async function POST(req: Request) {
     const parsed = parseBody(signupSchema, rawBody)
     if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
     const { name, email, password, schoolName, paybill, term } = parsed.data
+    console.log('[Signup] Validation passed for:', email.substring(0, 3) + '***')
 
     if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
       return NextResponse.json({ error: 'Password does not meet requirements' }, { status: 400 })
@@ -33,6 +35,7 @@ export async function POST(req: Request) {
     if (breachResult.breached) {
       return NextResponse.json({ error: formatBreachMessage(breachResult.count) }, { status: 400 })
     }
+    console.log('[Signup] HIBP check passed')
 
     // Reserved prefix check — return generic success to prevent enumeration
     const localPart = email.split('@')[0]
@@ -43,6 +46,7 @@ export async function POST(req: Request) {
     const normalizedEmail = email.toLowerCase().trim()
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } })
     if (existing) {
+      console.log('[Signup] Duplicate email, returning silent success')
       return NextResponse.json({ success: true })
     }
 
@@ -56,6 +60,7 @@ export async function POST(req: Request) {
     const hashed = await bcrypt.hash(password, 10)
     const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
+    console.log('[Signup] Creating user...')
     const user = await prisma.user.create({
       data: {
         name,
@@ -71,8 +76,9 @@ export async function POST(req: Request) {
         }
       }
     })
+    console.log('[Signup] User created:', user.id)
 
-    const settings = await prisma.platformSettings.findUnique({ where: { id: 1 } })
+    const settings = await prisma.platformSettings.findUnique({ where: { id: 1 } }).catch(() => null)
     if (settings?.notifyNewSchool !== false) {
       const trialEnd = trialEndsAt.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
       sendEmail({
@@ -100,6 +106,7 @@ export async function POST(req: Request) {
       }).catch(err => console.error('signup notification email error:', err))
     }
 
+    console.log('[Signup] Complete, returning success')
     return NextResponse.json({ success: true, userId: user.id })
   } catch (err) {
     console.error('signup error:', err)

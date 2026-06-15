@@ -102,34 +102,47 @@ export default function Signup() {
     setLoading(true)
     setError('')
 
-    const res = await fetch('/api/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    })
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
 
-    const data = await res.json()
+      const data = await res.json()
 
-    if (!res.ok) {
-      setError(data.error || 'Something went wrong')
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong')
+        setLoading(false)
+        return
+      }
+
+      console.log('[Signup Frontend] Account created, signing in...')
+
+      // Sign in with a 10 second timeout so a slow/hanging auth server never
+      // leaves the user staring at a spinner indefinitely.
+      const signInTimeout = new Promise<{ error: string }>((resolve) =>
+        setTimeout(() => resolve({ error: 'timeout' }), 10000)
+      )
+      const result = await Promise.race([
+        signIn('credentials', { email: form.email, password: form.password, redirect: false }),
+        signInTimeout,
+      ])
+
+      console.log('[Signup Frontend] signIn result:', result?.error ?? 'ok')
+
+      if (!result || result.error) {
+        // signIn failed or timed out — account exists, send to login with success banner
+        router.push('/login?message=account-created')
+        return
+      }
+
+      router.push('/dashboard')
+    } catch (err) {
+      console.error('[Signup Frontend] Unexpected error:', err)
+      setError('Something went wrong. Please try again.')
       setLoading(false)
-      return
     }
-
-    // Try to sign in with the credentials just submitted
-    const result = await signIn('credentials', {
-      email: form.email,
-      password: form.password,
-      redirect: false,
-    })
-
-    if (result?.error) {
-      // signIn failed — the email already exists with a different password
-      router.push('/login?message=account-exists')
-      return
-    }
-
-    router.push('/dashboard')
   }
 
   return (
