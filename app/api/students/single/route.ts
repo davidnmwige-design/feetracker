@@ -23,8 +23,23 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
   const { name, admNo, studentClass, parentName, parentPhone, parentEmail, parent2Name, parent2Phone, parent2Email, stream, categories = [] } = parsed.data
 
-  const existing = await prisma.student.findFirst({ where: { admNo, schoolId: ctx.school.id } })
+  const [existing, schoolWithCount, userRecord] = await Promise.all([
+    prisma.student.findFirst({ where: { admNo, schoolId: ctx.school.id } }),
+    prisma.school.findUnique({ where: { id: ctx.school.id }, select: { trialEndsAt: true, _count: { select: { students: true } } } }),
+    prisma.user.findUnique({ where: { email: session.user.email }, select: { isAdmin: true } }),
+  ])
   if (existing) return NextResponse.json({ error: `Admission number ${admNo} is already in use` }, { status: 400 })
+
+  const TRIAL_LIMIT = 50
+  const currentCount = schoolWithCount?._count?.students ?? 0
+  if (!userRecord?.isAdmin && !!schoolWithCount?.trialEndsAt && currentCount >= TRIAL_LIMIT) {
+    return NextResponse.json({
+      error: 'trial_limit_reached',
+      message: `Your free trial supports up to ${TRIAL_LIMIT} students. You currently have ${currentCount} students. Contact us at support@elimupay.co.ke or WhatsApp +254 746 353 411 to activate your paid account.`,
+      currentCount,
+      trialLimit: TRIAL_LIMIT,
+    }, { status: 403 })
+  }
 
   const validCats = categories.filter(c => c.name && c.amount >= 0)
   const feeRequired = validCats.reduce((sum, c) => sum + c.amount, 0)

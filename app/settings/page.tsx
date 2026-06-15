@@ -351,14 +351,14 @@ export default function Settings() {
   }
 
   async function submitUpgrade() {
-    if (!requestedPlan || upgradeLoading) return
+    if (upgradeLoading) return
     setUpgradeLoading(true)
     setUpgradeError('')
     try {
       const res = await fetch('/api/upgrade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestedPlan, notes: upgradeNotes })
+        body: JSON.stringify({ notes: upgradeNotes })
       })
       const data = await res.json()
       if (!res.ok) {
@@ -1201,6 +1201,20 @@ export default function Settings() {
               >
                 {cycleSaved ? 'Saved' : savingCycle ? 'Saving…' : 'Change billing cycle'}
               </button>
+
+              {school?.trialEndsAt && (
+                <div style={{marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--ep-border)'}}>
+                  <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', marginBottom: '10px'}}>
+                    Your account is on a free trial (max 50 students). To add more students and unlock all features, activate your paid account.
+                  </p>
+                  <button
+                    onClick={() => setShowUpgradeModal(true)}
+                    style={{background: '#c8a84b', color: '#0a1f4e', padding: '9px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: 'none', cursor: 'pointer'}}
+                  >
+                    Activate paid account
+                  </button>
+                </div>
+              )}
             </div>
 
             <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
@@ -2075,13 +2089,10 @@ export default function Settings() {
             {upgradeSuccess ? (
               <>
                 <div style={{textAlign: 'center', padding: '8px 0 16px'}}>
-                  <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '22px'}}>Done</div>
+                  <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '20px', fontWeight: 700, color: '#0a7c3e'}}>✓</div>
                   <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0a7c3e', marginBottom: '8px'}}>Request Submitted!</h3>
                   <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', lineHeight: 1.6}}>
-                    {requestedPlan === 'Enterprise'
-                      ? 'Our team will contact you within 24 hours to discuss your Enterprise plan and complete the setup.'
-                      : <>Your upgrade request has been submitted. We will contact you at <strong>{upgradeEmail}</strong> or via WhatsApp <strong>+254 746 353 411</strong> to complete the upgrade.</>
-                    }
+                    We have received your request. We will contact you at <strong>{upgradeEmail}</strong> or via WhatsApp <strong>+254 746 353 411</strong> within 24 hours to complete your account activation.
                   </p>
                 </div>
                 <button
@@ -2093,41 +2104,35 @@ export default function Settings() {
               </>
             ) : (
               <>
-                <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Request Tier Change</h3>
-                <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '12px'}}>Pricing is KES 200 per student per year — your bill adjusts automatically as you add students. Select a tier to move to:</p>
+                <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Activate Paid Account</h3>
+                <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '16px'}}>Unlimited students, no per-tier caps. Your fee adjusts automatically as you grow.</p>
 
-                <div style={{background: 'var(--ep-bg-secondary)', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>
-                  <div style={{marginBottom: '4px'}}><strong style={{color: 'var(--ep-text-primary)'}}>Your current tier:</strong> {currentPlanName} ({studentCount} students)</div>
-                  <div><strong style={{color: 'var(--ep-text-primary)'}}>Annual subscription:</strong> KES {annualTotal.toLocaleString()}/year</div>
+                <div style={{background: 'var(--ep-bg-secondary)', borderRadius: '8px', padding: '14px 16px', marginBottom: '16px', fontSize: '13px'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
+                    <span style={{color: 'var(--ep-text-secondary)'}}>Students enrolled</span>
+                    <span style={{fontWeight: 700, color: 'var(--ep-text-primary)'}}>{studentCount}</span>
+                  </div>
+                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '6px'}}>
+                    <span style={{color: 'var(--ep-text-secondary)'}}>Rate</span>
+                    <span style={{fontWeight: 700, color: 'var(--ep-text-primary)'}}>KES 200 per student / year</span>
+                  </div>
+                  <div style={{borderTop: '1px solid var(--ep-border)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between'}}>
+                    <span style={{color: 'var(--ep-text-secondary)'}}>Your annual fee</span>
+                    <span style={{fontWeight: 700, color: '#c8a84b', fontSize: '14px'}}>KES {annualTotal.toLocaleString()}/year</span>
+                  </div>
                 </div>
 
-                {(['Growth', 'Professional', 'Premium', 'Enterprise'] as const).map(tier => (
-                  <div
-                    key={tier}
-                    onClick={() => setRequestedPlan(tier)}
-                    style={{
-                      border: requestedPlan === tier ? '2px solid #0a1f4e' : '1px solid #e2e8f0',
-                      borderRadius: '8px', padding: '12px 14px', marginBottom: '8px', cursor: 'pointer',
-                      background: requestedPlan === tier ? '#f0f4ff' : '#fff'
-                    }}
-                  >
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                      <div>
-                        <p style={{fontSize: '13px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>{tier}</p>
-                        <p style={{fontSize: '11px', color: 'var(--ep-text-secondary)', margin: '2px 0 0'}}>
-                          {tier === 'Growth' ? 'Up to 400 students' : tier === 'Professional' ? 'Up to 700 students' : tier === 'Premium' ? 'Up to 1,000 students' : '1,000+ students'}
-                        </p>
-                      </div>
-                      <div style={{textAlign: 'right', fontSize: '11px', color: 'var(--ep-text-secondary)'}}>KES 200/student/yr</div>
-                    </div>
-                  </div>
-                ))}
+                <div style={{background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px', color: '#0369a1'}}>
+                  <p style={{margin: '0 0 6px', fontWeight: 600}}>Contact us to complete activation:</p>
+                  <p style={{margin: '0 0 4px'}}>WhatsApp: <strong>+254 746 353 411</strong></p>
+                  <p style={{margin: 0}}>Email: <strong>support@elimupay.co.ke</strong></p>
+                </div>
 
                 <textarea
                   placeholder="Any notes or questions? (optional)"
                   value={upgradeNotes}
                   onChange={e => setUpgradeNotes(e.target.value)}
-                  style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', resize: 'vertical', minHeight: '72px', marginBottom: '16px', boxSizing: 'border-box', outline: 'none'}}
+                  style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', resize: 'vertical', minHeight: '60px', marginBottom: '16px', boxSizing: 'border-box', outline: 'none'}}
                 />
 
                 {upgradeError && (
@@ -2143,14 +2148,14 @@ export default function Settings() {
                   </button>
                   <button
                     onClick={submitUpgrade}
-                    disabled={!requestedPlan || upgradeLoading}
+                    disabled={upgradeLoading}
                     style={{
-                      flex: 2, background: (!requestedPlan || upgradeLoading) ? '#94a3b8' : '#0a1f4e',
+                      flex: 2, background: upgradeLoading ? '#94a3b8' : '#0a1f4e',
                       color: '#fff', padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700,
-                      border: 'none', cursor: (!requestedPlan || upgradeLoading) ? 'not-allowed' : 'pointer'
+                      border: 'none', cursor: upgradeLoading ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    {upgradeLoading ? 'Submitting...' : 'Request Upgrade'}
+                    {upgradeLoading ? 'Sending...' : 'Send activation request'}
                   </button>
                 </div>
               </>

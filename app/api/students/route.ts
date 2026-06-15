@@ -97,13 +97,16 @@ export async function POST(req: Request) {
     if (!hasPermission(ctx.role, 'students', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const schoolId = ctx.school.id
-    const schoolWithCount = await prisma.school.findUnique({
-      where: { id: schoolId },
-      include: { _count: { select: { students: true } } }
-    })
-    const currentCount = (schoolWithCount as any)?._count?.students ?? 0
-    const planName = ctx.school.currentPlan || 'Starter'
-    const planCap = planName === 'Growth' ? 600 : planName === 'Premium' ? 1000 : planName === 'Enterprise' ? Infinity : 300
+    const [schoolWithCount, userRecord] = await Promise.all([
+      prisma.school.findUnique({
+        where: { id: schoolId },
+        select: { trialEndsAt: true, _count: { select: { students: true } } },
+      }),
+      prisma.user.findUnique({ where: { email: session.user.email }, select: { isAdmin: true } }),
+    ])
+    const currentCount = schoolWithCount?._count?.students ?? 0
+    const TRIAL_LIMIT = 50
+    const isOnTrial = !!schoolWithCount?.trialEndsAt
 
     const formData = await req.formData()
     const file = formData.get('file') as File
@@ -134,10 +137,13 @@ export async function POST(req: Request) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
     const rows = XLSX.utils.sheet_to_json(sheet) as any[]
 
-    if (currentCount + rows.length > planCap) {
+    if (!userRecord?.isAdmin && isOnTrial && currentCount + rows.length > TRIAL_LIMIT) {
       return NextResponse.json({
-        error: `Your ${planName} plan supports up to ${planCap} students. You currently have ${currentCount} students and this upload contains ${rows.length} rows, which would exceed your limit. Contact Elimu Pay to upgrade your plan.`
-      }, { status: 400 })
+        error: 'trial_limit_reached',
+        message: `Your free trial supports up to ${TRIAL_LIMIT} students. You currently have ${currentCount} students and this file contains ${rows.length} rows, which would exceed your trial limit. Contact us at support@elimupay.co.ke or WhatsApp +254 746 353 411 to activate your paid account.`,
+        currentCount,
+        trialLimit: TRIAL_LIMIT,
+      }, { status: 403 })
     }
 
     const created = []

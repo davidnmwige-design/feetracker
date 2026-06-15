@@ -8,6 +8,7 @@ import { require2FA } from '@/lib/check2fa'
 import { resolveSchool } from '@/lib/schoolContext'
 import { getEffectiveFee } from '@/lib/feeCalculations'
 import OnboardingChecklist from '@/components/OnboardingChecklist'
+import { getAnnualTotal } from '@/lib/pricing'
 
 export const revalidate = 0
 
@@ -127,6 +128,36 @@ export default async function Dashboard() {
             </div>
           ))}
         </div>
+
+        {school.trialEndsAt ? (
+          <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '16px 20px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px'}}>
+            <div>
+              <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px'}}>Free trial</p>
+              <p style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>
+                {students.length} of 50 trial students used
+              </p>
+              <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', marginTop: '3px'}}>
+                Expires {school.trialEndsAt.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+            <Link href="/settings" style={{background: '#c8a84b', color: '#0a1f4e', padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap'}}>
+              Activate paid account
+            </Link>
+          </div>
+        ) : (
+          <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '16px 20px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px'}}>
+            <div>
+              <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px'}}>Subscription</p>
+              <p style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>
+                {students.length} students · KES {getAnnualTotal(students.length).toLocaleString()}/year
+              </p>
+              <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', marginTop: '3px'}}>KES 200 per student · unlimited students</p>
+            </div>
+            <Link href="/settings" style={{border: '1px solid var(--ep-border)', color: 'var(--ep-text-secondary)', padding: '8px 16px', borderRadius: '6px', fontSize: '12px', textDecoration: 'none', whiteSpace: 'nowrap'}}>
+              View invoice →
+            </Link>
+          </div>
+        )}
 
         <LivePaymentsFeed />
       </div>

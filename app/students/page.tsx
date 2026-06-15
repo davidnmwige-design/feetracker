@@ -229,6 +229,7 @@ export default function Students() {
     fetch('/api/auth/check-2fa').then(r => r.json()).then(d => { if (!d.verified) window.location.href = '/verify-2fa' })
   }, [])
   const router = useRouter()
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
   const [students, setStudents] = useState<any[]>([])
   const [totalStudents, setTotalStudents] = useState(0)
   const [nextCursor, setNextCursor] = useState<number | null>(null)
@@ -273,7 +274,10 @@ export default function Students() {
   const [downloading, setDownloading] = useState(false)
   const emailInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { fetchStudents() }, [])
+  useEffect(() => {
+    fetchStudents()
+    fetch('/api/school').then(r => r.json()).then(d => { if (d?.trialEndsAt) setTrialEndsAt(d.trialEndsAt) })
+  }, [])
 
   useEffect(() => {
     if (emailModal) setTimeout(() => emailInputRef.current?.focus(), 50)
@@ -326,7 +330,7 @@ export default function Students() {
         const res = await fetch('/api/students/upload-large', { method: 'POST', body: formData })
         if (!res.ok) {
           const data = await res.json()
-          setUploadError(data.error || 'Upload failed')
+          setUploadError(data.message || data.error || 'Upload failed')
           setUploading(false)
           return
         }
@@ -363,7 +367,7 @@ export default function Students() {
     const res = await fetch('/api/students', { method: 'POST', body: formData })
     const data = await res.json()
     if (!res.ok) {
-      setUploadError(data.error || 'Upload failed')
+      setUploadError(data.message || data.error || 'Upload failed')
       setUploading(false)
       return
     }
@@ -504,7 +508,7 @@ export default function Students() {
     })
     const data = await res.json()
     if (!res.ok) {
-      setAddError(data.error || 'Failed to add student')
+      setAddError(data.message || data.error || 'Failed to add student')
       setAddSaving(false)
       return
     }
@@ -644,6 +648,26 @@ export default function Students() {
           </Link>
         </div>
       </div>
+
+      {trialEndsAt && totalStudents >= 40 && (
+        <div style={{
+          background: totalStudents >= 50 ? '#fef2f2' : '#fffbeb',
+          borderBottom: `1px solid ${totalStudents >= 50 ? '#fecaca' : '#fde68a'}`,
+          padding: '10px 28px',
+          display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px',
+          color: totalStudents >= 50 ? '#991b1b' : '#92400e',
+        }}>
+          <span style={{fontWeight: 700}}>{totalStudents >= 50 ? 'Trial limit reached.' : 'Trial limit approaching.'}</span>
+          {totalStudents >= 50
+            ? `You have ${totalStudents} students — your free trial supports up to 50. New students cannot be added until you activate your paid account.`
+            : `You have ${totalStudents} of 50 trial students. Activate your paid account to add more.`
+          }
+          {' '}
+          <a href="/settings" style={{color: totalStudents >= 50 ? '#dc2626' : '#d97706', fontWeight: 700, textDecoration: 'underline', whiteSpace: 'nowrap'}}>
+            Activate paid account →
+          </a>
+        </div>
+      )}
 
       <div className="stu-content" style={{padding: '24px 32px'}}>
         <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '20px', marginBottom: '16px'}}>

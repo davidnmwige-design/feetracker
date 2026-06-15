@@ -68,7 +68,7 @@ export async function PATCH(req: Request) {
     if (action === 'approve') {
       await prisma.school.update({
         where: { id: upgradeRequest.schoolId },
-        data: { currentPlan: upgradeRequest.requestedPlan }
+        data: { currentPlan: upgradeRequest.requestedPlan, trialEndsAt: null }
       })
 
       const schoolStudentCount = await prisma.student.count({ where: { schoolId: upgradeRequest.schoolId } })
