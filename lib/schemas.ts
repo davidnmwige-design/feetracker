@@ -121,7 +121,6 @@ export const signupSchema = z
     email: emailSchema,
     password: passwordSchema,
     schoolName: nameSchema('School name'),
-    term: z.string().min(1, 'Current term is required').max(50, 'Invalid term'),
   })
   .strict()
 

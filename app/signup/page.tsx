@@ -45,7 +45,6 @@ export default function Signup() {
     email: '',
     password: '',
     schoolName: '',
-    term: 'Term 2 2026'
   })
 
   const [breachStatus, setBreachStatus] = useState<'unchecked' | 'checking' | 'safe' | 'breached'>('unchecked')
@@ -290,21 +289,6 @@ export default function Signup() {
                     onChange={e => setForm({ ...form, schoolName: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label htmlFor="term" className="text-sm font-medium text-gray-700 block mb-1">Current term</label>
-                  <select
-                    id="term"
-                    name="term"
-                    aria-label="Current term"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-                    value={form.term}
-                    onChange={e => setForm({ ...form, term: e.target.value })}
-                  >
-                    <option>Term 1 2026</option>
-                    <option>Term 2 2026</option>
-                    <option>Term 3 2026</option>
-                  </select>
-                </div>
               </div>
             </div>
 
@@ -336,7 +320,7 @@ export default function Signup() {
             </button>
 
             <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', textAlign: 'center', lineHeight: '1.5'}}>
-              You can add your M-PESA paybill number and other details after signing in under Settings.
+              You can add your M-PESA paybill, current term, and other details after signing in under Settings.
             </p>
 
             <p style={{textAlign: 'center', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>

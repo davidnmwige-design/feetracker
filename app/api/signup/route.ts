@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error }, { status: 400 })
   }
 
-  const { name, email, password, schoolName, term } = parsed.data
+  const { name, email, password, schoolName } = parsed.data
   console.log('[Signup] Step 2: Validation passed for:', email.substring(0, 3) + '***')
 
   // ── Password complexity ───────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
         school: {
           create: {
             name: schoolName,
-            currentTerm: term || 'Term 1 2026',
+            currentTerm: 'Term 1 ' + new Date().getFullYear(),
             trialEndsAt,
           }
         }
