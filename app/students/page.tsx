@@ -701,7 +701,7 @@ export default function Students() {
                           </td>
                           <td style={{padding: '9px 10px'}} onClick={e => e.stopPropagation()}>
                             {isEditingEmail ? (
-                              <input type="email" value={editingEmail!.value}
+                              <input type="email" maxLength={254} value={editingEmail!.value}
                                 onChange={e => setEditingEmail({ id: student.id, value: e.target.value })}
                                 onBlur={() => saveEmail(student.id, editingEmail!.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') saveEmail(student.id, editingEmail!.value); if (e.key === 'Escape') setEditingEmail(null) }}
@@ -745,6 +745,7 @@ export default function Students() {
                                     <div key={i} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
                                       <input
                                         value={row.name}
+                                        maxLength={80}
                                         onChange={e => setFeeEditRows(prev => prev.map((r, j) => j === i ? { ...r, name: e.target.value } : r))}
                                         placeholder="Category name"
                                         style={{flex: 2, border: '1px solid var(--ep-border)', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', background: 'var(--ep-card-bg)', minWidth: '100px'}}
@@ -755,6 +756,7 @@ export default function Students() {
                                         onChange={e => setFeeEditRows(prev => prev.map((r, j) => j === i ? { ...r, amount: Number(e.target.value) } : r))}
                                         placeholder="0"
                                         min="0"
+                                        max="10000000"
                                         style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', background: 'var(--ep-card-bg)', minWidth: '80px'}}
                                       />
                                       <button onClick={() => setFeeEditRows(prev => prev.filter((_, j) => j !== i))}
@@ -819,13 +821,13 @@ export default function Students() {
 
               <p style={{fontSize: '11px', fontWeight: 700, color: 'var(--ep-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Student details</p>
               <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px'}}>
-                {[{label:'Name *', key:'name', type:'text', placeholder:'e.g. John Kamau'},
-                  {label:'Admission No. *', key:'admNo', type:'text', placeholder:'e.g. ADM001'},
-                  {label:'Stream', key:'stream', type:'text', placeholder:'e.g. North'},
+                {[{label:'Name *', key:'name', type:'text', placeholder:'e.g. John Kamau', max:120},
+                  {label:'Admission No. *', key:'admNo', type:'text', placeholder:'e.g. ADM001', max:20},
+                  {label:'Stream', key:'stream', type:'text', placeholder:'e.g. North', max:20},
                 ].map(f => (
                   <div key={f.key}>
                     <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '4px'}}>{f.label}</label>
-                    <input type={f.type} value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({...p, [f.key]: e.target.value}))}
+                    <input type={f.type} maxLength={f.max} value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({...p, [f.key]: e.target.value}))}
                       placeholder={f.placeholder}
                       style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}} />
                   </div>
@@ -841,13 +843,13 @@ export default function Students() {
 
               <p style={{fontSize: '11px', fontWeight: 700, color: 'var(--ep-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Parent 1</p>
               <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px'}}>
-                {[{label:'Name *', key:'parentName', placeholder:'e.g. Jane Kamau'},
-                  {label:'Phone *', key:'parentPhone', placeholder:'e.g. 0712345678'},
-                  {label:'Email', key:'parentEmail', placeholder:'parent@email.com'},
+                {[{label:'Name *', key:'parentName', placeholder:'e.g. Jane Kamau', max:120},
+                  {label:'Phone *', key:'parentPhone', placeholder:'e.g. 0712345678', max:20},
+                  {label:'Email', key:'parentEmail', placeholder:'parent@email.com', max:254},
                 ].map(f => (
                   <div key={f.key}>
                     <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '4px'}}>{f.label}</label>
-                    <input type="text" value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({...p, [f.key]: e.target.value}))}
+                    <input type="text" maxLength={f.max} value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({...p, [f.key]: e.target.value}))}
                       placeholder={f.placeholder}
                       style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}} />
                   </div>
@@ -856,13 +858,13 @@ export default function Students() {
 
               <p style={{fontSize: '11px', fontWeight: 700, color: 'var(--ep-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px'}}>Parent 2 (optional)</p>
               <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px'}}>
-                {[{label:'Name', key:'parent2Name', placeholder:''},
-                  {label:'Phone', key:'parent2Phone', placeholder:''},
-                  {label:'Email', key:'parent2Email', placeholder:''},
+                {[{label:'Name', key:'parent2Name', placeholder:'', max:120},
+                  {label:'Phone', key:'parent2Phone', placeholder:'', max:20},
+                  {label:'Email', key:'parent2Email', placeholder:'', max:254},
                 ].map(f => (
                   <div key={f.key}>
                     <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '4px'}}>{f.label}</label>
-                    <input type="text" value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({...p, [f.key]: e.target.value}))}
+                    <input type="text" maxLength={f.max} value={(addForm as any)[f.key]} onChange={e => setAddForm(p => ({...p, [f.key]: e.target.value}))}
                       style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '7px 10px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}} />
                   </div>
                 ))}
@@ -872,10 +874,10 @@ export default function Students() {
               <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px'}}>
                 {addCategories.map((cat, i) => (
                   <div key={i} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                    <input value={cat.name} onChange={e => setAddCategories(p => p.map((c, j) => j === i ? {...c, name: e.target.value} : c))}
+                    <input value={cat.name} maxLength={80} onChange={e => setAddCategories(p => p.map((c, j) => j === i ? {...c, name: e.target.value} : c))}
                       placeholder="Category name"
                       style={{flex: 2, border: '1px solid var(--ep-border)', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none'}} />
-                    <input type="number" value={cat.amount} min="0"
+                    <input type="number" value={cat.amount} min="0" max="10000000"
                       onChange={e => setAddCategories(p => p.map((c, j) => j === i ? {...c, amount: Number(e.target.value)} : c))}
                       placeholder="0"
                       style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', minWidth: '80px'}} />
