@@ -234,6 +234,8 @@ export default function Students() {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [page, setPage] = useState(1)
   const [uploadError, setUploadError] = useState('')
   const [expandedFees, setExpandedFees] = useState<number | null>(null)
   const [editingEmail, setEditingEmail] = useState<{ id: number; value: string } | null>(null)
@@ -270,6 +272,12 @@ export default function Students() {
   const emailInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { fetchStudents() }, [])
+
+  // Debounce the search box (and reset to page 1) so filtering/rendering isn't run on every keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1) }, 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   useEffect(() => {
     if (emailModal) setTimeout(() => emailInputRef.current?.focus(), 50)
@@ -541,11 +549,16 @@ export default function Students() {
   const uniqueClasses = [...new Set(students.map(s => s.class).filter(Boolean))].sort() as string[]
 
   const filtered = students.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    (s.admNo || '').toLowerCase().includes(search.toLowerCase()) ||
-    (s.class || '').toLowerCase().includes(search.toLowerCase()) ||
-    (s.parentEmail || '').toLowerCase().includes(search.toLowerCase())
+    s.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    (s.admNo || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    (s.class || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    (s.parentEmail || '').toLowerCase().includes(debouncedSearch.toLowerCase())
   )
+  // Render only one page of rows at a time — avoids building tens of thousands of DOM nodes.
+  const PAGE_SIZE = 50
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   function hasFeeBreakdown(s: any) {
     return s.tuitionFee > 0 || s.sportsFee > 0 || s.clubsFee > 0 || s.otherFee > 0
@@ -641,6 +654,7 @@ export default function Students() {
               {students.length === 0 ? 'No students yet. Import a CSV to get started.' : 'No students match your search.'}
             </div>
           ) : (
+            <>
             <div className="stu-table-wrap" style={{overflowX: 'auto', overflowY: 'auto', maxHeight: '640px', WebkitOverflowScrolling: 'touch' as any, width: '100%'}}>
               <table style={{width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '900px', tableLayout: 'fixed' as const}}>
                 <thead style={{position: 'sticky', top: 0, zIndex: 1}}>
@@ -656,7 +670,7 @@ export default function Students() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(student => {
+                  {paged.map(student => {
                     const paid = student.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
                     const balance = (student.effectiveFee ?? student.feeRequired) - paid
                     const cleared = balance <= 0
@@ -777,6 +791,17 @@ export default function Students() {
                 </tbody>
               </table>
             </div>
+            {filtered.length > PAGE_SIZE && (
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--ep-border)', fontSize: '12px', color: 'var(--ep-text-secondary)', flexWrap: 'wrap' as const, gap: '8px'}}>
+                <span>Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}</span>
+                <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage <= 1} style={{padding: '5px 12px', borderRadius: '5px', border: '1px solid var(--ep-border)', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1}}>Prev</button>
+                  <span>Page {safePage} of {totalPages}</span>
+                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} style={{padding: '5px 12px', borderRadius: '5px', border: '1px solid var(--ep-border)', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1}}>Next</button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>

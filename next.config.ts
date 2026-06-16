@@ -12,7 +12,7 @@ const csp = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://client.crisp.chat https://plausible.io",
   "style-src 'self' 'unsafe-inline' https://client.crisp.chat",
   "img-src 'self' data: blob: https://client.crisp.chat https://image.crisp.chat",
-  `connect-src 'self' ${allowedOrigins} https://o*.ingest.sentry.io https://api.pwnedpasswords.com wss://client.crisp.chat https://api.crisp.chat https://plausible.io`,
+  `connect-src 'self' ${allowedOrigins} https://*.ingest.sentry.io https://api.pwnedpasswords.com wss://client.crisp.chat https://api.crisp.chat https://plausible.io`,
   "font-src 'self' data: https://client.crisp.chat",
   "frame-ancestors 'none'",
   "base-uri 'self'",

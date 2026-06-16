@@ -31,12 +31,10 @@ export default function LivePaymentsFeed() {
 
       if (!initialized.current) {
         initialized.current = true
-        fresh.forEach(p => knownIds.current.add(p.id))
-        setPayments(fresh)
+        setPayments(fresh.slice(0, 50))
       } else {
         const added = fresh.filter(p => !knownIds.current.has(p.id))
         if (added.length > 0) {
-          added.forEach(p => knownIds.current.add(p.id))
           setNewIds(prev => {
             const next = new Set(prev)
             added.forEach(p => next.add(p.id))
@@ -50,8 +48,11 @@ export default function LivePaymentsFeed() {
             })
           }, 3000)
         }
-        setPayments(fresh)
+        setPayments(fresh.slice(0, 50))
       }
+      // Keep knownIds bounded to the current window — prevents the Set growing without limit
+      // over a long-lived dashboard session.
+      knownIds.current = new Set(fresh.map(p => p.id))
 
       setLastFetched(new Date())
       setSecondsAgo(0)
