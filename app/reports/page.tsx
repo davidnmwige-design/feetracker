@@ -426,7 +426,7 @@ export default function Reports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {classStudents.map(student => {
+                        {classStudents.slice(0, 50).map(student => {
                           const paid = (student.payments || []).reduce((s: number, p: any) => s + p.amount, 0)
                           const bal  = (student.effectiveFee ?? student.feeRequired) - paid
                           const status = bal <= 0 ? 'Paid' : paid > 0 ? 'Partial' : 'Unpaid'
@@ -447,6 +447,11 @@ export default function Reports() {
                       </tbody>
                     </table>
                   </div>
+                  {classStudents.length > 50 && (
+                    <p style={{ padding: '10px 16px', margin: 0, fontSize: '11px', color: 'var(--ep-text-tertiary)', borderTop: '1px solid var(--ep-border)' }}>
+                      Showing first 50 of {classStudents.length}. Download the report for the full list.
+                    </p>
+                  )}
                 </div>
               )
             })}

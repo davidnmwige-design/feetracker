@@ -25,6 +25,7 @@ export default function AdminBilling() {
   const [upgradeLoading, setUpgradeLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<Record<number, boolean>>({})
   const [overdueOnly, setOverdueOnly] = useState(false)
+  const [page, setPage] = useState(1)
 
   const now = new Date()
   const currentMonth = now.getMonth() + 1
@@ -36,6 +37,8 @@ export default function AdminBilling() {
     fetch('/api/admin/billing').then(r => r.json()).then(d => setBillingRecords(Array.isArray(d) ? d : []))
     fetch('/api/admin/upgrade').then(r => r.json()).then(d => { setUpgradeRequests(Array.isArray(d) ? d : []); setUpgradeLoading(false) })
   }, [])
+
+  useEffect(() => { setPage(1) }, [overdueOnly])
 
   function getBillingRecord(schoolId: number) {
     return billingRecords.find(r => r.schoolId === schoolId && r.month === currentMonth && r.year === currentYear)
@@ -90,6 +93,10 @@ export default function AdminBilling() {
   const overdueSchools = schools.filter(isOverdue)
 
   const displayedSchools = overdueOnly ? schools.filter(isOverdue) : schools
+  const PAGE_SIZE = 50
+  const totalPages = Math.max(1, Math.ceil(displayedSchools.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paged = displayedSchools.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   return (
     <div>
@@ -181,7 +188,7 @@ export default function AdminBilling() {
             </thead>
             <tbody>
               {loading && <tr><td colSpan={7} style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>Loading…</td></tr>}
-              {displayedSchools.map(school => {
+              {paged.map(school => {
                 const studentCount = school._count?.students || 0
                 const planName = getPlanName(studentCount)
                 const cycle = (school.billingCycle as 'monthly' | 'term' | 'annual') || 'monthly'
@@ -230,6 +237,16 @@ export default function AdminBilling() {
             </tbody>
           </table>
         </div>
+        {displayedSchools.length > PAGE_SIZE && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid #f1f5f9', fontSize: '12px', color: '#64748b', flexWrap: 'wrap', gap: '8px' }}>
+            <span>Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, displayedSchools.length)} of {displayedSchools.length}</span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage <= 1} style={{ padding: '5px 12px', borderRadius: '5px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1 }}>Prev</button>
+              <span>Page {safePage} of {totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} style={{ padding: '5px 12px', borderRadius: '5px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1 }}>Next</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

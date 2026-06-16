@@ -41,6 +41,8 @@ export default function AdminSchools() {
   const [schools, setSchools] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [page, setPage] = useState(1)
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Newest')
   const [billingRecords, setBillingRecords] = useState<any[]>([])
@@ -49,6 +51,13 @@ export default function AdminSchools() {
     fetch('/api/admin/schools').then(r => r.json()).then(d => { setSchools(Array.isArray(d) ? d : []); setLoading(false) })
     fetch('/api/admin/billing').then(r => r.json()).then(d => setBillingRecords(Array.isArray(d) ? d : []))
   }, [])
+
+  // Debounce the search box; reset to page 1 whenever the search/filter/sort changes.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
+  useEffect(() => { setPage(1) }, [debouncedSearch, filter, sort])
 
   const now = new Date()
 
@@ -82,7 +91,7 @@ export default function AdminSchools() {
     return '#dc2626'
   }
 
-  const q = search.toLowerCase()
+  const q = debouncedSearch.toLowerCase()
   let filtered = schools.filter(s => {
     const matchSearch = !q || s.name.toLowerCase().includes(q) || (s.user?.email || '').toLowerCase().includes(q)
     const status = getStatus(s)
@@ -92,6 +101,12 @@ export default function AdminSchools() {
 
   if (sort === 'Most students') filtered = [...filtered].sort((a, b) => (b._count?.students || 0) - (a._count?.students || 0))
   else if (sort === 'Needs attention') filtered = [...filtered].sort((a, b) => getOnboardingSteps(a).completed - getOnboardingSteps(b).completed)
+
+  // Render only one page of cards at a time — avoids building a 600+ card grid at once.
+  const PAGE_SIZE = 60
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> = {
     'On Trial':    { bg: '#fef9ec', color: '#92681a', label: 'Active Trial' },
@@ -135,8 +150,9 @@ export default function AdminSchools() {
           {search ? `No schools match "${search}"` : 'No schools yet.'}
         </div>
       ) : (
+        <>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-          {filtered.map(school => {
+          {paged.map(school => {
             const plan = school.currentPlan || 'Starter'
             const planStyle = PLAN_STYLE[plan] || PLAN_STYLE.Starter
             const studentCount = school._count?.students || 0
@@ -205,6 +221,17 @@ export default function AdminSchools() {
             )
           })}
         </div>
+        {filtered.length > PAGE_SIZE && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', fontSize: '12px', color: '#64748b', flexWrap: 'wrap', gap: '8px' }}>
+            <span>Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}</span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage <= 1} style={{ padding: '5px 12px', borderRadius: '5px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1 }}>Prev</button>
+              <span>Page {safePage} of {totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} style={{ padding: '5px 12px', borderRadius: '5px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1 }}>Next</button>
+            </div>
+          </div>
+        )}
+        </>
       )}
     </div>
   )
