@@ -454,7 +454,17 @@ export default function Settings() {
 
   async function saveAcademicYear() {
     if (acYearSaving) return
-    setAcYearSaving(true); setAcYearError('')
+    setAcYearError('')
+    const d = acYearForm
+    for (const [label, start, end] of [['Term 1', d.term1Start, d.term1End], ['Term 2', d.term2Start, d.term2End], ['Term 3', d.term3Start, d.term3End]] as const) {
+      if (start && end && new Date(start) > new Date(end)) { setAcYearError(`${label} end date must be on or after its start date.`); return }
+    }
+    const seq = [d.term1Start, d.term1End, d.term2Start, d.term2End, d.term3Start, d.term3End].filter(Boolean)
+    for (let i = 1; i < seq.length; i++) {
+      if (new Date(seq[i - 1]) > new Date(seq[i])) { setAcYearError('Term dates must be in chronological order.'); return }
+    }
+    if (d.year < 2020 || d.year > 2035) { setAcYearError('Year must be between 2020 and 2035.'); return }
+    setAcYearSaving(true)
     try {
       const res = await fetch('/api/academic-years', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(acYearForm) })
       const d = await res.json()
@@ -478,7 +488,11 @@ export default function Settings() {
 
   async function saveExamFee() {
     if (examFeeSaving) return
-    setExamFeeSaving(true); setExamFeeError('')
+    setExamFeeError('')
+    const amt = Number(examFeeForm.amount)
+    if (!examFeeForm.name.trim()) { setExamFeeError('Name is required.'); return }
+    if (!(amt > 0) || amt > 10000000) { setExamFeeError('Enter an amount between 1 and 10,000,000.'); return }
+    setExamFeeSaving(true)
     try {
       const res = await fetch('/api/exam-fees', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(examFeeForm) })
       const d = await res.json()
@@ -538,7 +552,11 @@ export default function Settings() {
 
   async function saveDiscount() {
     if (!discountForm.name.trim() || !discountForm.discountValue || discountSaving) return
-    setDiscountSaving(true); setDiscountError('')
+    setDiscountError('')
+    const val = parseFloat(discountForm.discountValue)
+    if (discountForm.discountType === 'percentage' && (!(val > 0) || val > 100)) { setDiscountError('Percentage must be between 1 and 100.'); return }
+    if (discountForm.discountType === 'fixed' && (!(val > 0) || val > 10000000)) { setDiscountError('Amount must be between 1 and 10,000,000.'); return }
+    setDiscountSaving(true)
     try {
       const res = await fetch('/api/discounts', {
         method: 'POST',
