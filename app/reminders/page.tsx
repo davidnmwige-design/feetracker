@@ -232,12 +232,11 @@ export default function Reminders() {
   async function sendBulkEmails() {
     setBulkSending(true)
     setBulkResult(null)
-    let sent = 0
-    let skipped = 0
     const schoolName = school?.name || 'Your School'
-    for (const student of withBalance) {
+
+    const sendOne = async (student: any): Promise<'sent' | 'skipped'> => {
       const toEmail = (bulkEmails[student.id] || '').trim()
-      if (!toEmail) { skipped++; continue }
+      if (!toEmail) return 'skipped'
       try {
         const html = reminderEmailHtml({
           schoolName,
@@ -251,29 +250,31 @@ export default function Reminders() {
         const res = await fetch('/api/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: toEmail,
-            subject: `Fee Payment Reminder — ${student.name} — ${schoolName}`,
-            html,
-          }),
+          body: JSON.stringify({ to: toEmail, subject: `Fee Payment Reminder — ${student.name} — ${schoolName}`, html }),
         })
-        if (res.ok) {
-          sent++
-          setEmailSentIds(prev => new Set([...prev, student.id]))
-          if (toEmail !== student.parentEmail) {
-            fetch('/api/students', {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ studentId: student.id, parentEmail: toEmail }),
-            })
-            setStudents(prev => prev.map(s => s.id === student.id ? { ...s, parentEmail: toEmail } : s))
-          }
-        } else {
-          skipped++
+        if (!res.ok) return 'skipped'
+        setEmailSentIds(prev => new Set([...prev, student.id]))
+        if (toEmail !== student.parentEmail) {
+          fetch('/api/students', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId: student.id, parentEmail: toEmail }),
+          })
+          setStudents(prev => prev.map(s => s.id === student.id ? { ...s, parentEmail: toEmail } : s))
         }
+        return 'sent'
       } catch {
-        skipped++
+        return 'skipped'
       }
+    }
+
+    // Send 5 concurrently instead of one-at-a-time.
+    let sent = 0
+    let skipped = 0
+    const CONCURRENCY = 5
+    for (let i = 0; i < withBalance.length; i += CONCURRENCY) {
+      const results = await Promise.all(withBalance.slice(i, i + CONCURRENCY).map(sendOne))
+      results.forEach(r => { if (r === 'sent') sent++; else skipped++ })
     }
     setBulkResult({ sent, skipped })
     setBulkSending(false)
@@ -383,11 +384,15 @@ export default function Reminders() {
           <div className="rem-bulk-row" style={{display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' as const}}>
             <button
               onClick={() => {
-                withBalance.forEach((student, i) => {
+                // Browsers block opening many tabs from one click, and a tab per parent would
+                // crash the browser — cap the bulk action and point to the per-row links.
+                const MAX = 10
+                if (withBalance.length > MAX && !confirm(`Your browser can only open a few WhatsApp chats at once. This opens the first ${MAX}; use the WhatsApp button on each parent's row for the rest. Continue?`)) return
+                withBalance.slice(0, MAX).forEach((student, i) => {
                   const msg = getMessage(student)
                   const phone = normalizePhoneForWhatsApp(student.parentPhone)
                   const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg)
-                  setTimeout(() => window.open(url, '_blank'), i * 1500)
+                  setTimeout(() => window.open(url, '_blank'), i * 800)
                 })
               }}
               style={{background: '#c8a84b', color: 'var(--ep-text-primary)', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'}}
