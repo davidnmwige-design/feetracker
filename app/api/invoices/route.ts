@@ -5,6 +5,7 @@ import { checkRateLimit, getIp } from '@/lib/ratelimit'
 import { logAudit } from '@/lib/audit'
 import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
+import { parsePagination, paginatedResponse } from '@/lib/pagination'
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -19,10 +20,18 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
     const term = url.searchParams.get('term') || ctx.school.currentTerm
+    const pg = parsePagination(url.searchParams)
+    const where = { schoolId: ctx.school.id, term }
 
-    const invoices = await prisma.invoice.findMany({
-      where: { schoolId: ctx.school.id, term },
-    })
+    if (pg.paginated) {
+      const [total, invoices] = await Promise.all([
+        prisma.invoice.count({ where }),
+        prisma.invoice.findMany({ where, skip: pg.skip, take: pg.take, orderBy: { id: 'asc' } }),
+      ])
+      return NextResponse.json(paginatedResponse(invoices, total, pg))
+    }
+
+    const invoices = await prisma.invoice.findMany({ where })
     return NextResponse.json(invoices)
   } catch (err) {
     console.error('invoices GET error:', err)

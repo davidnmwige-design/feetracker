@@ -9,6 +9,7 @@ import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
 import { getEffectiveFee } from '@/lib/feeCalculations'
 import { hashPhone } from '@/lib/phoneHash'
+import { parsePagination, paginatedResponse } from '@/lib/pagination'
 import * as XLSX from 'xlsx'
 
 export async function GET(req: Request) {
@@ -27,20 +28,38 @@ export async function GET(req: Request) {
 
     if (!hasPermission(ctx.role, 'students', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
-    const students = await prisma.student.findMany({
-      where: { schoolId: ctx.school.id },
-      include: { payments: true, feeCategories: true, bursary: true, studentDiscounts: { include: { discount: true } } },
-      orderBy: { name: 'asc' }
-    })
+    const { searchParams } = new URL(req.url)
+    const q = (searchParams.get('q') || '').trim()
+    const pg = parsePagination(searchParams)
 
-    const decrypted = students.map(s => ({
+    const where = {
+      schoolId: ctx.school.id,
+      ...(q ? { OR: [
+        { name: { contains: q, mode: 'insensitive' as const } },
+        { admNo: { contains: q, mode: 'insensitive' as const } },
+        { class: { contains: q, mode: 'insensitive' as const } },
+      ] } : {}),
+    }
+    const include = { payments: true, feeCategories: true, bursary: true, studentDiscounts: { include: { discount: true } } }
+    const decorate = (s: Awaited<ReturnType<typeof prisma.student.findMany>>[number] & { bursary: any; studentDiscounts: any }) => ({
       ...s,
       parentEmail: s.parentEmail ? decrypt(s.parentEmail) : s.parentEmail,
       parent2Email: s.parent2Email ? decrypt(s.parent2Email) : s.parent2Email,
       effectiveFee: getEffectiveFee(s.feeRequired, s.bursary, s.studentDiscounts),
-    }))
+    })
 
-    return NextResponse.json(decrypted)
+    // Paginated mode (opt-in via ?page/?limit) — used as the front-end adopts it.
+    if (pg.paginated) {
+      const [total, students] = await Promise.all([
+        prisma.student.count({ where }),
+        prisma.student.findMany({ where, include, orderBy: { name: 'asc' }, skip: pg.skip, take: pg.take }),
+      ])
+      return NextResponse.json(paginatedResponse(students.map(decorate), total, pg))
+    }
+
+    // Default (no params): unchanged — return the full array the current UI expects.
+    const students = await prisma.student.findMany({ where, include, orderBy: { name: 'asc' } })
+    return NextResponse.json(students.map(decorate))
   } catch (err) {
     console.error('students GET error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
