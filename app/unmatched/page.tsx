@@ -14,6 +14,7 @@ export default function Unmatched() {
   const [loading, setLoading] = useState(true)
   const [matching, setMatching] = useState<Record<number, boolean>>({})
   const [autoMatching, setAutoMatching] = useState(false)
+  const [page, setPage] = useState(1)
   const [openDropdown, setOpenDropdown] = useState<number | null>(null)
   const dropdownRef = useRef<Record<number, HTMLDivElement | null>>({})
 
@@ -116,6 +117,13 @@ export default function Unmatched() {
     setSearchTerms(prev => ({ ...prev, [paymentId]: '' }))
   }
 
+  // Render only one page of payment cards at a time — a keystroke in any card re-renders the
+  // visible cards only, instead of all 1,000+ at once.
+  const PAGE_SIZE = 50
+  const totalPages = Math.max(1, Math.ceil(payments.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paged = payments.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
   return (
     <RoleGuard requiredPermission="canUpload">
     <main style={{ background: 'var(--ep-bg-secondary)', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden' }}>
@@ -197,8 +205,9 @@ export default function Unmatched() {
 
         {/* Payment cards */}
         {!loading && (
+          <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {payments.map(payment => {
+            {paged.map(payment => {
               const sel = selectedStudents[payment.id]
               const term = searchTerms[payment.id] || ''
               const results = getResults(payment.id)
@@ -381,6 +390,17 @@ export default function Unmatched() {
               )
             })}
           </div>
+          {payments.length > PAGE_SIZE && (
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', fontSize: '12px', color: 'var(--ep-text-secondary)', flexWrap: 'wrap' as const, gap: '8px'}}>
+              <span>Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, payments.length)} of {payments.length}</span>
+              <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage <= 1} style={{padding: '5px 12px', borderRadius: '5px', border: '1px solid var(--ep-border)', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1}}>Prev</button>
+                <span>Page {safePage} of {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} style={{padding: '5px 12px', borderRadius: '5px', border: '1px solid var(--ep-border)', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1}}>Next</button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
 

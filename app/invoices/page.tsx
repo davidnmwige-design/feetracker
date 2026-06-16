@@ -231,6 +231,8 @@ export default function Invoices() {
   const [invoices, setInvoices] = useState<Record<number, any>>({}) // studentId → invoice
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [page, setPage] = useState(1)
   const [sending, setSending] = useState<Record<number, boolean>>({})
   const [sentNow, setSentNow] = useState<Set<number>>(new Set())
   const [bulkConfirm, setBulkConfirm] = useState(false)
@@ -257,6 +259,12 @@ export default function Invoices() {
         setInvoices(map)
       })
   }, [school])
+
+  // Debounce search (and reset to page 1) so filtering/rendering isn't done on every keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1) }, 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   function getTotalPaid(student: any) {
     return student.payments?.reduce((s: number, p: any) => s + p.amount, 0) ?? 0
@@ -414,12 +422,18 @@ export default function Invoices() {
     })
   }
 
-  const q = search.toLowerCase()
+  const q = debouncedSearch.toLowerCase()
   const filtered = students.filter(s =>
     s.name.toLowerCase().includes(q) ||
     (s.class || '').toLowerCase().includes(q) ||
     (s.admNo || '').toLowerCase().includes(q)
   )
+  // Render only one page of rows at a time — avoids building tens of thousands of DOM nodes.
+  // (filtered is still used for bulk send + counts so "send to all" covers the full set.)
+  const PAGE_SIZE = 50
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   const draftCount = filtered.filter(s => getStatus(s) === 'draft').length
 
@@ -509,6 +523,7 @@ export default function Invoices() {
               {students.length === 0 ? 'No students found. Import students first.' : 'No students match your search.'}
             </div>
           ) : (
+            <>
             <div className="inv-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: '12px', minWidth: '860px' }}>
                 <thead>
@@ -519,7 +534,7 @@ export default function Invoices() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(student => {
+                  {paged.map(student => {
                     const totalPaid = getTotalPaid(student)
                     const totalDue = getTotalDue(student)
                     const status = getStatus(student)
@@ -593,6 +608,17 @@ export default function Invoices() {
                 </tbody>
               </table>
             </div>
+            {filtered.length > PAGE_SIZE && (
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--ep-border)', fontSize: '12px', color: 'var(--ep-text-secondary)', flexWrap: 'wrap' as const, gap: '8px'}}>
+                <span>Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}</span>
+                <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage <= 1} style={{padding: '5px 12px', borderRadius: '5px', border: '1px solid var(--ep-border)', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1}}>Prev</button>
+                  <span>Page {safePage} of {totalPages}</span>
+                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} style={{padding: '5px 12px', borderRadius: '5px', border: '1px solid var(--ep-border)', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1}}>Next</button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </div>
 
