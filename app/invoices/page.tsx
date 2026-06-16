@@ -392,33 +392,27 @@ export default function Invoices() {
 
   async function runBulkSend() {
     setBulkConfirm(false)
-    const eligible = filtered
+    // Bulk = email only. Sending WhatsApp in bulk would open hundreds of browser tabs,
+    // so phone-only parents are surfaced for the per-row WhatsApp button instead.
+    const eligible = filtered.filter(s => s.parentEmail)
+    const noEmail = filtered.length - eligible.length
     setBulkState({ running: true, done: 0, total: eligible.length, summary: '' })
 
     let emailSent = 0
-    let waSent = 0
-    let skipped = 0
-
-    for (let i = 0; i < eligible.length; i++) {
-      const s = eligible[i]
-      setBulkState(prev => prev ? { ...prev, done: i } : null)
-
-      if (s.parentEmail) {
-        try { await sendInvoiceEmail(s); emailSent++ } catch { skipped++ }
-      } else if (s.parentPhone) {
-        sendInvoiceWhatsApp(s)
-        waSent++
-        await new Promise(r => setTimeout(r, 1500))
-      } else {
-        skipped++
-      }
+    let failed = 0
+    const CONCURRENCY = 5
+    for (let i = 0; i < eligible.length; i += CONCURRENCY) {
+      const batch = eligible.slice(i, i + CONCURRENCY)
+      const results = await Promise.allSettled(batch.map(s => sendInvoiceEmail(s)))
+      results.forEach(r => { if (r.status === 'fulfilled') emailSent++; else failed++ })
+      setBulkState(prev => prev ? { ...prev, done: Math.min(i + CONCURRENCY, eligible.length) } : null)
     }
 
     setBulkState({
       running: false,
       done: eligible.length,
       total: eligible.length,
-      summary: `${emailSent} email${emailSent !== 1 ? 's' : ''} sent, ${waSent} via WhatsApp, ${skipped} skipped (no contact).`,
+      summary: `${emailSent} invoice${emailSent !== 1 ? 's' : ''} emailed${failed ? `, ${failed} failed` : ''}${noEmail ? `, ${noEmail} skipped (no email — use the WhatsApp button on their row)` : ''}.`,
     })
   }
 
@@ -464,10 +458,10 @@ export default function Invoices() {
         {/* Bulk send confirmation dialog */}
         {bulkConfirm && (
           <div style={{ background: 'var(--ep-card-bg)', border: '1px solid var(--ep-border)', borderRadius: '10px', padding: '24px', marginBottom: '20px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
-            <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '8px' }}>Send invoices to all {filtered.length} students?</h2>
+            <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '8px' }}>Email invoices to {filtered.filter(s => s.parentEmail).length} parents?</h2>
             <p style={{ fontSize: '13px', color: 'var(--ep-text-secondary)', marginBottom: '20px', lineHeight: 1.6 }}>
-              Parents with email on file will receive an email with a PDF invoice attached.
-              Parents with only a phone number will be contacted via WhatsApp. Parents with neither will be skipped.
+              Parents with an email on file will receive a PDF invoice, sent a few at a time.
+              Parents without an email aren&rsquo;t included here &mdash; use the WhatsApp button on their row to message them individually.
             </p>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={runBulkSend} style={{ background: '#c8a84b', color: 'var(--ep-text-primary)', border: 'none', padding: '10px 24px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
