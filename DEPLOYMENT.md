@@ -74,17 +74,11 @@ On Vercel each serverless invocation opens its own Postgres connection. Under lo
 the database connection limit (queries start failing with "too many connections"). To avoid this, run
 the app through a pooled connection and keep migrations on a direct connection:
 
-1. In `prisma/schema.prisma`, add a direct URL alongside the pooled one:
-   ```prisma
-   datasource db {
-     provider  = "postgresql"
-     url       = env("DATABASE_URL") // pooled (pgbouncer) — used by the app at runtime
-     directUrl = env("DIRECT_URL")   // direct — used by prisma migrate/generate
-   }
-   ```
+1. The datasource already declares `directUrl = env("DIRECT_URL")`, so **`DIRECT_URL` is required** in
+   every environment (already set in CI and locally).
 2. In Vercel env vars: set `DATABASE_URL` to Neon's **pooled** connection string (the host with
-   `-pooler`), and `DIRECT_URL` to Neon's **direct** connection string.
-3. Set `DIRECT_URL` everywhere Prisma migrations run (Vercel build env and CI).
+   `-pooler`) and `DIRECT_URL` to Neon's **direct** connection string. A missing `DIRECT_URL` fails the
+   deploy safely (the build aborts), like the migration baseline.
 
 Alternatively, use [Prisma Accelerate](https://www.prisma.io/accelerate) for managed pooling. Until one
 of these is configured, keep an eye on the Neon connection-count metric as schools onboard.

@@ -48,6 +48,7 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/feetracker_ci
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/feetracker_ci
       NEXTAUTH_SECRET: ci_dummy_nextauth_secret_0123456789abcdef
       AUTH_SECRET: ci_dummy_auth_secret_0123456789abcdef0123
       DATA_ENCRYPTION_KEY: ci_dummy_encryption_key_0123456789abc
