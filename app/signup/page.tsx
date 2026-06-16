@@ -154,6 +154,7 @@ export default function Signup() {
                 id="name"
                 name="name"
                 type="text"
+                maxLength={120}
                 autoComplete="name"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                 placeholder="e.g. John Kamau"
@@ -168,6 +169,7 @@ export default function Signup() {
                 id="email"
                 name="email"
                 type="email"
+                maxLength={254}
                 autoComplete="email"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                 placeholder="e.g. john@stmarys.ac.ke"
@@ -183,6 +185,7 @@ export default function Signup() {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  maxLength={128}
                   autoComplete="new-password"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                   style={{paddingRight: '40px'}}
@@ -237,6 +240,7 @@ export default function Signup() {
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
+                  maxLength={128}
                   autoComplete="new-password"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                   style={{paddingRight: '40px'}}
@@ -271,6 +275,7 @@ export default function Signup() {
                     id="schoolName"
                     name="schoolName"
                     type="text"
+                    maxLength={120}
                     autoComplete="organization"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                     placeholder="e.g. St. Mary's Academy"
@@ -284,6 +289,7 @@ export default function Signup() {
                     id="paybill"
                     name="paybill"
                     type="text"
+                    maxLength={7}
                     autoComplete="off"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                     placeholder="e.g. 123456"

@@ -54,6 +54,7 @@ export default function ForgotPassword() {
                 <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '6px'}}>Email address</label>
                 <input
                   type="email"
+                  maxLength={254}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
                   placeholder="your@email.com"
                   value={email}

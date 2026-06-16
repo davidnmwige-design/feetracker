@@ -884,16 +884,17 @@ export default function Settings() {
                     </div>
                   )}
                   {([
-                    {label: 'School name', key: 'name', type: 'text', placeholder: "e.g. St. Mary's Academy"},
-                    {label: 'MPESA Paybill / Till number', key: 'paybill', type: 'text', placeholder: 'e.g. 123456'},
-                    {label: 'Account number format', key: 'accountNumberFormat', type: 'text', placeholder: "e.g. Your child's admission number e.g. ADM1234"},
-                    {label: 'School WhatsApp number', key: 'whatsappNumber', type: 'tel', placeholder: 'e.g. 0722000000'},
-                    {label: 'School email address (reply-to)', key: 'replyToEmail', type: 'email', placeholder: 'e.g. info@stmarys.ac.ke'},
-                  ] as {label: string; key: keyof typeof editSchool; type: string; placeholder: string}[]).map(field => (
+                    {label: 'School name', key: 'name', type: 'text', placeholder: "e.g. St. Mary's Academy", max: 120},
+                    {label: 'MPESA Paybill / Till number', key: 'paybill', type: 'text', placeholder: 'e.g. 123456', max: 7},
+                    {label: 'Account number format', key: 'accountNumberFormat', type: 'text', placeholder: "e.g. Your child's admission number e.g. ADM1234", max: 200},
+                    {label: 'School WhatsApp number', key: 'whatsappNumber', type: 'tel', placeholder: 'e.g. 0722000000', max: 20},
+                    {label: 'School email address (reply-to)', key: 'replyToEmail', type: 'email', placeholder: 'e.g. info@stmarys.ac.ke', max: 254},
+                  ] as {label: string; key: keyof typeof editSchool; type: string; placeholder: string; max: number}[]).map(field => (
                     <div key={field.key}>
                       <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '5px'}}>{field.label}</label>
                       <input
                         type={field.type}
+                        maxLength={field.max}
                         value={editSchool[field.key]}
                         onChange={e => setEditSchool(prev => ({...prev, [field.key]: e.target.value}))}
                         placeholder={field.placeholder}
@@ -916,6 +917,7 @@ export default function Settings() {
                     <textarea
                       value={editSchool.emailSignature}
                       onChange={e => setEditSchool(prev => ({...prev, emailSignature: e.target.value}))}
+                      maxLength={500}
                       placeholder="e.g. Bursary Office | St. Mary's Academy | Tel: 0712 345 678"
                       rows={2}
                       style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', resize: 'vertical' as const, boxSizing: 'border-box' as const}}
@@ -1482,7 +1484,7 @@ export default function Settings() {
                 <div style={{background: 'var(--ep-bg-secondary)', border: '1px solid var(--ep-border)', borderRadius: '8px', padding: '16px', marginBottom: '16px'}}>
                   <p style={{fontSize: '13px', fontWeight: 600, color: 'var(--ep-text-primary)', marginBottom: '12px'}}>New exam fee</p>
                   <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                    <input type="text" placeholder="Name (e.g. KCSE Registration 2026)" value={examFeeForm.name} onChange={e => setExamFeeForm(f => ({...f, name: e.target.value}))}
+                    <input type="text" maxLength={120} placeholder="Name (e.g. KCSE Registration 2026)" value={examFeeForm.name} onChange={e => setExamFeeForm(f => ({...f, name: e.target.value}))}
                       style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', width: '100%'}} />
                     <div style={{display: 'flex', gap: '10px'}}>
                       <select value={examFeeForm.examType} onChange={e => setExamFeeForm(f => ({...f, examType: e.target.value}))}
@@ -1497,7 +1499,7 @@ export default function Settings() {
                         style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
                     </div>
                     <div style={{display: 'flex', gap: '10px'}}>
-                      <input type="text" placeholder="Target class (e.g. Form 4)" value={examFeeForm.targetClass} onChange={e => setExamFeeForm(f => ({...f, targetClass: e.target.value}))}
+                      <input type="text" maxLength={20} placeholder="Target class (e.g. Form 4)" value={examFeeForm.targetClass} onChange={e => setExamFeeForm(f => ({...f, targetClass: e.target.value}))}
                         style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box'}} />
                       <div style={{flex: 1}}>
                         <label style={{fontSize: '11px', color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '4px'}}>Due date (optional)</label>
@@ -1645,6 +1647,7 @@ export default function Settings() {
                   <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                     <input
                       type="text"
+                      maxLength={120}
                       placeholder="Discount name (e.g. Sibling discount, Staff child)"
                       value={discountForm.name}
                       onChange={e => setDiscountForm(f => ({...f, name: e.target.value}))}
@@ -1652,6 +1655,7 @@ export default function Settings() {
                     />
                     <input
                       type="text"
+                      maxLength={200}
                       placeholder="Description (optional)"
                       value={discountForm.description}
                       onChange={e => setDiscountForm(f => ({...f, description: e.target.value}))}
@@ -1669,6 +1673,7 @@ export default function Settings() {
                       <input
                         type="number"
                         min="0"
+                        max="10000000"
                         placeholder={discountForm.discountType === 'percentage' ? 'e.g. 10' : 'e.g. 5000'}
                         value={discountForm.discountValue}
                         onChange={e => setDiscountForm(f => ({...f, discountValue: e.target.value}))}
@@ -1853,6 +1858,7 @@ export default function Settings() {
                       <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                         <input
                           type="text"
+                          maxLength={120}
                           value={inviteName}
                           onChange={e => setInviteName(e.target.value)}
                           placeholder="Full name"
@@ -1860,6 +1866,7 @@ export default function Settings() {
                         />
                         <input
                           type="email"
+                          maxLength={254}
                           value={inviteEmail}
                           onChange={e => setInviteEmail(e.target.value)}
                           placeholder="Email address"
