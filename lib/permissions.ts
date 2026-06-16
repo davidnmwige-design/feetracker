@@ -8,6 +8,7 @@ const PERM: Record<string, Partial<Record<string, Role[]>>> = {
   'unmatched':            { GET: ['admin','accountant','principal'], POST: ['admin','accountant'] },
   'invoices':             { GET: ['admin','accountant'], POST: ['admin','accountant'] },
   'reminders/schedule':   { GET: ['admin','accountant','principal'], POST: ['admin','accountant'] },
+  'reminders/sms':        { POST: ['admin','accountant'] },
   'terms':                { GET: ['admin','accountant','principal','viewer'], POST: ['admin'] },
   'school':               { GET: ['admin','accountant','principal','viewer'], PATCH: ['admin'] },
   'team':                 { GET: ['admin'], POST: ['admin'], DELETE: ['admin'] },

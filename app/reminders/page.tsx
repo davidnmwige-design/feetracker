@@ -101,6 +101,8 @@ export default function Reminders() {
   const [bulkEmails, setBulkEmails] = useState<Record<number, string>>({})
   const [bulkSending, setBulkSending] = useState(false)
   const [bulkResult, setBulkResult] = useState<{ sent: number; skipped: number } | null>(null)
+  const [smsRunning, setSmsRunning] = useState(false)
+  const [smsResult, setSmsResult] = useState<string | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -280,6 +282,24 @@ export default function Reminders() {
     setBulkSending(false)
   }
 
+  // Server-side bulk SMS via Celcom — the route builds the message + phone list from the DB.
+  async function sendSmsToAll() {
+    if (smsRunning) return
+    if (!confirm('Send an SMS reminder to every parent with a phone number and an outstanding balance? This sends real SMS.')) return
+    setSmsRunning(true)
+    setSmsResult(null)
+    try {
+      const res = await fetch('/api/reminders/send-sms', { method: 'POST' })
+      const data = await res.json()
+      setSmsResult(!res.ok
+        ? (data.error || 'Failed to send SMS')
+        : (data.message || `${data.sent} SMS sent${data.failed ? `, ${data.failed} failed` : ''}${data.skipped ? `, ${data.skipped} skipped (no phone)` : ''}.`))
+    } catch {
+      setSmsResult('Network error — please try again')
+    }
+    setSmsRunning(false)
+  }
+
   const withBalance = students.filter(s => getBalance(s) > 0)
   const totalOutstanding = withBalance.reduce((sum, s) => sum + getBalance(s), 0)
 
@@ -381,7 +401,15 @@ export default function Reminders() {
         )}
 
         {!loading && withBalance.length > 0 && (
-          <div className="rem-bulk-row" style={{display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' as const}}>
+          <>
+          <div className="rem-bulk-row" style={{display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' as const, alignItems: 'center'}}>
+            <button
+              onClick={sendSmsToAll}
+              disabled={smsRunning}
+              style={{background: '#0a7c3e', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: smsRunning ? 'not-allowed' : 'pointer', opacity: smsRunning ? 0.7 : 1}}
+            >
+              {smsRunning ? 'Sending SMS…' : `Send SMS to all ${withBalance.length} parents`}
+            </button>
             <button
               onClick={() => {
                 // Browsers block opening many tabs from one click, and a tab per parent would
@@ -406,6 +434,10 @@ export default function Reminders() {
               Send email to all {withBalance.length} parents
             </button>
           </div>
+          {smsResult && (
+            <div style={{marginBottom: '16px', fontSize: '13px', color: 'var(--ep-text-secondary)', background: 'var(--ep-bg-tertiary)', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '10px 14px'}}>{smsResult}</div>
+          )}
+          </>
         )}
 
         {loading && (

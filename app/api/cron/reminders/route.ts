@@ -5,6 +5,7 @@ import { decrypt } from '@/lib/encrypt'
 import { getEffectiveFee } from '@/lib/feeCalculations'
 import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
 import { isAuthorizedCron } from '@/lib/cronAuth'
+import { sendBulkSms, smsConfigured, reminderSmsText } from '@/lib/sms'
 
 function buildWaMessage(studentName: string, cls: string, balance: number, schoolName: string, paybill?: string | null, acctFmt?: string | null) {
   let msg = `Dear Parent, this is a reminder that ${studentName} (${cls}) has an outstanding fee balance of KES ${balance.toLocaleString()} for this term. Please make payment at your earliest convenience. Thank you. — ${schoolName}`
@@ -208,13 +209,32 @@ export async function GET(req: Request) {
       }
     }
 
-    // 3. Update lastSentAt
+    // 3. Send SMS reminders (Celcom) to parents with a phone number
+    let smsSent = 0
+    const smsTargets = rows.filter(r => r.phone).map(r => ({
+      to: r.phone as string,
+      message: reminderSmsText(
+        { name: school.name, paybill: school.paybill, accountNumberFormat: school.accountNumberFormat },
+        { name: r.name, class: r.cls, stream: '', parentName: r.parentName },
+        r.balance,
+      ),
+    }))
+    if (smsConfigured() && smsTargets.length > 0) {
+      try {
+        const smsResults = await sendBulkSms(smsTargets)
+        smsSent = smsResults.filter(x => x.ok).length
+      } catch (err) {
+        console.error(`[cron] SMS send failed for school ${school.id}:`, err)
+      }
+    }
+
+    // 4. Update lastSentAt
     await prisma.reminderSchedule.update({
       where: { id: schedule.id },
       data: { lastSentAt: now },
     })
 
-    const detail = `admin email ${adminEmailSent ? 'sent' : 'failed'}, ${parentEmailsSent}/${parentEmailStudents.length} parent emails sent, ${rows.filter(r => r.waLink).length} WA links in admin email`
+    const detail = `admin email ${adminEmailSent ? 'sent' : 'failed'}, ${parentEmailsSent}/${parentEmailStudents.length} parent emails sent, ${smsSent}/${smsTargets.length} SMS sent, ${rows.filter(r => r.waLink).length} WA links in admin email`
     results.push({ schoolId: school.id, schoolName: school.name, status: 'processed', detail })
     console.log(`[cron] School ${school.id} (${school.name}): ${detail}`)
   }
