@@ -1,5 +1,5 @@
 ﻿'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Fragment } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { maskEmail } from '@/lib/mask'
@@ -679,8 +679,8 @@ export default function Students() {
                     const feeTotal = feeEditRows.reduce((s, r) => s + (Number(r.amount) || 0), 0)
 
                     return (
-                      <>
-                        <tr key={student.id} style={{borderBottom: isFeeEdit ? 'none' : '1px solid var(--ep-border)', cursor: 'pointer', background: isFeeEdit ? 'var(--ep-bg-tertiary)' : undefined}} onClick={() => router.push('/students/' + student.id)}>
+                      <Fragment key={student.id}>
+                        <tr style={{borderBottom: isFeeEdit ? 'none' : '1px solid var(--ep-border)', cursor: 'pointer', background: isFeeEdit ? 'var(--ep-bg-tertiary)' : undefined}} onClick={() => router.push('/students/' + student.id)}>
                           <td style={{padding: '9px 10px', fontWeight: 600, color: 'var(--ep-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{student.name}</td>
                           <td style={{padding: '9px 10px', color: 'var(--ep-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis'}}>{student.admNo || '—'}</td>
                           <td style={{padding: '9px 10px', color: 'var(--ep-text-secondary)', whiteSpace: 'nowrap'}}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>
@@ -787,7 +787,7 @@ export default function Students() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     )
                   })}
                 </tbody>

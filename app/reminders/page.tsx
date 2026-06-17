@@ -103,6 +103,9 @@ export default function Reminders() {
   const [bulkResult, setBulkResult] = useState<{ sent: number; skipped: number } | null>(null)
   const [smsRunning, setSmsRunning] = useState(false)
   const [smsResult, setSmsResult] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     Promise.all([
@@ -145,6 +148,12 @@ export default function Reminders() {
   useEffect(() => {
     if (emailFormId !== null) setTimeout(() => emailInputRef.current?.focus(), 50)
   }, [emailFormId])
+
+  // Debounce search (and reset to page 1) so we don't filter/render on every keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1) }, 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   function getPaid(student: any) {
     return student.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
@@ -303,6 +312,21 @@ export default function Reminders() {
   const withBalance = students.filter(s => getBalance(s) > 0)
   const totalOutstanding = withBalance.reduce((sum, s) => sum + getBalance(s), 0)
 
+  // Window the rendered list (bulk actions still operate on the full `withBalance` set).
+  const PAGE_SIZE = 50
+  const remQuery = debouncedSearch.trim().toLowerCase()
+  const filtered = remQuery
+    ? withBalance.filter(s =>
+        (s.name || '').toLowerCase().includes(remQuery) ||
+        (s.admNo || '').toLowerCase().includes(remQuery) ||
+        `${s.class || ''} ${s.stream || ''}`.toLowerCase().includes(remQuery) ||
+        (s.parentName || '').toLowerCase().includes(remQuery) ||
+        (s.parentPhone || '').toLowerCase().includes(remQuery))
+    : withBalance
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
   return (
     <RoleGuard requiredPermission="canSendReminders">
     <main style={{background: 'var(--ep-bg-secondary)', minHeight: '100vh', fontFamily: 'Arial, sans-serif', overflowX: 'hidden'}}>
@@ -450,8 +474,29 @@ export default function Reminders() {
           </div>
         )}
 
+        {!loading && withBalance.length > 0 && (
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' as const}}>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name, class, parent or phone…"
+              aria-label="Search parents with outstanding balances"
+              style={{flex: 1, minWidth: '220px', maxWidth: '360px', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', background: 'var(--ep-card-bg)', color: 'var(--ep-text-primary)'}}
+            />
+            <span style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', whiteSpace: 'nowrap' as const}}>
+              {filtered.length === withBalance.length ? `${withBalance.length}` : `${filtered.length} of ${withBalance.length}`} parents
+            </span>
+          </div>
+        )}
+
         <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
-          {withBalance.map(student => {
+          {!loading && withBalance.length > 0 && filtered.length === 0 && (
+            <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '32px', textAlign: 'center', color: 'var(--ep-text-tertiary)', fontSize: '13px'}}>
+              No parents match “{debouncedSearch}”.
+            </div>
+          )}
+          {paged.map(student => {
             const balance = getBalance(student)
             const paid = getPaid(student)
             const percent = Math.round((paid / (student.effectiveFee ?? student.feeRequired)) * 100)
@@ -541,6 +586,17 @@ export default function Reminders() {
             )
           })}
         </div>
+
+        {!loading && filtered.length > PAGE_SIZE && (
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', fontSize: '12px', color: 'var(--ep-text-secondary)', flexWrap: 'wrap' as const, gap: '8px'}}>
+            <span>Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}</span>
+            <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage <= 1} style={{padding: '5px 12px', borderRadius: '5px', border: '1px solid var(--ep-border)', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1}}>Prev</button>
+              <span>Page {safePage} of {totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages} style={{padding: '5px 12px', borderRadius: '5px', border: '1px solid var(--ep-border)', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1}}>Next</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {bulkModal && (
