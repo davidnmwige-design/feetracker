@@ -1,10 +1,14 @@
 import nodemailer from 'nodemailer'
 
+// Provider-agnostic SMTP transport. Defaults to Gmail for backward compatibility; set
+// EMAIL_HOST/EMAIL_PORT to use Resend (smtp.resend.com:465, user "resend", pass = API key)
+// or any other SMTP provider without code changes.
 function createTransporter() {
+  const port = Number(process.env.EMAIL_PORT || 587)
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port,
+    secure: port === 465, // implicit TLS on 465; STARTTLS on 587
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -29,8 +33,11 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
   }
   const transporter = createTransporter()
   const fromName = opts.fromName || 'Elimu Pay'
+  // With Resend (and most providers) the auth user isn't a valid From address; use
+  // EMAIL_FROM (a verified-domain address) when set, falling back to the auth user (Gmail).
+  const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER
   const mailOptions: nodemailer.SendMailOptions = {
-    from: `"${fromName}" <${process.env.EMAIL_USER}>`,
+    from: `"${fromName}" <${fromAddress}>`,
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
