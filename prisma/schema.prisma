@@ -258,6 +258,26 @@ model Invoice {
   @@index([status])
 }
 
+model StkRequest {
+  id                Int       @id @default(autoincrement())
+  checkoutRequestId String    @unique
+  merchantRequestId String?
+  schoolId          Int
+  studentId         Int?
+  amount            Float
+  phone             String
+  status            String    @default("pending") // pending | success | failed | cancelled
+  mpesaReceipt      String?
+  resultCode        Int?
+  resultDesc        String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([status])
+}
+
 model AuditLog {
   id        Int      @id @default(autoincrement())
   userId    Int?
