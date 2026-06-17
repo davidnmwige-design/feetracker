@@ -73,8 +73,8 @@ export default function Home() {
           <span style={{color: '#0a1f4e'}}>Elimu</span><span style={{color: '#c8a84b'}}> Pay</span>
         </span>
         <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
-          <Link href="/demo" style={{color: '#0a1f4e', fontSize: '13px', fontWeight: 600, textDecoration: 'none', padding: '8px 14px', borderRadius: '6px', border: '1px solid #e2e8f0'}}>
-            Demo
+          <Link href="/login" style={{color: '#0a1f4e', fontSize: '13px', fontWeight: 600, textDecoration: 'none', padding: '8px 14px', borderRadius: '6px', border: '1px solid #e2e8f0'}}>
+            Sign in
           </Link>
           <Link href="/signup" style={{background: '#0a1f4e', color: '#fff', padding: '8px 20px', borderRadius: '6px', fontSize: '13px', textDecoration: 'none'}}>
             Get started free
@@ -95,9 +95,6 @@ export default function Home() {
         <div style={{display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' as const}}>
           <Link href="/signup" style={{background: '#c8a84b', color: '#0a1f4e', padding: '12px 28px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none'}}>
             Set up your school free
-          </Link>
-          <Link href="/demo" style={{background: 'rgba(200,168,75,0.15)', color: '#c8a84b', padding: '12px 28px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, border: '1px solid rgba(200,168,75,0.4)', textDecoration: 'none'}}>
-            View demo →
           </Link>
           <Link href="/login" style={{background: 'transparent', color: '#fff', padding: '12px 28px', borderRadius: '6px', fontSize: '13px', border: '1px solid rgba(255,255,255,0.2)', textDecoration: 'none'}}>
             Sign in
@@ -214,7 +211,6 @@ export default function Home() {
 
       <div className="land-footer" style={{background: '#0a1f4e', padding: '28px 32px', textAlign: 'center' as const}}>
         <div style={{display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' as const, marginBottom: '14px'}}>
-          <Link href="/demo" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>Demo</Link>
           <a href="mailto:support@elimupay.co.ke" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>support@elimupay.co.ke</a>
           <a href="https://wa.me/254746353411" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}} target="_blank" rel="noopener noreferrer">WhatsApp +254 746 353 411</a>
           <Link href="/privacy" style={{fontSize: '12px', color: '#94a3c8', textDecoration: 'none'}}>Privacy Policy</Link>

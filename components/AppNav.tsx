@@ -39,7 +39,7 @@ export default function AppNav() {
   }, [])
 
   if (pathname.startsWith('/admin')) return null
-  const hideNav = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-2fa', '/trial-expired', '/demo', '/privacy'].some(
+  const hideNav = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/verify-2fa', '/trial-expired', '/privacy'].some(
     p => pathname === p || pathname.startsWith(p + '/')
   )
   if (hideNav) return null
