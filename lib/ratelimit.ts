@@ -11,9 +11,14 @@ function getRedis(): Redis | null {
 }
 
 function createLimiter(requests: number, window: Duration): Ratelimit | null {
-  const redis = getRedis()
-  if (!redis) return null
-  return new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(requests, window), analytics: false })
+  try {
+    const redis = getRedis()
+    if (!redis) return null
+    return new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(requests, window), analytics: false })
+  } catch (err) {
+    console.error('[ratelimit] createLimiter failed (failing open):', err)
+    return null
+  }
 }
 
 // ─── Lazy limiter getters ─────────────────────────────────────────────────────
