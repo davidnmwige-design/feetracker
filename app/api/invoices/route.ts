@@ -61,24 +61,47 @@ export async function POST(req: Request) {
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
     const term = school.currentTerm
-    const invoice = await prisma.invoice.upsert({
-      where: { studentId_term: { studentId: Number(studentId), term } },
-      update: {
-        status: status || 'sent',
-        sentAt: status === 'sent' ? new Date() : undefined,
-        amount: Number(amount),
-        breakdown: breakdown ?? {},
-      },
-      create: {
-        studentId: Number(studentId),
-        schoolId: school.id,
-        term,
-        status: status || 'sent',
-        sentAt: status === 'sent' ? new Date() : null,
-        amount: Number(amount),
-        breakdown: breakdown ?? {},
-      },
+    const sid = Number(studentId)
+    const existing = await prisma.invoice.findUnique({
+      where: { studentId_term: { studentId: sid, term } },
     })
+
+    let invoice
+    if (existing) {
+      // Re-send / re-save: never re-number an already-issued invoice.
+      invoice = await prisma.invoice.update({
+        where: { id: existing.id },
+        data: {
+          status: status || 'sent',
+          sentAt: status === 'sent' ? new Date() : undefined,
+          amount: Number(amount),
+          breakdown: breakdown ?? {},
+        },
+      })
+    } else {
+      // First issue: atomically claim the next sequential number for this school.
+      // The increment is a single UPDATE that returns the post-increment value, so
+      // concurrent issues each get a distinct, gap-free number (within the txn).
+      invoice = await prisma.$transaction(async (tx) => {
+        const sc = await tx.school.update({
+          where: { id: school.id },
+          data: { nextInvoiceNumber: { increment: 1 } },
+          select: { nextInvoiceNumber: true },
+        })
+        return tx.invoice.create({
+          data: {
+            studentId: sid,
+            schoolId: school.id,
+            term,
+            status: status || 'sent',
+            sentAt: status === 'sent' ? new Date() : null,
+            amount: Number(amount),
+            breakdown: breakdown ?? {},
+            invoiceNumber: sc.nextInvoiceNumber - 1,
+          },
+        })
+      })
+    }
     if (status === 'sent') {
       logAudit({ schoolId: school.id, action: 'INVOICE_SENT', details: `Student: ${student.name} (${student.admNo}), Amount: ${amount}` }).catch(() => {})
     }

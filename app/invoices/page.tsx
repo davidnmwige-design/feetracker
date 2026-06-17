@@ -6,7 +6,7 @@ import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
 
 // -- PDF builder ---------------------------------------------------------------
 
-async function buildInvoicePdf(school: any, student: any, totalPaid: number, feeCategories?: { name: string; amount: number }[]) {
+async function buildInvoicePdf(school: any, student: any, totalPaid: number, feeCategories?: { name: string; amount: number }[], invoiceNumber?: number | null) {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const W = 210
@@ -16,7 +16,11 @@ async function buildInvoicePdf(school: any, student: any, totalPaid: number, fee
   const dueDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
   const todayStr = today.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
   const dueDateStr = dueDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
-  const invoiceNo = `INV-${today.getFullYear()}-${(student.admNo || 'STU').replace(/\//g, '-')}`
+  // Use the school's stored sequential number once issued (tax-compliant); fall back to a
+  // derived reference only for previews before the invoice has been saved.
+  const invoiceNo = invoiceNumber != null
+    ? `INV-${String(invoiceNumber).padStart(5, '0')}`
+    : `INV-${today.getFullYear()}-${(student.admNo || 'STU').replace(/\//g, '-')}`
   const totalDue = Math.max(0, (student.effectiveFee ?? student.feeRequired) - totalPaid)
 
   // Navy header
@@ -314,6 +318,7 @@ export default function Invoices() {
     })
     const inv = await res.json()
     setInvoices(prev => ({ ...prev, [studentId]: inv }))
+    return inv
   }
 
   async function sendInvoiceEmail(student: any) {
@@ -326,7 +331,9 @@ export default function Invoices() {
       const dueDateStr = dueDate.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })
 
       const cats = (student.feeCategories as { name: string; amount: number }[] | undefined) || []
-      const doc = await buildInvoicePdf(school, student, totalPaid, cats.length > 0 ? cats : undefined)
+      // Save first so the invoice gets its sequential number, then render the PDF with it.
+      const inv = await saveInvoiceStatus(student.id, student, 'sent')
+      const doc = await buildInvoicePdf(school, student, totalPaid, cats.length > 0 ? cats : undefined, inv?.invoiceNumber)
       const pdfBase64 = doc.output('datauristring').split(',')[1]
       const term = school.currentTerm || ''
 
@@ -349,7 +356,6 @@ export default function Invoices() {
         }),
       })
 
-      await saveInvoiceStatus(student.id, student, 'sent')
       setSentNow(prev => new Set([...prev, student.id]))
     } finally {
       setSending(prev => ({ ...prev, [student.id]: false }))
@@ -542,7 +548,14 @@ export default function Invoices() {
                       <tr key={student.id} style={{ borderBottom: '1px solid var(--ep-border)' }}>
                         <td style={{ padding: '10px 14px' }}>
                           <div style={{ fontWeight: 600, color: 'var(--ep-text-primary)' }}>{student.name}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--ep-text-tertiary)' }}>{student.admNo}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--ep-text-tertiary)' }}>
+                            {student.admNo}
+                            {invoices[student.id]?.invoiceNumber != null && (
+                              <span style={{ marginLeft: 6, color: 'var(--ep-text-secondary)', fontWeight: 600 }}>
+                                · INV-{String(invoices[student.id].invoiceNumber).padStart(5, '0')}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td style={{ padding: '10px 14px', color: 'var(--ep-text-secondary)', whiteSpace: 'nowrap' }}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>
                         <td style={{ padding: '10px 14px' }}>
