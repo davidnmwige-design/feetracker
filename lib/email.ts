@@ -46,6 +46,55 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
   await transporter.sendMail(mailOptions)
 }
 
+export function invoiceEmailHtml({
+  schoolName, parentName, studentName, term, totalDue, dueDateStr,
+}: {
+  schoolName: string; parentName: string; studentName: string
+  term: string; totalDue: number; dueDateStr: string
+}): string {
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
+      <div style="background:#0a1f4e;padding:24px;text-align:center">
+        <h1 style="margin:0;font-family:Georgia,serif;font-size:22px"><span style="color:#fff">Elimu</span><span style="color:#c8a84b"> Pay</span></h1>
+        <p style="color:#94a3c8;margin:6px 0 0;font-size:12px">${schoolName}</p>
+      </div>
+      <div style="padding:32px;background:#fff;border:1px solid #e2e8f0">
+        <h2 style="color:#0f172a;font-size:18px;margin-bottom:8px">Fee Invoice</h2>
+        <p style="color:#64748b;font-size:14px;line-height:1.6;margin-bottom:20px">
+          Dear ${parentName},<br>please find attached the fee invoice for <strong>${studentName}</strong> for ${term}.
+        </p>
+        <div style="background:#f8f9fc;border-radius:8px;padding:20px;margin-bottom:20px">
+          <table style="width:100%;border-collapse:collapse">
+            <tr>
+              <td style="padding:8px 0;color:#64748b;font-size:13px">Student</td>
+              <td style="text-align:right;font-weight:700;color:#0f172a;font-size:13px">${studentName}</td>
+            </tr>
+            <tr style="border-top:1px solid #e2e8f0">
+              <td style="padding:8px 0;color:#64748b;font-size:13px">Term</td>
+              <td style="text-align:right;font-size:13px">${term}</td>
+            </tr>
+            <tr style="border-top:1px solid #e2e8f0">
+              <td style="padding:8px 0;color:#64748b;font-size:13px">Total Amount Due</td>
+              <td style="text-align:right;font-weight:700;color:#0a1f4e;font-size:15px">KES ${totalDue.toLocaleString()}</td>
+            </tr>
+            <tr style="border-top:1px solid #e2e8f0">
+              <td style="padding:8px 0;color:#64748b;font-size:13px">Payment Due By</td>
+              <td style="text-align:right;font-size:13px">${dueDateStr}</td>
+            </tr>
+          </table>
+        </div>
+        <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0">
+          Please make payment via MPESA and retain the attached invoice for your records.
+          For queries, contact ${schoolName}.
+        </p>
+      </div>
+      <div style="padding:16px;background:#f8f9fc;text-align:center">
+        <p style="color:#94a3b8;font-size:11px;margin:0">Elimu Pay &middot; support@elimupay.co.ke</p>
+      </div>
+    </div>
+  `
+}
+
 export function paymentConfirmationHtml({
   schoolName,
   parentName,
