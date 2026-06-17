@@ -60,7 +60,10 @@
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
       "Bash(npm ls *)",
       "Bash(python -c \"import json,sys; p=json.load\\(sys.stdin\\); deps={**p.get\\('dependencies',{}\\), **p.get\\('devDependencies',{}\\)}; [print\\(k,v\\) for k,v in sorted\\(deps.items\\(\\)\\)]\")",
-      "PowerShell(Head *)"
+      "PowerShell(Head *)",
+      "Bash(grep -v \"//\\\\|import\\\\|submitUpgrade\\\\|upgradeEmail\\\\|upgradeNotes\\\\|upgradeLoading\\\\|upgradeSuccess\\\\|upgradeError\\\\|requestedPlan\\\\|showUpgradeModal\")",
+      "Bash(grep -v \"//\\\\|import\\\\|upgrade_\\\\|setUpgrade\\\\|upgradeL\\\\|upgradeS\\\\|upgradeE\\\\|upgradeN\\\\|requestedP\\\\|upgradeM\\\\|upgrade err\\\\|upgrade POST\\\\|upgrade email\")",
+      "Bash(curl -sf https://feetracker-seven.vercel.app/api/debug/db-test)"
     ]
   }
 }
