@@ -176,6 +176,7 @@ export const updateSchoolSchema = z
   .object({
     name: nameSchema('School name').optional(),
     paybill: paybillSchema,
+    mpesaPasskey: z.string().max(255, 'Invalid passkey').optional().nullable(),
     currentTerm: z.string().max(50, 'Invalid term').optional().nullable(),
     accountNumberFormat: textSchema('Account number format', 200),
     whatsappNumber: phoneSchema,

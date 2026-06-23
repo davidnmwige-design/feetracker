@@ -9,6 +9,7 @@ export type SchoolContext = {
     userId: number
     paybill: string | null
     accountNumberFormat: string | null
+    mpesaPasskey: string | null
     replyToEmail: string | null
     emailSignature: string | null
     whatsappNumber: string | null

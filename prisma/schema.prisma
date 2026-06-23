@@ -44,6 +44,7 @@ model School {
   name                String
   paybill             String?
   accountNumberFormat String?
+  mpesaPasskey        String?              // Lipa na M-Pesa Online passkey, encrypted at rest
   replyToEmail        String?
   emailSignature      String?
   whatsappNumber      String?

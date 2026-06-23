@@ -28,7 +28,7 @@ export default function Settings() {
 
   // School details edit state
   const [editingSchool, setEditingSchool] = useState(false)
-  const [editSchool, setEditSchool] = useState({ name: '', paybill: '', accountNumberFormat: '', currentTerm: '', whatsappNumber: '', replyToEmail: '', emailSignature: '' })
+  const [editSchool, setEditSchool] = useState({ name: '', paybill: '', accountNumberFormat: '', mpesaPasskey: '', currentTerm: '', whatsappNumber: '', replyToEmail: '', emailSignature: '' })
   const [schoolSaving, setSchoolSaving] = useState(false)
   const [schoolSaveSuccess, setSchoolSaveSuccess] = useState(false)
   const [schoolSaveError, setSchoolSaveError] = useState('')
@@ -181,6 +181,7 @@ export default function Settings() {
       name: school?.name || '',
       paybill: school?.paybill || '',
       accountNumberFormat: school?.accountNumberFormat || '',
+      mpesaPasskey: '', // write-only: always starts blank
       currentTerm: school?.currentTerm || '',
       whatsappNumber: school?.whatsappNumber || '',
       replyToEmail: school?.replyToEmail || '',
@@ -195,16 +196,19 @@ export default function Settings() {
     setSchoolSaving(true)
     setSchoolSaveError('')
     try {
+      // A blank passkey means "keep the existing one" — don't send it (empty would clear it).
+      const { mpesaPasskey, ...restEdit } = editSchool
+      const payload = mpesaPasskey ? editSchool : restEdit
       const res = await fetch('/api/school', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editSchool),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) {
         setSchoolSaveError(data.error || 'Failed to save changes')
       } else {
-        setSchool((prev: any) => prev ? { ...prev, ...editSchool } : prev)
+        setSchool((prev: any) => prev ? { ...prev, ...restEdit, mpesaPasskeySet: prev?.mpesaPasskeySet || !!mpesaPasskey } : prev)
         setAcctFmt(editSchool.accountNumberFormat)
         setWhatsappNumber(editSchool.whatsappNumber)
         setReplyToEmail(editSchool.replyToEmail)
@@ -902,6 +906,21 @@ export default function Settings() {
                       />
                     </div>
                   ))}
+                  <div>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '5px'}}>
+                      Lipa Na M-Pesa Online passkey{school?.mpesaPasskeySet ? <span style={{color: '#0a7c3e', fontWeight: 700, marginLeft: '6px'}}>• Set</span> : <span style={{color: 'var(--ep-text-tertiary)', fontWeight: 400, marginLeft: '6px'}}>• Not set</span>}
+                    </label>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      maxLength={255}
+                      value={editSchool.mpesaPasskey}
+                      onChange={e => setEditSchool(prev => ({...prev, mpesaPasskey: e.target.value}))}
+                      placeholder={school?.mpesaPasskeySet ? 'Leave blank to keep — or paste a new passkey to replace' : 'Paste your Daraja online passkey'}
+                      style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const}}
+                    />
+                    <p style={{fontSize: '11px', color: 'var(--ep-text-tertiary)', marginTop: '4px', marginBottom: 0}}>Required for the &ldquo;Request M-Pesa payment&rdquo; (STK) feature. Stored encrypted; never shown again.</p>
+                  </div>
                   <div>
                     <label style={{fontSize: '12px', fontWeight: 600, color: 'var(--ep-text-primary)', display: 'block', marginBottom: '5px'}}>Current term</label>
                     <select

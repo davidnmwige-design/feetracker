@@ -26,13 +26,11 @@ export async function getDarajaToken(): Promise<string> {
 
 // ─── STK Push (Lipa Na M-Pesa Online) ───────────────────────────────────────
 
+// Platform-level Daraja API access (OAuth). The per-school shortcode + passkey are
+// supplied per request (each school collects to its own paybill), so they are checked
+// in the route, not here.
 export function stkConfigured(): boolean {
-  return Boolean(
-    process.env.DARAJA_CONSUMER_KEY &&
-    process.env.DARAJA_CONSUMER_SECRET &&
-    process.env.DARAJA_PASSKEY &&
-    process.env.DARAJA_SHORTCODE,
-  )
+  return Boolean(process.env.DARAJA_CONSUMER_KEY && process.env.DARAJA_CONSUMER_SECRET)
 }
 
 // Daraja timestamp: YYYYMMDDHHmmss in the server's local time.

@@ -6,6 +6,13 @@ import { resolveSchool } from '@/lib/schoolContext'
 import { prisma } from '@/lib/prisma'
 import { getCache, setCache, invalidateCache, CacheKeys } from '@/lib/cache'
 import { parseBody, updateSchoolSchema } from '@/lib/schemas'
+import { encrypt } from '@/lib/encrypt'
+
+// Never expose the raw M-Pesa passkey to the client — surface only whether one is set.
+function sanitizeSchool<T extends { mpesaPasskey?: string | null }>(school: T) {
+  const { mpesaPasskey, ...rest } = school
+  return { ...rest, mpesaPasskeySet: Boolean(mpesaPasskey) }
+}
 
 export async function GET(req: Request) {
   if (!checkRateLimit(getIp(req))) {
@@ -23,8 +30,9 @@ export async function GET(req: Request) {
     const cached = await getCache(cacheKey)
     if (cached) return NextResponse.json(cached)
 
-    await setCache(cacheKey, ctx.school, 300)
-    return NextResponse.json(ctx.school)
+    const safe = sanitizeSchool(ctx.school)
+    await setCache(cacheKey, safe, 300)
+    return NextResponse.json(safe)
   } catch (err) {
     console.error('school GET error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
@@ -55,15 +63,21 @@ export async function PATCH(req: Request) {
       if (conflict) return NextResponse.json({ error: 'This paybill number is already registered to another school' }, { status: 400 })
     }
 
-    // Build update object from validated data, excluding undefined fields
+    // Build update object from validated data, excluding undefined fields.
+    // The M-Pesa passkey is a secret — encrypt before storing (empty clears it).
     const data: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(parsed.data)) {
-      if (v !== undefined) data[k] = v
+      if (v === undefined) continue
+      if (k === 'mpesaPasskey') {
+        data.mpesaPasskey = v ? encrypt(String(v)) : null
+      } else {
+        data[k] = v
+      }
     }
 
     const school = await prisma.school.update({ where: { id: ctx.school.id }, data })
     await invalidateCache(CacheKeys.schoolSettings(ctx.school.id))
-    return NextResponse.json(school)
+    return NextResponse.json(sanitizeSchool(school))
   } catch (err) {
     console.error('school PATCH error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })

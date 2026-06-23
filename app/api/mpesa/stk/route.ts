@@ -7,6 +7,7 @@ import { hasPermission, FORBIDDEN } from '@/lib/permissions'
 import { resolveSchool } from '@/lib/schoolContext'
 import { initiateStkPush, stkConfigured } from '@/lib/daraja'
 import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
+import { decrypt } from '@/lib/encrypt'
 
 // Staff-initiated M-Pesa STK Push: prompts a parent's phone to pay fees. The CheckoutRequestID
 // is persisted (StkRequest) so the async callback can correlate the result back to the student.
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
   if (!hasPermission(ctx.role, 'mpesa/stk', 'POST')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
   if (!stkConfigured()) {
-    return NextResponse.json({ error: 'M-Pesa STK Push is not configured. Add the Daraja credentials and passkey in your environment settings.' }, { status: 400 })
+    return NextResponse.json({ error: 'M-Pesa is not connected on the platform yet. Please contact support.' }, { status: 400 })
   }
 
   try {
@@ -30,6 +31,21 @@ export async function POST(req: Request) {
     const amount = Math.round(Number(body?.amount))
     if (!studentId) return NextResponse.json({ error: 'Missing studentId' }, { status: 400 })
     if (!amount || amount < 1) return NextResponse.json({ error: 'Amount must be at least KES 1' }, { status: 400 })
+
+    // Resolve the M-Pesa credentials: prefer this school's own paybill + passkey (never mix
+    // a school shortcode with the sandbox passkey); fall back to the platform sandbox creds.
+    let shortcode: string | undefined
+    let passkey: string | undefined
+    if (school.paybill && school.mpesaPasskey) {
+      shortcode = school.paybill
+      passkey = decrypt(school.mpesaPasskey)
+    } else if (process.env.DARAJA_SHORTCODE && process.env.DARAJA_PASSKEY) {
+      shortcode = process.env.DARAJA_SHORTCODE
+      passkey = process.env.DARAJA_PASSKEY
+    }
+    if (!shortcode || !passkey) {
+      return NextResponse.json({ error: "This school hasn't set up M-Pesa STK yet. Add your paybill and Lipa na M-Pesa passkey in Settings." }, { status: 400 })
+    }
 
     const student = await prisma.student.findFirst({ where: { id: studentId, schoolId: school.id } })
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
@@ -44,8 +60,8 @@ export async function POST(req: Request) {
     const callbackUrl = `${appUrl}/api/mpesa/stk/callback?t=${process.env.DARAJA_CALLBACK_SECRET || ''}`
 
     const resp = await initiateStkPush({
-      shortcode: process.env.DARAJA_SHORTCODE!,
-      passkey: process.env.DARAJA_PASSKEY!,
+      shortcode,
+      passkey,
       amount,
       phone: msisdn,
       callbackUrl,

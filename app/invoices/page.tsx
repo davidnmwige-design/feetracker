@@ -35,6 +35,7 @@ export default function Invoices() {
   const [page, setPage] = useState(1)
   const [sending, setSending] = useState<Record<number, boolean>>({})
   const [sentNow, setSentNow] = useState<Set<number>>(new Set())
+  const [stkBusy, setStkBusy] = useState<Record<number, boolean>>({})
   const [bulkConfirm, setBulkConfirm] = useState(false)
   const [bulkState, setBulkState] = useState<{ running: boolean; done: number; total: number; summary: string } | null>(null)
 
@@ -169,6 +170,28 @@ export default function Invoices() {
 
     saveInvoiceStatus(student.id, student, 'sent')
     setSentNow(prev => new Set([...prev, student.id]))
+  }
+
+  // Trigger an M-Pesa STK Push to the parent for the outstanding balance.
+  async function requestStkPayment(student: any) {
+    const due = getTotalDue(student)
+    if (due <= 0 || stkBusy[student.id]) return
+    if (!confirm(`Send an M-Pesa payment request of KES ${due.toLocaleString()} to ${student.parentPhone} for ${student.name}?`)) return
+    setStkBusy(prev => ({ ...prev, [student.id]: true }))
+    try {
+      const res = await fetch('/api/mpesa/stk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: student.id, amount: due }),
+      })
+      const data = await res.json()
+      alert(res.ok
+        ? (data.customerMessage || "Payment request sent to the parent's phone.")
+        : (data.error || 'Failed to send payment request'))
+    } catch {
+      alert('Network error — please try again')
+    }
+    setStkBusy(prev => ({ ...prev, [student.id]: false }))
   }
 
   async function runBulkSend() {
@@ -382,6 +405,23 @@ export default function Invoices() {
                                 WhatsApp
                               </button>
                             )}
+                            {hasPhone && totalDue > 0 && (
+                              <button
+                                onClick={() => requestStkPayment(student)}
+                                disabled={stkBusy[student.id]}
+                                title="Send an M-Pesa payment prompt to the parent's phone"
+                                style={{ fontSize: '11px', background: stkBusy[student.id] ? '#94a3b8' : '#0a7c3e', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: stkBusy[student.id] ? 'not-allowed' : 'pointer', fontWeight: 600, whiteSpace: 'nowrap' as const }}
+                              >
+                                {stkBusy[student.id] ? '…' : 'M-Pesa'}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => window.open('/api/invoices/student/' + student.id + '/pdf', '_blank')}
+                              title="Download this invoice as a PDF"
+                              style={{ fontSize: '11px', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', border: '1px solid var(--ep-border)', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' as const }}
+                            >
+                              PDF
+                            </button>
                           </div>
                         </td>
                       </tr>
