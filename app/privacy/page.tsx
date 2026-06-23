@@ -72,7 +72,7 @@ export default function Privacy() {
               <p style={{marginBottom: '12px'}}>All data is stored in a PostgreSQL database hosted on Vercel's infrastructure within secure data centres. We apply the following security measures:</p>
               <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
                 <li>Passwords are hashed using bcrypt before storage — we never store plaintext passwords</li>
-                <li>Parent email addresses are encrypted at rest using AES-256-CBC field-level encryption</li>
+                <li>Parent email addresses are encrypted at rest using AES-256-GCM authenticated field-level encryption</li>
                 <li>All data is transmitted over HTTPS/TLS with HTTP Strict Transport Security (HSTS) enforced</li>
                 <li>Authentication uses secure JWT session tokens with a 24-hour expiry</li>
                 <li>Session invalidation: you can sign out all devices at once from Settings</li>
@@ -168,7 +168,7 @@ export default function Privacy() {
               <ul style={{paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px'}}>
                 <li>Neon (database hosting) — neon.tech</li>
                 <li>Vercel (application hosting) — vercel.com</li>
-                <li>Google (email delivery via Gmail SMTP) — google.com</li>
+                <li>Resend (transactional email delivery) — resend.com</li>
                 <li>Safaricom (MPESA payment notifications) — safaricom.co.ke</li>
                 <li>WhatsApp (parent notifications via deep links) — whatsapp.com</li>
               </ul>

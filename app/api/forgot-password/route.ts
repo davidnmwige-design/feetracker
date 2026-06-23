@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         data: { email, token, expiresAt }
       })
 
-      const appUrl = process.env.NEXTAUTH_URL || 'https://feetracker.co.ke'
+      const appUrl = process.env.NEXTAUTH_URL || 'https://elimupay.co.ke'
       const resetUrl = `${appUrl}/reset-password?token=${token}`
 
       if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {

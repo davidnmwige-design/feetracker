@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'A valid Safaricom phone number is required (07XX XXX XXX).' }, { status: 400 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker-seven.vercel.app'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
     const callbackUrl = `${appUrl}/api/mpesa/stk/callback?t=${process.env.DARAJA_CALLBACK_SECRET || ''}`
 
     const resp = await initiateStkPush({

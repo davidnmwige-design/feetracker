@@ -25,7 +25,7 @@ export async function GET(req: Request) {
   })
 
   let sent = 0
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker-seven.vercel.app'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
 
   for (const school of schools) {
     const token = makeToken(school.id)

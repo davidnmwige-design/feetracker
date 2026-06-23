@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Daraja is not fully configured. Set DARAJA_CALLBACK_SECRET before registering callback URLs.' }, { status: 500 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker-seven.vercel.app'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
     // Embed the shared secret so the confirmation/validation handlers can authenticate Safaricom's callbacks.
     const confirmationUrl = `${appUrl}/api/daraja/confirmation?t=${callbackSecret}`
     const validationUrl = `${appUrl}/api/daraja/validation?t=${callbackSecret}`

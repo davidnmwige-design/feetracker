@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker.co.ke'
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
