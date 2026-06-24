@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from '@sentry/nextjs'
 
 const APP_URL = process.env.NEXTAUTH_URL || 'https://feetracker.co.ke'
-const VERCEL_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker-seven.vercel.app'
+const VERCEL_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
 const CUSTOM_DOMAIN = 'https://feetracker.co.ke'
 
 const allowedOrigins = [...new Set([APP_URL, VERCEL_URL, CUSTOM_DOMAIN])].join(' ')

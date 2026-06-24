@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { logAudit } from '@/lib/audit'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {
