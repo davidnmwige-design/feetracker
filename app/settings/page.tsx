@@ -832,6 +832,11 @@ export default function Settings() {
           .set-invoice-row { flex-direction: column !important; }
           .set-plan-cards { flex-direction: column !important; }
         }
+        @media (min-width: 900px) {
+          .set-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+          .set-col { display: flex; flex-direction: column; gap: 16px; }
+          .set-col > div { margin-bottom: 0 !important; }
+        }
       `}</style>
 
       <div className="set-header" style={{background: '#0a1f4e', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -844,11 +849,13 @@ export default function Settings() {
         </Link>
       </div>
 
-      <div className="set-content" style={{padding: '24px 32px', maxWidth: '640px'}}>
+      <div className="set-content" style={{padding: '24px 32px', maxWidth: '1100px', margin: '0 auto'}}>
         {loading ? (
           <div style={{textAlign: 'center', color: 'var(--ep-text-tertiary)', padding: '48px'}}>Loading...</div>
         ) : (
           <>
+            <div className="set-cols">
+            <div className="set-col">
             <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
               <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px'}}>
                 <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>School details</h2>
@@ -1128,7 +1135,9 @@ export default function Settings() {
                 </button>
               </div>
             </div>
+            </div>{/* end left col */}
 
+            <div className="set-col">
             {/* Your Plan */}
             <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>
               <h2 style={{fontSize: '14px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Subscription</h2>
@@ -1396,6 +1405,8 @@ export default function Settings() {
                 {signingOut ? 'Signing out...' : 'Sign out of all devices'}
               </button>
             </div>
+            </div>{/* end right col */}
+            </div>{/* end set-cols grid */}
 
             {/* Academic Year */}
             <div style={{background: 'var(--ep-card-bg)', borderRadius: '8px', border: '1px solid var(--ep-border)', padding: '24px', marginBottom: '16px'}}>

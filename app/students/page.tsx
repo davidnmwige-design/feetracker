@@ -648,7 +648,7 @@ export default function Students() {
               aria-label="Search students by name, admission number, or email"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', width: '260px', outline: 'none'}}
+              style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', width: '260px', maxWidth: '100%', outline: 'none'}}
             />
           </div>
 

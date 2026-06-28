@@ -303,7 +303,7 @@ export default function Invoices() {
             aria-label="Search invoices by student name, class, or admission number"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', width: '280px', outline: 'none' }}
+            style={{ border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', width: '280px', maxWidth: '100%', outline: 'none' }}
           />
           <button
             onClick={() => setBulkConfirm(true)}
