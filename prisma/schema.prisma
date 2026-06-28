@@ -41,6 +41,7 @@ model OTPCode {
 
 model School {
   id                  Int                  @id @default(autoincrement())
+  publicId            String               @unique @default(dbgenerated("gen_random_uuid()"))
   name                String
   paybill             String?
   accountNumberFormat String?
@@ -121,6 +122,7 @@ model Term {
 
 model Student {
   id               Int               @id @default(autoincrement())
+  publicId         String            @unique @default(dbgenerated("gen_random_uuid()"))
   name             String
   admNo            String
   class            String

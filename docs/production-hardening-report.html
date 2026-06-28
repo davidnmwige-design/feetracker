@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Production Hardening — Engineering Report</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    color: #1f2937; font-size: 11px; line-height: 1.55; margin: 0;
+  }
+  /* ---- Masthead ---- */
+  .masthead {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    border-bottom: 3px solid #0d5c63; padding-bottom: 14px; margin-bottom: 22px;
+  }
+  .brand .wordmark { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #0d5c63; }
+  .brand .wordmark span { color: #c9a227; }
+  .brand .tagline { font-size: 9.5px; letter-spacing: 2.5px; text-transform: uppercase; color: #6b7280; margin-top: 2px; }
+  .brand .logo-note { font-size: 8px; color: #9ca3af; margin-top: 6px; font-style: italic; }
+  .contact { text-align: right; font-size: 10px; color: #374151; line-height: 1.7; }
+  .contact a { color: #0d5c63; text-decoration: none; }
+  .contact .label { color: #9ca3af; font-size: 8.5px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ---- Title block ---- */
+  .titleblock { margin-bottom: 22px; }
+  .titleblock h1 { font-size: 22px; color: #0f172a; margin: 0 0 4px; }
+  .titleblock .sub { color: #6b7280; font-size: 12px; }
+  .meta { margin-top: 12px; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+  .meta table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .meta td { padding: 6px 12px; border-bottom: 1px solid #f1f5f9; }
+  .meta tr:last-child td { border-bottom: none; }
+  .meta td.k { background: #f8fafc; color: #6b7280; width: 130px; font-weight: 600; }
+
+  h2 { font-size: 14px; color: #0d5c63; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin: 22px 0 10px; }
+  h3 { font-size: 12px; color: #0f172a; margin: 14px 0 4px; }
+  p { margin: 0 0 8px; }
+  ul { margin: 4px 0 10px; padding-left: 18px; }
+  li { margin-bottom: 3px; }
+  .sev { display: inline-block; font-size: 8.5px; font-weight: 700; padding: 1px 6px; border-radius: 3px; vertical-align: middle; margin-left: 4px; }
+  .crit { background: #fde2e1; color: #b42318; }
+  .high { background: #fde9d2; color: #b54708; }
+  .med  { background: #fef3cd; color: #8d6708; }
+  .ok   { background: #d6f3e4; color: #0a7a48; }
+
+  table.grid { width: 100%; border-collapse: collapse; font-size: 10px; margin: 8px 0 12px; }
+  table.grid th { background: #0d5c63; color: #fff; text-align: left; padding: 6px 9px; font-weight: 600; }
+  table.grid td { padding: 6px 9px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
+  table.grid tr:nth-child(even) td { background: #f8fafc; }
+
+  pre {
+    background: #0f172a; color: #e2e8f0; border-radius: 6px; padding: 10px 12px;
+    font-family: "Consolas", "SF Mono", Menlo, monospace; font-size: 9px; line-height: 1.5;
+    overflow-x: auto; margin: 6px 0 12px; white-space: pre-wrap; word-break: break-word;
+    break-inside: avoid;
+  }
+  pre .c { color: #94a3b8; } /* comment */
+  pre .a { color: #fca5a5; } /* removed */
+  pre .g { color: #86efac; } /* added */
+  code.inline { background: #f1f5f9; color: #0d5c63; padding: 0 4px; border-radius: 3px; font-family: Consolas, monospace; font-size: 9.5px; }
+  .callout { border-left: 3px solid #c9a227; background: #fffbeb; padding: 8px 12px; border-radius: 0 4px 4px 0; margin: 8px 0 12px; font-size: 10px; }
+  .section { break-inside: avoid; }
+  footer {
+    margin-top: 26px; border-top: 1px solid #e5e7eb; padding-top: 8px;
+    font-size: 8.5px; color: #9ca3af; display: flex; justify-content: space-between;
+  }
+  .page-break { break-before: page; }
+</style>
+</head>
+<body>
+
+  <div class="masthead">
+    <div class="brand">
+      <div class="wordmark">datacare<span>.</span> limited</div>
+      <div class="tagline">Security &middot; Engineering &middot; Assurance</div>
+      <div class="logo-note">[ logo artwork to be placed here ]</div>
+    </div>
+    <div class="contact">
+      <div><span class="label">Web</span><br><a href="https://www.datacare.co.ke">www.datacare.co.ke</a></div>
+      <div><span class="label">Email</span><br><a href="mailto:info@datacare.co.ke">info@datacare.co.ke</a></div>
+      <div><span class="label">Phone</span><br>0722 155 752</div>
+    </div>
+  </div>
+
+  <div class="titleblock">
+    <h1>Production Hardening — Engineering Report</h1>
+    <div class="sub">Elimu Pay / FeeTracker — security, reliability &amp; pre-launch remediation</div>
+    <div class="meta">
+      <table>
+        <tr><td class="k">Prepared by</td><td>Datacare Limited &middot; info@datacare.co.ke &middot; 0722 155 752</td></tr>
+        <tr><td class="k">System</td><td>Elimu Pay / FeeTracker — multi-tenant school-fee SaaS (Next.js 16 &middot; Prisma/PostgreSQL &middot; Vercel)</td></tr>
+        <tr><td class="k">Date</td><td>11 June 2026</td></tr>
+        <tr><td class="k">Status</td><td>Phases 0–2 complete &amp; verified &middot; delivered via PR #1 (CI green)</td></tr>
+        <tr><td class="k">Classification</td><td>Confidential — for the intended recipient only</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+  <h2>1. Executive summary</h2>
+  <p>This engagement hardened the Elimu Pay / FeeTracker platform for a production launch handling real money (M-Pesa) and the personal data of parents and pupils. Work was delivered in three phases, reconciled against both a source-level audit and the prior pre-production penetration test, and verified end-to-end on an isolated local stack. The headline outcome: the platform's most serious latent risk — an <strong>unauthenticated M-Pesa payment webhook</strong> — has been closed, the deployment pipeline can no longer silently destroy data, and an automated quality gate (tests + CI) now protects the fee-matching and billing logic.</p>
+  <table class="grid">
+    <tr><th>Dimension</th><th>Before</th><th>After</th></tr>
+    <tr><td>Payment integrity</td><td>Anyone could inject M-Pesa payments; any tenant could claim a paybill</td><td>Webhook authenticated &amp; rate-limited; paybill made unique</td></tr>
+    <tr><td>Authentication</td><td>2FA bypassable; one-time codes stored in clear</td><td>Signed 2FA token; codes stored as bcrypt hashes</td></tr>
+    <tr><td>Data protection</td><td>Sensitive fields could be stored unencrypted, silently</td><td>Authenticated encryption; production refuses to run without a key</td></tr>
+    <tr><td>Deployments</td><td>Destructive schema sync on every deploy</td><td>Versioned migrations with a safe-fail path</td></tr>
+    <tr><td>Quality assurance</td><td>No tests, no CI</td><td>Automated tests + continuous-integration gates</td></tr>
+  </table>
+  </div>
+
+  <div class="section">
+  <h2>2. Phase 0 — Security criticals</h2>
+
+  <h3>A1 &middot; Unauthenticated M-Pesa payment webhook <span class="sev crit">CRITICAL</span></h3>
+  <p>The Daraja confirmation endpoint accepted anonymous requests, created payment records and emailed parents — allowing fabricated payments. It now requires a secret token embedded in the registered callback URL, fails closed, and is rate-limited per paybill.</p>
+<pre><span class="c">// app/api/daraja/confirmation/route.ts — new guard</span>
+const expectedToken = process.env.DARAJA_CALLBACK_SECRET
+const providedToken = new URL(req.url).searchParams.get('t')
+if (!expectedToken || !secureEqual(providedToken, expectedToken)) {
+  console.warn('[daraja] Rejected confirmation: invalid or missing callback token')
+  return NextResponse.json(ACCEPTED)   <span class="c">// normal shape, but NO writes / emails</span>
+}</pre>
+
+  <h3>A2 &middot; Forgeable two-factor cookie <span class="sev high">HIGH</span></h3>
+  <p>The <code class="inline">ft_2fa</code> cookie was the literal text <code class="inline">userId:expiry:valid</code> — trivially forged to bypass 2FA. It is now signed (HMAC-SHA256) and verified in constant time.</p>
+<pre><span class="c">// lib/check2fa.ts</span>
+export function buildTwoFactorCookie(userId, expiry) {
+  return `${userId}:${expiry}:${signTwoFactor(userId, expiry)}`   <span class="c">// HMAC signature</span>
+}</pre>
+
+  <h3>A3 &middot; Encryption without integrity / silent plaintext <span class="sev high">HIGH</span></h3>
+  <p>Field encryption used AES-256-CBC (no tamper detection) and fell back to storing plaintext if the key was absent. Replaced with authenticated AES-256-GCM, with backward-compatible reads of existing data and a hard fail in production when the key is missing.</p>
+
+  <h3>A4 &middot; One-time codes stored in clear <span class="sev med">MEDIUM</span></h3>
+  <p>2FA codes are now generated with a cryptographic RNG and persisted only as bcrypt hashes; a database compromise no longer exposes live codes.</p>
+
+  <h3>A5 &middot; Public debug endpoint removed <span class="sev med">MEDIUM</span></h3>
+  <p>A publicly reachable diagnostics route that leaked configuration was deleted.</p>
+
+  <h3>A6 &middot; Scheduled-job endpoints failed open <span class="sev med">MEDIUM</span></h3>
+  <p>Cron routes previously ran for anonymous callers when the secret was unset. They now fail closed behind a shared authorization helper.</p>
+  </div>
+
+  <div class="section page-break">
+  <h2>3. Phase 1 — Production safety</h2>
+
+  <h3>Deployments could destroy data <span class="sev crit">BLOCKER</span></h3>
+  <p>The build performed a destructive schema sync on every deploy, and the recorded migration history was far behind the live schema. We moved to versioned migrations and generated a catch-up migration so history fully represents the schema (verified to apply to a clean database with no drift).</p>
+<pre><span class="a">- "build": "prisma generate &amp;&amp; prisma db push --accept-data-loss &amp;&amp; next build"</span>
+<span class="g">+ "build": "prisma generate &amp;&amp; prisma migrate deploy &amp;&amp; next build"</span></pre>
+
+  <h3>No startup configuration validation <span class="sev high">HIGH</span></h3>
+  <p>A startup validator now fails fast on a missing database URL, weak auth secret, or (in production) a missing encryption key, and the error-monitoring integration is now correctly initialized server-side.</p>
+
+  <h3>No automated tests or CI <span class="sev crit">BLOCKER</span></h3>
+  <p>Introduced an automated test suite for the two highest-risk areas — payment matching and fee calculation — including a guard that a payment is never assigned to the wrong pupil, plus a continuous-integration pipeline that gates every change on type-checking, tests and a full build.</p>
+  <table class="grid">
+    <tr><th>Addition</th><th>Effect</th></tr>
+    <tr><td>Automated unit tests</td><td>Regression net over fee-matching &amp; fee math (incl. mis-assignment guard)</td></tr>
+    <tr><td>Continuous integration</td><td>Type-check + tests + production build on every change</td></tr>
+    <tr><td>Log hygiene + error pages</td><td>Sensitive tokens no longer logged in production; graceful error/404 pages</td></tr>
+  </table>
+  </div>
+
+  <div class="section">
+  <h2>4. Phase 2 — Remaining assessment findings</h2>
+  <table class="grid">
+    <tr><th>Item</th><th>Resolution</th></tr>
+    <tr><td>Admin area gated only in the browser <span class="sev high">HIGH</span></td><td>Now enforced server-side; admin panels are unreachable without a session</td></tr>
+    <tr><td>Two tenants could share a paybill <span class="sev crit">CRITICAL</span></td><td>Database uniqueness constraint added on the paybill</td></tr>
+    <tr><td>Pre-launch host indexable under wrong address <span class="sev med">MEDIUM</span></td><td>Preview host excluded from search engines</td></tr>
+  </table>
+  <p>A number of earlier findings were confirmed already remediated and required no further change. One larger, cross-cutting item (opaque public identifiers) has been deliberately deferred to a dedicated change window, as the data-exposure paths it depended on are already closed.</p>
+  </div>
+
+  <div class="section">
+  <h2>5. System impact &amp; required operational actions</h2>
+  <p>Several changes alter runtime behaviour and require coordinated configuration before the first production deploy:</p>
+  <ul>
+    <li>Production now requires a valid encryption key, authentication secret and database URL — the application will not start otherwise.</li>
+    <li>Scheduled jobs and the payment webhook each require their new secrets to be configured; M-Pesa callback registration must be re-run once the webhook secret is in place.</li>
+    <li>The first deploy requires a one-time migration baseline; duplicate paybills must be removed before the uniqueness constraint is applied. Both are documented in the deployment guide, and a missed step fails safely without data loss.</li>
+    <li>The temporary preview address is now excluded from search indexing; the production domain indexes normally after cut-over.</li>
+  </ul>
+  </div>
+
+  <div class="section">
+  <h2>6. Next steps &amp; forward roadmap</h2>
+  <p>The trajectory from here is non-linear and contingent, gated by a set of interlocking dependencies that resolve in approximate — not strict — sequence. The remaining surface decomposes into several concurrent yet partially-coupled workstreams whose ordering is subject to ongoing discovery and stakeholder alignment.</p>
+  <ul>
+    <li><strong>Provider-integration enablement.</strong> Operationalizing the automated parent-engagement layer and the inbound-collections rail is predicated on the procurement, credentialing and sandbox-to-production promotion of one or more third-party gateways, the selection of which is itself a function of cost-model, deliverability and regulatory-posture considerations still to be triangulated.</li>
+    <li><strong>Financial-instrument compliance hardening.</strong> The invoicing and revenue-recognition primitives require alignment with the prevailing statutory framework, the precise contours of which depend on entity-level determinations sitting outside the current technical envelope.</li>
+    <li><strong>Billing &amp; monetization orchestration.</strong> Transitioning the subscription lifecycle from its present manually-mediated state toward an automated, self-reconciling posture entails a multi-phase convergence of capture, entitlement, dunning and reconciliation semantics, each with its own failure-mode surface.</li>
+    <li><strong>Identifier-surface remediation (deferred).</strong> A latent, cross-cutting architectural undertaking touching substantially all persistence and routing layers; best actioned within a dedicated change window given its blast radius.</li>
+    <li><strong>Continuous assurance &amp; residual-risk drawdown.</strong> A rolling cadence of verification, accessibility conformance, observability maturation and residual-finding attrition, continuously re-weighted as new telemetry and review feedback materialize.</li>
+  </ul>
+  <p>Net: the path to general availability is directionally clear but operationally complex, with several critical-path items blocked on external and organizational inputs. Concrete sequencing, effort sizing and milestone definition will be established collaboratively in a subsequent scoping pass once the upstream dependencies above are sufficiently de-risked.</p>
+  </div>
+
+  <footer>
+    <span>Datacare Limited &middot; www.datacare.co.ke &middot; info@datacare.co.ke &middot; 0722 155 752</span>
+    <span>Confidential &middot; 11 June 2026</span>
+  </footer>
+
+</body>
+</html>

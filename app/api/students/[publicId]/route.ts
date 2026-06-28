@@ -11,7 +11,7 @@ import { hashPhone } from '@/lib/phoneHash'
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ publicId: string }> }
 ) {
   if (!checkRateLimit(getIp(req))) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -23,17 +23,14 @@ export async function GET(
   }
 
   try {
-    const { id } = await params
-    const studentId = Number(id)
-    if (!studentId) return NextResponse.json({ error: 'Invalid student ID' }, { status: 400 })
-
+    const { publicId } = await params
     const ctx = await resolveSchool(session.user.email)
     if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
 
     if (!hasPermission(ctx.role, 'students', 'GET')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const student = await prisma.student.findFirst({
-      where: { id: studentId, schoolId: ctx.school.id },
+      where: { publicId, schoolId: ctx.school.id },
       include: {
         payments: { orderBy: { paidAt: 'desc' } },
         school: true,
@@ -47,14 +44,14 @@ export async function GET(
       parent2Email: student.parent2Email ? decrypt(student.parent2Email) : student.parent2Email,
     })
   } catch (err) {
-    console.error('students/[id] GET error:', err)
+    console.error('students/[publicId] GET error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ publicId: string }> }
 ) {
   if (!checkRateLimit(getIp(req))) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -66,17 +63,14 @@ export async function PATCH(
   }
 
   try {
-    const { id } = await params
-    const studentId = Number(id)
-    if (!studentId) return NextResponse.json({ error: 'Invalid student ID' }, { status: 400 })
-
+    const { publicId } = await params
     const ctx = await resolveSchool(session.user.email)
     if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
 
     if (!hasPermission(ctx.role, 'students', 'PATCH')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const student = await prisma.student.findFirst({
-      where: { id: studentId, schoolId: ctx.school.id }
+      where: { publicId, schoolId: ctx.school.id }
     })
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
@@ -105,7 +99,7 @@ export async function PATCH(
     if (d.parent2Email !== undefined) data.parent2Email = d.parent2Email ? encrypt(d.parent2Email) : null
 
     const updated = await prisma.student.update({
-      where: { id: studentId },
+      where: { id: student.id },
       data
     })
     return NextResponse.json({
@@ -114,14 +108,14 @@ export async function PATCH(
       parent2Email: updated.parent2Email ? decrypt(updated.parent2Email) : updated.parent2Email,
     })
   } catch (err) {
-    console.error('students/[id] PATCH error:', err)
+    console.error('students/[publicId] PATCH error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ publicId: string }> }
 ) {
   if (!checkRateLimit(getIp(req))) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
@@ -131,20 +125,18 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
-    const { id } = await params
-    const studentId = Number(id)
-    if (!studentId) return NextResponse.json({ error: 'Invalid student ID' }, { status: 400 })
-
+    const { publicId } = await params
     const ctx = await resolveSchool(session.user.email)
     if (!ctx) return NextResponse.json({ error: 'No school found' }, { status: 400 })
 
     if (!hasPermission(ctx.role, 'students', 'DELETE')) return NextResponse.json(FORBIDDEN, { status: 403 })
 
     const student = await prisma.student.findFirst({
-      where: { id: studentId, schoolId: ctx.school.id },
+      where: { publicId, schoolId: ctx.school.id },
     })
     if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 })
 
+    const studentId = student.id
     await prisma.feeCategory.deleteMany({ where: { studentId } })
     await prisma.invoice.deleteMany({ where: { studentId } })
     await prisma.payment.updateMany({ where: { studentId }, data: { studentId: null, matched: false } })
@@ -153,7 +145,7 @@ export async function DELETE(
     logAudit({ userId: ctx.userId, schoolId: ctx.school.id, action: 'STUDENT_DELETED', details: `${student.name} (${student.admNo})`, ipAddress: getIp(req) }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('students/[id] DELETE error:', err)
+    console.error('students/[publicId] DELETE error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(\"---GIT---\")",
+      "Read(//f/Projects/**)",
+      "Bash(vercel.json)",
+      "Bash(.github\")",
+      "Bash(xargs ls -la)",
+      "PowerShell(git -C f:\\\\Projects\\\\FeeTracker-DavidMwige ls-files .env)",
+      "PowerShell(git -C f:\\\\Projects\\\\FeeTracker-DavidMwige log --all --oneline -- .env)",
+      "PowerShell(\"=== Is .env tracked by git? \\(expect nothing\\) ===\")",
+      "PowerShell(\"=== prisma/migrations contents ===\")",
+      "PowerShell(\"=== Was .env ever in git history? \\(expect nothing\\) ===\")"
+    ]
+  }
+}

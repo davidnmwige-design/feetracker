@@ -1,0 +1,198 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Elimu Pay — Status Report &amp; Go-Live Setup Guide</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 18mm 15mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: "Segoe UI", Arial, Helvetica, sans-serif; color: #1f2937; font-size: 11px; line-height: 1.55; margin: 0; }
+  .masthead { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0d5c63; padding-bottom: 14px; margin-bottom: 20px; }
+  .brand .wordmark { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #0d5c63; }
+  .brand .wordmark span { color: #c9a227; }
+  .brand .tagline { font-size: 9.5px; letter-spacing: 2.5px; text-transform: uppercase; color: #6b7280; margin-top: 2px; }
+  .contact { text-align: right; font-size: 10px; color: #374151; line-height: 1.7; }
+  .contact a { color: #0d5c63; text-decoration: none; }
+  .contact .label { color: #9ca3af; font-size: 8.5px; text-transform: uppercase; letter-spacing: 1px; }
+  h1 { font-size: 21px; color: #0f172a; margin: 0 0 14px; }
+  h2 { font-size: 14px; color: #0d5c63; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin: 20px 0 9px; break-after: avoid; }
+  h3 { font-size: 12px; color: #0f172a; margin: 12px 0 4px; }
+  p { margin: 0 0 8px; }
+  ul, ol { margin: 4px 0 10px; padding-left: 20px; }
+  li { margin-bottom: 3px; }
+  strong { color: #0f172a; }
+  em { color: #6b7280; font-style: italic; }
+  code { background: #f1f5f9; color: #0d5c63; border-radius: 3px; padding: 0.5px 4px; font-family: "Consolas", Menlo, monospace; font-size: 9.5px; }
+  a { color: #0d5c63; }
+  hr { border: none; border-top: 1px solid #e5e7eb; margin: 16px 0; }
+  table.grid { width: 100%; border-collapse: collapse; font-size: 10px; margin: 8px 0 12px; break-inside: avoid; }
+  table.grid th { background: #0d5c63; color: #fff; text-align: left; padding: 6px 9px; font-weight: 600; }
+  table.grid td { padding: 6px 9px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
+  table.grid tr:nth-child(even) td { background: #f8fafc; }
+  .callout { background: #f8fafc; border-left: 3px solid #c9a227; border-radius: 4px; padding: 9px 14px; margin: 10px 0; break-inside: avoid; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout ol, .callout ul { margin-bottom: 0; }
+  .docnote { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #c9a227; font-weight: 700; margin-bottom: 4px; }
+  .pagebreak { break-before: page; }
+</style></head><body>
+  <div class="masthead">
+    <div class="brand">
+      <div class="wordmark">datacare<span>.</span> limited</div>
+      <div class="tagline">Security &middot; Engineering &middot; Assurance</div>
+    </div>
+    <div class="contact">
+      <div><span class="label">Web</span><br><a href="https://www.datacare.co.ke">www.datacare.co.ke</a></div>
+      <div><span class="label">Email</span><br><a href="mailto:info@datacare.co.ke">info@datacare.co.ke</a></div>
+      <div><span class="label">Phone</span><br>0722 155 752</div>
+    </div>
+  </div>
+  <div class="docnote">Document 1 of 2 — Progress Report</div>
+  <h1>Elimu Pay — Production-Hardening Progress Report</h1>
+<p><strong>Prepared by:</strong> Datacare Limited <strong>For:</strong> David Njiru, Elimu Pay <strong>Date:</strong> 17 June 2026 <strong>Contact:</strong> info@datacare.co.ke · www.datacare.co.ke · 0722 155 752</p>
+<hr>
+<h2>1. Executive summary</h2>
+<p>Work to take Elimu Pay from a working build to a launch-ready, production-grade platform is well advanced and <strong>on track for the agreed launch window</strong>. We now have full access to the codebase and database, and have completed the security, stability, and core "market-readiness" work — the items a school and a regulator would expect of a system that handles real money and the personal data of children.</p>
+<p>Every change has been delivered into a single, reviewed change-set, and each piece has been tested against a large, realistic copy of the data (thousands of students and payments) before being accepted. The platform is materially more secure, faster under load, and now supports the payment and communication features that schools asked for.</p>
+<p>A small amount of work remains — chiefly a visual/usability refresh and a few items that depend on information only you or the schools can provide (payment and messaging account details). These are listed in Sections 5 and 6.</p>
+<hr>
+<h2>2. What we have completed</h2>
+<h3>Security and data protection</h3>
+<ul><li>Closed the highest-risk security gaps around <strong>payment integrity and login</strong>, so that</li></ul>
+<p>  fake payments cannot be injected and login/2-factor sessions cannot be forged.</p>
+<ul><li>Strengthened how sensitive data is stored and how automated/background jobs are</li></ul>
+<p>  authorised, and removed a diagnostic endpoint that should never reach production.</p>
+<ul><li>Independent penetration-test findings supplied earlier were reconciled against the</li></ul>
+<p>  live system; the outstanding high-risk items have been addressed.</p>
+<h3>Reliability and scale</h3>
+<ul><li>Re-engineered the database connection approach so the platform stays responsive as the</li></ul>
+<p>  number of schools grows (essential for a multi-school, cloud deployment).</p>
+<ul><li>Added an automated safety net of <strong>38 tests</strong> plus a large-scale stress test that we run</li></ul>
+<p>  before accepting any change, so regressions are caught early.</p>
+<h3>Fee collection and compliance</h3>
+<ul><li><strong>Tax-compliant invoice numbering.</strong> Invoices now carry unique, sequential numbers</li></ul>
+<p>  assigned by the system — a requirement for KRA-compliant record-keeping. This was   proven correct even when many invoices are produced at the same moment.</p>
+<ul><li><strong>Instant M-Pesa payment requests (STK Push).</strong> Staff can now prompt a parent's phone</li></ul>
+<p>  to pay directly; a confirmed payment is recorded and reconciled to the right student   automatically, and the parent receives a confirmation.</p>
+<ul><li><strong>Faster, server-generated invoices.</strong> Invoice PDFs are now produced by the server</li></ul>
+<p>  rather than the staff member's browser, so sending invoices — including in bulk — no   longer slows down or freezes the screen.</p>
+<h3>Parent communication</h3>
+<ul><li><strong>Real SMS fee reminders</strong> via a Kenyan bulk-SMS gateway, alongside the existing email</li></ul>
+<p>  and WhatsApp options, including an automated scheduled reminder run.</p>
+<h3>Performance and pre-launch tidy-up</h3>
+<ul><li>Fixed the heaviest screen in the app (the reminders list) so it stays fast even with</li></ul>
+<p>  thousands of students.</p>
+<ul><li>Resolved a class of display/console warnings that affected polish and correctness.</li><li>Removed the public "demo" area ahead of the live launch.</li></ul>
+<hr>
+<h2>3. Testing performed</h2>
+<p>Testing was done against a <strong>large, realistic dataset</strong> — roughly <strong>5,000 students across ~600 schools, with 3,000 payments and 2,000 invoices</strong> — to mimic real load rather than a small sample.</p>
+<table class="grid"><thead><tr><th>Area tested</th><th>How</th><th>Result</th></tr></thead><tbody><tr><td>Invoice numbering under pressure</td><td>Issued 75 invoices simultaneously</td><td>All unique, sequential, none duplicated; re-sending an invoice kept its original number</td></tr><tr><td>Instant payment (STK) security</td><td>Probed the payment endpoints directly</td><td>Staff-only access enforced; the payment-confirmation channel safely rejects forged calls without recording anything</td></tr><tr><td>Server-generated invoices</td><td>Issued and downloaded invoices end-to-end</td><td>Produced correctly and quickly; a failed email no longer voids an issued invoice</td></tr><tr><td>SMS and payment features when not yet configured</td><td>Triggered them without account details</td><td>Fail gracefully with a clear message — never crash</td></tr><tr><td>Speed under load</td><td>Loaded the main screens with the full dataset</td><td>Key list screens load in a fraction of a second when paged; the heaviest screen was reduced dramatically</td></tr><tr><td>Automated regression suite</td><td>38 automated checks on every change</td><td>All passing</td></tr></tbody></table>
+<hr>
+<h2>4. Key findings</h2>
+<ul><li><strong>The new fee-collection and compliance features are correct and safe.</strong> The most</li></ul>
+<p>  important property — that money and invoice numbers are handled accurately even under   simultaneous activity — was demonstrated, not assumed.</p>
+<ul><li><strong>Security posture is strong.</strong> Payment-confirmation channels reject anything they</li></ul>
+<p>  cannot verify, and sensitive actions are limited to authorised staff.</p>
+<ul><li><strong>Performance is good and will be better in production.</strong> The biggest gains came from</li></ul>
+<p>  only loading what is shown on screen; one heavy screen has been brought into line with   the rest. (Measured speeds during testing are slower than the live system will be,   because the test environment runs in an un-optimised development mode.)</p>
+<ul><li><strong>A few usability/polish items remain</strong> and are itemised below; none are blockers.</li></ul>
+<hr>
+<h2>5. What remains</h2>
+<ol><li><strong>Visual and usability refresh</strong> — a consistent design pass and accessibility improvements across the screens. We have deliberately held back front-end changes pending your written go-ahead; this is the main remaining body of work and can begin on your word.</li><li><strong>Two small front-end additions</strong> already approved — an in-app button to trigger an M-Pesa payment request, and a one-click invoice download — to be wired next.</li><li><strong>Final compliance items</strong> — a published data-protection/privacy position aligned to Kenya's Data Protection Act.</li></ol>
+<hr>
+<h2>6. What we need from you / the schools</h2>
+<p>To switch the new features fully "on" in production, we will need:</p>
+<ul><li><strong>Bulk-SMS account</strong> (sender name) so SMS reminders can send under the school's identity.</li><li><strong>M-Pesa details per school</strong> — each school's own paybill/till and the matching M-Pesa</li></ul>
+<p>  online passkey. Per your direction, every school uses its <strong>own</strong> M-Pesa number for its   collections; the platform is built around that model.</p>
+<ul><li><strong>Email sending credentials</strong> for invoice and payment-confirmation emails.</li></ul>
+<p>We can provide a short, plain checklist for each of these.</p>
+<hr>
+<h2>7. Outlook</h2>
+<p>The platform is in a strong, launch-ready position on security, stability, compliance, and core features. The remaining work is primarily the visual/usability refresh and switching on the third-party accounts above. We remain confident in the agreed launch window and will share a final go-live checklist as we approach it.</p>
+<p><em>This report summarises progress and outcomes. Technical implementation detail is held in the project's source control and is available to your team on request.</em></p>
+<p>— <strong>Datacare Limited</strong> info@datacare.co.ke · www.datacare.co.ke · 0722 155 752</p>
+
+  <div class="pagebreak"></div>
+  <div class="masthead">
+    <div class="brand">
+      <div class="wordmark">datacare<span>.</span> limited</div>
+      <div class="tagline">Security &middot; Engineering &middot; Assurance</div>
+    </div>
+    <div class="contact">
+      <div><span class="label">Web</span><br><a href="https://www.datacare.co.ke">www.datacare.co.ke</a></div>
+      <div><span class="label">Email</span><br><a href="mailto:info@datacare.co.ke">info@datacare.co.ke</a></div>
+      <div><span class="label">Phone</span><br>0722 155 752</div>
+    </div>
+  </div>
+  <div class="docnote">Document 2 of 2 — Go-Live Setup Guide</div>
+  <h1>Elimu Pay — Go-Live Setup Guide</h1>
+<p><strong>Prepared by:</strong> Datacare Limited · <strong>For:</strong> David Njiru, Elimu Pay · <strong>Date:</strong> 17 June 2026 <strong>Contact:</strong> info@datacare.co.ke · www.datacare.co.ke · 0722 155 752</p>
+<p>This guide walks you through everything that must be set up on your side to move Elimu Pay into the live (production) environment. Each section says <strong>what to do</strong>, the <strong>rough cost</strong>, and <strong>exactly what to send back to us</strong> so we can connect it.</p>
+<div class="callout"><p><strong>Prefer us to handle all of it?</strong> If you'd rather not do these steps yourself, Datacare can take care of the entire production setup end-to-end — registering and configuring every account (domain, hosting, database, email, SMS, M-Pesa), wiring it all up, and deploying — for a <strong>one-time setup fee of KES 20,000</strong>. This is a separate, optional service and is <strong>not part of the original arrangement</strong>. (Third-party charges above — domain, hosting, SMS units, etc. — are billed by those providers and are not included in this fee.)</p>
+</div>
+<div class="callout"><p><strong>Important — ownership.</strong> Please create each account <strong>in Elimu Pay's name</strong> (your business email and your payment card). You own the accounts and the billing; we only need the access keys to connect them. Where an account supports it, you can instead add us as a team member (we'll give you the email to invite). Never let a vendor account be owned by an individual contractor.</p>
+</div>
+<div class="callout"><p><strong>How to send us credentials — securely.</strong> Do <strong>not</strong> send keys over plain email, SMS, or WhatsApp. Use one of these:</p>
+<ol><li>A one-time secret link — go to <strong>onetimesecret.com</strong>, paste the value, send us the link (it self-destructs after we open it), or</li><li>Share via a password manager (we can use a shared 1Password/Bitwarden vault), or</li><li>Read them to us on a call while we enter them.</li></ol>
+</div>
+<hr>
+<h2>At a glance — the pieces</h2>
+<table class="grid"><thead><tr><th>Piece</th><th>Provider (recommended)</th><th>Purpose</th><th>Indicative cost</th></tr></thead><tbody><tr><td>Domain name</td><td><strong>simbahost.co.ke</strong> (.co.ke)</td><td>Your web address</td><td>KES 1,500/yr</td></tr><tr><td>Hosting</td><td>Vercel <em>(already set up)</em></td><td>Runs the application</td><td>Currently free tier; ~$20/mo Pro for production scale</td></tr><tr><td>Database</td><td>Neon — PostgreSQL <em>(already set up)</em></td><td>Stores all data</td><td>Currently free tier; ~$19/mo for production scale</td></tr><tr><td>Email</td><td><strong>Resend</strong></td><td>Invoices, reminders, confirmations</td><td>Free up to 3,000/mo; ~$20/mo for 50,000</td></tr><tr><td>SMS</td><td>Celcom Africa</td><td>SMS fee reminders</td><td>Pay-as-you-go, ~KES 0.30–0.80 per SMS</td></tr><tr><td>M-Pesa</td><td>Safaricom Daraja</td><td>Payments &amp; instant pay prompts</td><td>Free API; paybill per Safaricom</td></tr></tbody></table>
+<p><strong>Already in place.</strong> The application is built and <strong>live on Vercel</strong> (currently at https://feetracker-seven.vercel.app) with its database on <strong>Neon</strong> — so hosting and the database need nothing from you. The only thing to note is that, for production scale, we may move both to their <strong>paid tiers</strong> (Vercel Pro ~$20/mo, Neon ~$19/mo) for performance and reliability as schools come on board; we'll advise when that's worthwhile. Everything else below can start on a <strong>free tier</strong>.</p>
+<hr>
+<h2>Step 1 — Buy a domain name</h2>
+<p><strong>What to do</strong></p>
+<ol><li>Decide the address. We suggest <strong>elimupay.co.ke</strong> (Kenyan, trusted locally).</li><li>Register it at <strong>simbahost.co.ke</strong> — search for the name and check out (<strong>KES 1,500/year</strong>).</li><li>After purchase, you'll get a login to the registrar's <strong>DNS / domain management</strong> page. We will give you a short list of DNS records to add (for the website, email, etc.), or you can add us as a user on the registrar so we configure it.</li></ol>
+<p><strong>What to send us</strong></p>
+<ul><li>The domain name(s) you bought, and <strong>access to the DNS settings</strong> (invite us, or be</li></ul>
+<p>  available to paste in the 4–6 records we provide).</p>
+<p>We connect your new domain (Step 1) to the existing Vercel deployment so the app answers at <code>https://elimupay.co.ke</code> instead of the temporary address.</p>
+<hr>
+<h2>Step 2 — Set up email sending (Resend)</h2>
+<p>This powers invoice emails, payment confirmations, and email reminders.</p>
+<p><strong>What to do</strong></p>
+<ol><li>Go to <strong>resend.com</strong> → <strong>Sign Up</strong> (free tier: 3,000 emails/month, 100/day).</li><li>In the left menu, open <strong>Domains → Add Domain</strong> and enter your domain (e.g. <code>elimupay.co.ke</code>). Resend will show you <strong>3–4 DNS records</strong> (SPF, DKIM, and a return-path).</li><li>Add those records in your domain's DNS page from Step 1 (or send them to us to add). Wait for Resend to show the domain as <strong>Verified</strong> (usually minutes, sometimes a few hours).</li><li>Open <strong>API Keys → Create API Key</strong>, name it "Elimu Pay Production", and copy the key (it starts with <code>re_…</code>). <strong>You can only see it once</strong> — copy it immediately.</li></ol>
+<p><strong>What to send us (securely)</strong></p>
+<ul><li>The <strong>Resend API key</strong> (<code>re_…</code>).</li><li>Confirmation that your domain shows <strong>Verified</strong> in Resend.</li><li>The <strong>"from" address</strong> you want parents to see (e.g. <code>fees@elimupay.co.ke</code> or</li></ul>
+<p>  <code>no-reply@elimupay.co.ke</code>).</p>
+<div class="callout"><p>Note: the app currently emails via a Google account. We will switch it to Resend (a small change on our side) so that, once you send the key above, everything sends under your own domain with better deliverability.</p>
+</div>
+<hr>
+<h2>Step 3 — Set up SMS (Celcom Africa)</h2>
+<p><strong>What to do</strong></p>
+<ol><li>Visit <strong>celcomafrica.com</strong> and <strong>register for a Bulk SMS account</strong> (or email/call their sales team — they often onboard you directly).</li><li>Ask them to <strong>register a Sender ID</strong> for you — a short text name parents will see as the sender, e.g. <code>ELIMUPAY</code> or your school brand. (Sender-ID approval goes through the Communications Authority and can take <strong>1–2 weeks</strong>, so start this early. There is a small one-time registration fee.)</li><li><strong>Buy SMS units</strong> to load your account (start small, e.g. KES 2,000–5,000).</li><li>From your Celcom account dashboard, obtain your <strong>API key</strong>, <strong>Partner ID</strong>, and the approved <strong>Sender ID (shortcode)</strong>.</li></ol>
+<p><strong>What to send us (securely)</strong></p>
+<ul><li><strong>API key</strong>, <strong>Partner ID</strong>, and the approved <strong>Sender ID</strong>.</li></ul>
+<p>Until these arrive, the SMS feature stays safely dormant (it simply does nothing).</p>
+<hr>
+<h2>Step 4 — Set up M-Pesa (Safaricom Daraja) — per school</h2>
+<p>Per your direction, <strong>each school collects to its own M-Pesa paybill/till</strong>. There are two parts: a one-time developer setup (platform level), and a per-school detail.</p>
+<p><strong>A. One-time (platform) — Daraja developer account</strong></p>
+<ol><li>Go to <strong>developer.safaricom.co.ke</strong> → <strong>Sign up</strong> with the Elimu Pay email.</li><li>Create an <strong>App</strong> (it gives you a <strong>Consumer Key</strong> and <strong>Consumer Secret</strong>). These let the platform talk to M-Pesa on schools' behalf.</li></ol>
+<p><strong>B. Per school — their M-Pesa details</strong> For each school joining the platform you (or the school) will need:</p>
+<ol><li>The school's <strong>Paybill or Till number</strong> (their Lipa na M-Pesa business shortcode).</li><li>The school's <strong>M-Pesa "online" passkey</strong> for that shortcode (Safaricom issues this when the shortcode is enabled for online payments / "Lipa na M-Pesa Online"). This is required for the <strong>instant payment prompt (STK Push)</strong> feature.</li><li>We register the school's paybill inside the app so real-time payment notifications flow in.</li></ol>
+<p><strong>Going live:</strong> Daraja starts in a <strong>sandbox</strong> (test) mode. When you're ready, Safaricom runs a short <strong>go-live</strong> approval to switch your app to production. We handle the technical side; you may be asked to confirm business details.</p>
+<p><strong>What to send us (securely)</strong></p>
+<ul><li>The <strong>Consumer Key</strong> and <strong>Consumer Secret</strong> from your Daraja app.</li><li>For each school: <strong>Paybill/Till</strong> and the <strong>online passkey</strong>.</li></ul>
+<hr>
+<h2>Behind-the-scenes secrets (we handle these)</h2>
+<p>A few internal secrets (for encrypting data, securing automated jobs, and authenticating M-Pesa callbacks) are generated by us and stored only in the hosting environment. <strong>You don't need to do anything here</strong> — they're already set in the current deployment.</p>
+<hr>
+<h2>Master checklist — what to send us</h2>
+<table class="grid"><thead><tr><th>#</th><th>Item</th><th>From</th></tr></thead><tbody><tr><td>1</td><td>Domain name + DNS access</td><td>Step 1</td></tr><tr><td>2</td><td>Resend API key + verified domain + "from" address</td><td>Step 2</td></tr><tr><td>3</td><td>Celcom API key + Partner ID + Sender ID</td><td>Step 3</td></tr><tr><td>4</td><td>Daraja Consumer Key + Secret; per-school Paybill + passkey</td><td>Step 4</td></tr></tbody></table>
+<p>Send each item via a one-time secret link (see top of this guide). Hosting and the database are already running, so as soon as we have items 1–2 the live site is on your own domain with email sending; SMS (3) and M-Pesa (4) switch on as those arrive.</p>
+<hr>
+<h2>Suggested improvements beyond the current scope</h2>
+<p>You asked for ideas to improve the application further. These are <strong>optional</strong> and <strong>not part of the current engagement</strong> — we've ranked them by value and added a rough effort guide so you can decide what to commission next. We're happy to quote any of them firmly on request.</p>
+<p><strong>Recommended first — protect the live system</strong></p>
+<table class="grid"><thead><tr><th>Improvement</th><th>What it gives you</th><th>Rough effort</th></tr></thead><tbody><tr><td><strong>Error &amp; uptime monitoring</strong></td><td>Instant alerts the moment something breaks or the site goes down, plus a dashboard of issues — essential peace-of-mind for a system handling real money.</td><td>Small (~1–2 days)</td></tr><tr><td><strong>Automated backups + tested restore</strong></td><td>Daily off-site backups <em>and</em> a proven restore, so school and payment data can never be lost — we verify the restore works, not just that a backup exists.</td><td>Small (~1–2 days)</td></tr></tbody></table>
+<p><strong>High value — grow collections &amp; cut workload</strong></p>
+<table class="grid"><thead><tr><th>Improvement</th><th>What it gives you</th><th>Rough effort</th></tr></thead><tbody><tr><td><strong>Parent-facing balance &amp; pay page</strong></td><td>A link each parent can open to see their child's balance and pay on the spot — fewer calls to the bursar and faster collections.</td><td>Medium (~1–2 weeks)</td></tr><tr><td><strong>Payment reconciliation dashboard</strong></td><td>A daily view of collected vs. expected, per class/school, with unmatched payments flagged for action.</td><td>Medium (~1 week)</td></tr><tr><td><strong>Per-school onboarding wizard</strong></td><td>New schools self-onboard their paybill, students and fees with minimal hand-holding — lets you scale sign-ups without manual setup.</td><td>Medium (~1–2 weeks)</td></tr></tbody></table>
+<p><strong>Nice to have — richer engagement &amp; reporting</strong></p>
+<table class="grid"><thead><tr><th>Improvement</th><th>What it gives you</th><th>Rough effort</th></tr></thead><tbody><tr><td><strong>Official WhatsApp Business API</strong></td><td>Fully automated WhatsApp reminders (not click-to-send) with delivery receipts.</td><td>Medium + WhatsApp approval</td></tr><tr><td><strong>Role-based reporting &amp; exports</strong></td><td>Termly collection reports for principals and boards, exportable to Excel/PDF.</td><td>Small–Medium</td></tr></tbody></table>
+<hr>
+<h2>What happens next on our side</h2>
+<ul><li>We switch the email engine to <strong>Resend</strong> so it's ready the moment your key arrives.</li><li>We wire the two approved front-end additions: the <strong>"Request M-Pesa payment"</strong> button and</li></ul>
+<p>  <strong>one-click invoice download</strong>.</p>
+<ul><li>On your go-ahead, we begin the <strong>visual/usability refresh</strong> (the main remaining work).</li><li>We point your new domain at the existing Vercel deployment and run a final go-live checklist</li></ul>
+<p>  with you (including any move to the paid hosting/database tiers).</p>
+<p>We're happy to hop on a short call and do Steps 1–2 together live if that's easier.</p>
+<p>— <strong>Datacare Limited</strong> info@datacare.co.ke · www.datacare.co.ke · 0722 155 752</p>
+
+</body></html>

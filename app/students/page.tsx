@@ -685,7 +685,7 @@ export default function Students() {
 
                     return (
                       <Fragment key={student.id}>
-                        <tr style={{borderBottom: isFeeEdit ? 'none' : '1px solid var(--ep-border)', cursor: 'pointer', background: isFeeEdit ? 'var(--ep-bg-tertiary)' : undefined}} onClick={() => router.push('/students/' + student.id)}>
+                        <tr style={{borderBottom: isFeeEdit ? 'none' : '1px solid var(--ep-border)', cursor: 'pointer', background: isFeeEdit ? 'var(--ep-bg-tertiary)' : undefined}} onClick={() => router.push('/students/' + student.publicId)}>
                           <td style={{padding: '9px 10px', fontWeight: 600, color: 'var(--ep-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{student.name}</td>
                           <td style={{padding: '9px 10px', color: 'var(--ep-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis'}}>{student.admNo || '—'}</td>
                           <td style={{padding: '9px 10px', color: 'var(--ep-text-secondary)', whiteSpace: 'nowrap'}}>{student.class}{student.stream ? ' ' + student.stream : ''}</td>

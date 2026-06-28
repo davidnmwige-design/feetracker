@@ -215,7 +215,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 export default function StudentDetail() {
-  const { id } = useParams()
+  const { publicId } = useParams()
   const router = useRouter()
   const [student, setStudent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -274,24 +274,28 @@ export default function StudentDetail() {
   const deleteModalRef = useFocusTrap(deleteModal)
 
   useEffect(() => {
-    fetch('/api/students/' + id)
+    fetch('/api/students/' + publicId)
       .then(r => { if (!r.ok) { setNotFound(true); setLoading(false); return null } return r.json() })
       .then(data => { if (data) { setStudent(data); setLoading(false) } })
       .catch(() => { setNotFound(true); setLoading(false) })
-    fetch('/api/fee-categories?studentId=' + id)
-      .then(r => r.json()).then(d => setFeeCategories(Array.isArray(d) ? d : []))
-    fetch('/api/bursaries/student/' + id)
+    fetch('/api/bursaries/student/' + publicId)
       .then(r => r.json()).then(d => { setBursary(d || null); setBursaryLoading(false) })
       .catch(() => setBursaryLoading(false))
+  }, [publicId])
+
+  useEffect(() => {
+    if (!student?.id) return
+    fetch('/api/fee-categories?studentId=' + student.id)
+      .then(r => r.json()).then(d => setFeeCategories(Array.isArray(d) ? d : []))
     Promise.all([
       fetch('/api/discounts').then(r => r.json()),
-      fetch(`/api/discounts/apply?studentId=${id}`).then(r => r.json()),
+      fetch(`/api/discounts/apply?studentId=${student.id}`).then(r => r.json()),
     ]).then(([allDiscounts, applied]) => {
       setSchoolDiscounts(Array.isArray(allDiscounts) ? allDiscounts.filter((d: any) => d.active) : [])
       setStudentDiscounts(Array.isArray(applied) ? applied : [])
       setDiscountsLoading(false)
     }).catch(() => setDiscountsLoading(false))
-  }, [id])
+  }, [student?.id])
 
   function getEffectiveFee(feeRequired: number, burs: any) {
     if (!burs || !burs.active) return feeRequired
@@ -307,7 +311,7 @@ export default function StudentDetail() {
       const method = bursary ? 'PATCH' : 'POST'
       const res = await fetch(endpoint, {
         method, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...bursaryForm, studentId: Number(id), discountValue: parseFloat(bursaryForm.discountValue) || 0, active: true }),
+        body: JSON.stringify({ ...bursaryForm, studentId: student.id, discountValue: parseFloat(bursaryForm.discountValue) || 0, active: true }),
       })
       const data = await res.json()
       if (!res.ok) { setBursaryError(data.error || 'Failed to save'); } else {
@@ -330,10 +334,10 @@ export default function StudentDetail() {
     const res = await fetch('/api/discounts/apply', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ discountId: parseInt(selectedDiscountId), studentIds: [Number(id)] }),
+      body: JSON.stringify({ discountId: parseInt(selectedDiscountId), studentIds: [student.id] }),
     })
     if (res.ok) {
-      const updated = await fetch(`/api/discounts/apply?studentId=${id}`).then(r => r.json())
+      const updated = await fetch(`/api/discounts/apply?studentId=${student.id}`).then(r => r.json())
       setStudentDiscounts(Array.isArray(updated) ? updated : [])
       setSelectedDiscountId('')
     }
@@ -344,7 +348,7 @@ export default function StudentDetail() {
     await fetch('/api/discounts/apply', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ discountId, studentId: Number(id) }),
+      body: JSON.stringify({ discountId, studentId: student.id }),
     })
     setStudentDiscounts(prev => prev.filter((sd: any) => sd.discountId !== discountId))
   }
@@ -389,7 +393,7 @@ export default function StudentDetail() {
     setEditSaving(true)
     setEditError('')
     try {
-      const res = await fetch('/api/students/' + id, {
+      const res = await fetch('/api/students/' + publicId, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -430,7 +434,7 @@ export default function StudentDetail() {
     if (deleteConfirm !== student.admNo || deleting) return
     setDeleting(true); setDeleteError('')
     try {
-      const res = await fetch('/api/students/' + id, { method: 'DELETE' })
+      const res = await fetch('/api/students/' + publicId, { method: 'DELETE' })
       if (res.ok) {
         router.push('/students')
       } else {
@@ -447,7 +451,7 @@ export default function StudentDetail() {
   async function saveFees() {
     if (savingFees) return
     setSavingFees(true)
-    const res = await fetch('/api/fee-categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId: id, categories: feeEdits }) })
+    const res = await fetch('/api/fee-categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId: student.id, categories: feeEdits }) })
     const data = await res.json()
     if (res.ok) {
       setFeeCategories(data.categories)
@@ -461,7 +465,7 @@ export default function StudentDetail() {
   useEffect(() => { if (reminderModal) setTimeout(() => reminderInputRef.current?.focus(), 50) }, [reminderModal])
 
   async function downloadCert() {
-    const res = await fetch('/api/certificate?studentId=' + id)
+    const res = await fetch('/api/certificate?studentId=' + student.id)
     const data = await res.json()
     const doc = await buildCertificateDoc(data)
     doc.save(student.name.replace(/\s+/g, '_') + '_clearance.pdf')
@@ -471,7 +475,7 @@ export default function StudentDetail() {
     if (!certEmail.trim() || certSending) return
     setCertSending(true); setCertResult(null)
     try {
-      const certRes = await fetch('/api/certificate?studentId=' + id)
+      const certRes = await fetch('/api/certificate?studentId=' + student.id)
       const certData = await certRes.json()
       const doc = await buildCertificateDoc(certData)
       const pdfBase64 = doc.output('datauristring').split(',')[1]

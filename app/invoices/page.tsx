@@ -418,7 +418,7 @@ export default function Invoices() {
                               </button>
                             )}
                             <button
-                              onClick={() => window.open('/api/invoices/student/' + student.id + '/pdf', '_blank')}
+                              onClick={() => window.open('/api/invoices/student/' + student.publicId + '/pdf', '_blank')}
                               title="Download this invoice as a PDF"
                               style={{ fontSize: '11px', background: 'var(--ep-card-bg)', color: 'var(--ep-text-secondary)', border: '1px solid var(--ep-border)', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' as const }}
                             >
