@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, Fragment } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 import { maskEmail } from '@/lib/mask'
 import RoleGuard from '@/components/RoleGuard'
 
@@ -240,6 +241,7 @@ export default function Students() {
   const [expandedFees, setExpandedFees] = useState<number | null>(null)
   const [editingEmail, setEditingEmail] = useState<{ id: number; value: string } | null>(null)
   const [emailModal, setEmailModal] = useState<{ student: any; certData: any } | null>(null)
+  const emailModalRef = useFocusTrap(emailModal !== null)
   const [emailInput, setEmailInput] = useState('')
   const [emailSending, setEmailSending] = useState(false)
   const [emailResult, setEmailResult] = useState<'sent' | 'error' | null>(null)
@@ -252,6 +254,7 @@ export default function Students() {
 
   // Add student modal
   const [addModal, setAddModal] = useState(false)
+  const addModalRef = useFocusTrap(addModal)
   const [addForm, setAddForm] = useState({ name: '', admNo: '', studentClass: 'Form 1', stream: '', parentName: '', parentPhone: '', parentEmail: '', parent2Name: '', parent2Phone: '', parent2Email: '' })
   const [addCategories, setAddCategories] = useState([{ name: 'Tuition Fee', amount: 0 }])
   const [addSaving, setAddSaving] = useState(false)
@@ -259,6 +262,7 @@ export default function Students() {
 
   // Bulk fee update modal
   const [bulkModal, setBulkModal] = useState(false)
+  const bulkModalRef = useFocusTrap(bulkModal)
   const [bulkMode, setBulkMode] = useState<'update' | 'add'>('update')
   const [bulkClass, setBulkClass] = useState('All')
   const [bulkCategory, setBulkCategory] = useState('')
@@ -641,6 +645,7 @@ export default function Students() {
             <input
               type="text"
               placeholder="Search by name, admission no, email..."
+              aria-label="Search students by name, admission number, or email"
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', width: '260px', outline: 'none'}}
@@ -665,7 +670,7 @@ export default function Students() {
                       {h: 'Paid', w: '90px'}, {h: 'Balance', w: '90px'}, {h: 'Status', w: '72px'},
                       {h: 'Parent Email', w: '160px'}, {h: '', w: '140px'},
                     ].map(({h, w}, i) => (
-                      <th key={i} style={{padding: '10px 10px', color: 'var(--ep-text-secondary)', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap', background: 'var(--ep-table-header, var(--ep-bg-tertiary))', width: w}}>{h}</th>
+                      <th key={i} scope="col" style={{padding: '10px 10px', color: 'var(--ep-text-secondary)', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap', background: 'var(--ep-table-header, var(--ep-bg-tertiary))', width: w}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -812,9 +817,16 @@ export default function Students() {
       {addModal && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px'}}
           onClick={e => { if (e.target === e.currentTarget && !addSaving) setAddModal(false) }}>
-          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', width: '520px', maxWidth: '100%', maxHeight: '90vh', overflow: 'auto'}}>
+          <div
+            ref={addModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-student-title"
+            onKeyDown={e => { if (e.key === 'Escape' && !addSaving) setAddModal(false) }}
+            style={{background: 'var(--ep-card-bg)', borderRadius: '12px', width: '520px', maxWidth: '100%', maxHeight: '90vh', overflow: 'auto'}}
+          >
             <div style={{padding: '20px 24px', borderBottom: '1px solid var(--ep-border)'}}>
-              <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>Add student</h3>
+              <h3 id="add-student-title" style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>Add student</h3>
             </div>
             <div style={{padding: '20px 24px'}}>
               {addError && <div style={{background: '#fcebeb', border: '1px solid #f5c6c6', color: '#a32d2d', fontSize: '12px', padding: '10px 12px', borderRadius: '6px', marginBottom: '16px'}}>{addError}</div>}
@@ -883,7 +895,8 @@ export default function Students() {
                       style={{flex: 1, border: '1px solid var(--ep-border)', borderRadius: '5px', padding: '6px 10px', fontSize: '13px', outline: 'none', minWidth: '80px'}} />
                     {addCategories.length > 1 && (
                       <button onClick={() => setAddCategories(p => p.filter((_, j) => j !== i))}
-                        style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '14px', padding: '0 4px'}}>x</button>
+                        aria-label="Remove fee category"
+                        style={{background: 'none', border: 'none', color: '#e24b4a', cursor: 'pointer', fontSize: '14px', padding: '0 4px'}}>×</button>
                     )}
                   </div>
                 ))}
@@ -917,12 +930,20 @@ export default function Students() {
       {bulkModal && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px'}}
           onClick={e => { if (e.target === e.currentTarget && !bulkSaving) { setBulkModal(false); setBulkResult(null); setBulkSuccess(false) } }}>
-          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', width: '480px', maxWidth: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+          <div
+            ref={bulkModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bulk-fee-title"
+            onKeyDown={e => { if (e.key === 'Escape' && !bulkSaving) { setBulkModal(false); setBulkResult(null); setBulkSuccess(false) } }}
+            style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', width: '480px', maxWidth: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}
+          >
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px'}}>
-              <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>Bulk fee update</h3>
+              <h3 id="bulk-fee-title" style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', margin: 0}}>Bulk fee update</h3>
               {!bulkSaving && (
                 <button onClick={() => { setBulkModal(false); setBulkResult(null); setBulkSuccess(false) }}
-                  style={{background: 'none', border: 'none', color: 'var(--ep-text-tertiary)', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '2px'}}>x</button>
+                  aria-label="Close bulk fee update"
+                  style={{background: 'none', border: 'none', color: 'var(--ep-text-tertiary)', cursor: 'pointer', fontSize: '18px', lineHeight: 1, padding: '2px'}}>×</button>
               )}
             </div>
 
@@ -1054,11 +1075,19 @@ export default function Students() {
           style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000}}
           onClick={e => { if (e.target === e.currentTarget) { setEmailModal(null); setEmailResult(null) } }}
         >
-          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', width: '400px', maxWidth: '92vw'}}>
-            <h3 style={{fontSize: '15px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Send certificate via email</h3>
+          <div
+            ref={emailModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cert-email-title"
+            onKeyDown={e => { if (e.key === 'Escape') { setEmailModal(null); setEmailResult(null) } }}
+            style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', width: '400px', maxWidth: '92vw'}}
+          >
+            <h3 id="cert-email-title" style={{fontSize: '15px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Send certificate via email</h3>
             <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', marginBottom: '20px'}}>{emailModal.student.name} · {emailModal.certData.school.term}</p>
-            <label style={{fontSize: '12px', color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '6px'}}>Parent email address</label>
+            <label htmlFor="cert-email-input" style={{fontSize: '12px', color: 'var(--ep-text-secondary)', display: 'block', marginBottom: '6px'}}>Parent email address</label>
             <input
+              id="cert-email-input"
               ref={emailInputRef}
               type="email"
               value={emailInput}

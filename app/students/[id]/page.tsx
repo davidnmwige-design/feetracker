@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
 import { calculateFeeBreakdown } from '@/lib/feeCalculations'
 
@@ -162,14 +163,23 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function EmailModal({ title, subtitle, emailValue, onEmailChange, onSend, onClose, sending, result, inputRef }: any) {
+  const trapRef = useFocusTrap(true)
   return (
     <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px'}}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{background: '#fff', borderRadius: '12px', padding: '28px', width: '400px', maxWidth: '92vw'}}>
-        <h3 style={{fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>{title}</h3>
+      <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="email-modal-title"
+        onKeyDown={e => { if (e.key === 'Escape') onClose() }}
+        style={{background: '#fff', borderRadius: '12px', padding: '28px', width: '400px', maxWidth: '92vw'}}
+      >
+        <h3 id="email-modal-title" style={{fontSize: '15px', fontWeight: 700, color: '#0f172a', marginBottom: '4px'}}>{title}</h3>
         <p style={{fontSize: '12px', color: '#64748b', marginBottom: '20px'}}>{subtitle}</p>
-        <label style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '6px'}}>Email address</label>
+        <label htmlFor="email-modal-input" style={{fontSize: '12px', color: '#64748b', display: 'block', marginBottom: '6px'}}>Email address</label>
         <input
+          id="email-modal-input"
           ref={inputRef}
           type="email"
           value={emailValue}
@@ -260,6 +270,8 @@ export default function StudentDetail() {
   })
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState('')
+
+  const deleteModalRef = useFocusTrap(deleteModal)
 
   useEffect(() => {
     fetch('/api/students/' + id)
@@ -851,7 +863,7 @@ export default function StudentDetail() {
                 <thead>
                   <tr style={{background: '#f8f9fc', borderBottom: '1px solid #e2e8f0'}}>
                     {['Date', 'MPESA Ref', 'Amount', 'Sender name', 'Sender phone'].map(h => (
-                      <th key={h} style={{padding: '8px 12px', textAlign: 'left', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap'}}>{h}</th>
+                      <th key={h} scope="col" style={{padding: '8px 12px', textAlign: 'left', color: '#94a3b8', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap'}}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1126,8 +1138,15 @@ export default function StudentDetail() {
       {/* Delete confirmation modal */}
       {deleteModal && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
-          <div style={{background: '#fff', borderRadius: '12px', padding: '28px', maxWidth: '440px', width: '100%'}}>
-            <h3 style={{fontSize: '16px', fontWeight: 700, color: '#dc2626', marginBottom: '12px'}}>Remove student</h3>
+          <div
+            ref={deleteModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+            onKeyDown={e => { if (e.key === 'Escape') { setDeleteModal(false); setDeleteConfirm(''); setDeleteError('') } }}
+            style={{background: '#fff', borderRadius: '12px', padding: '28px', maxWidth: '440px', width: '100%'}}
+          >
+            <h3 id="delete-modal-title" style={{fontSize: '16px', fontWeight: 700, color: '#dc2626', marginBottom: '12px'}}>Remove student</h3>
             <p style={{fontSize: '13px', color: '#475569', lineHeight: 1.6, marginBottom: '16px'}}>
               Are you sure you want to remove <strong>{student.name}</strong> from the system? This will also delete all their payment records. <strong>This cannot be undone.</strong>
             </p>
@@ -1135,6 +1154,7 @@ export default function StudentDetail() {
               Type the admission number <strong>{student.admNo}</strong> to confirm
             </p>
             <input type="text" value={deleteConfirm} onChange={e => setDeleteConfirm(e.target.value)} placeholder={student.admNo}
+              aria-label={`Type admission number ${student.admNo} to confirm deletion`}
               style={{width: '100%', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box' as const}} />
             {deleteError && <p style={{fontSize: '12px', color: '#dc2626', marginBottom: '12px'}}>{deleteError}</p>}
             <div style={{display: 'flex', gap: '10px'}}>

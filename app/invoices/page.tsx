@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import RoleGuard from '@/components/RoleGuard'
 import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 
 // -- Status badge --------------------------------------------------------------
 
@@ -299,6 +300,7 @@ export default function Invoices() {
           <input
             type="text"
             placeholder="Search by name, class, or admission no…"
+            aria-label="Search invoices by student name, class, or admission number"
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{ border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', width: '280px', outline: 'none' }}
@@ -327,7 +329,7 @@ export default function Invoices() {
                 <thead>
                   <tr style={{ textAlign: 'left' as const, borderBottom: '1px solid var(--ep-border)', background: 'var(--ep-bg-tertiary)' }}>
                     {['Student', 'Class', 'Fee breakdown', 'Paid', 'Due', 'Status', 'Actions'].map(h => (
-                      <th key={h} style={{ padding: '10px 14px', color: 'var(--ep-text-tertiary)', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} scope="col" style={{ padding: '10px 14px', color: 'var(--ep-text-tertiary)', fontWeight: 500, fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>

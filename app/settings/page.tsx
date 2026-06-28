@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 import {
   getAnnualTotal, getBillingAmount, getDiscountedAnnual,
   getAnnualSavings, getSetupFee, getPlanName, BILLING_DISCOUNTS,
@@ -97,6 +98,9 @@ export default function Settings() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+
+  const upgradeModalRef = useFocusTrap(showUpgradeModal)
+  const deleteAccountModalRef = useFocusTrap(showDeleteModal)
 
   // Academic year state
   const [academicYears, setAcademicYears] = useState<any[]>([])
@@ -2024,12 +2028,19 @@ export default function Settings() {
       {/* Upgrade Modal */}
       {showUpgradeModal && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
-          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
+          <div
+            ref={upgradeModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="upgrade-modal-title"
+            onKeyDown={e => { if (e.key === 'Escape') closeUpgradeModal() }}
+            style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', maxWidth: '460px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}
+          >
             {upgradeSuccess ? (
               <>
                 <div style={{textAlign: 'center', padding: '8px 0 16px'}}>
                   <div style={{width: '48px', height: '48px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '22px'}}>Done</div>
-                  <h3 style={{fontSize: '16px', fontWeight: 700, color: '#0a7c3e', marginBottom: '8px'}}>Request Submitted!</h3>
+                  <h3 id="upgrade-modal-title" style={{fontSize: '16px', fontWeight: 700, color: '#0a7c3e', marginBottom: '8px'}}>Request Submitted!</h3>
                   <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', lineHeight: 1.6}}>
                     {requestedPlan === 'Enterprise'
                       ? 'Our team will contact you within 24 hours to discuss your Enterprise plan and complete the setup.'
@@ -2046,7 +2057,7 @@ export default function Settings() {
               </>
             ) : (
               <>
-                <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Request Tier Change</h3>
+                <h3 id="upgrade-modal-title" style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Request Tier Change</h3>
                 <p style={{fontSize: '12px', color: 'var(--ep-text-tertiary)', marginBottom: '12px'}}>Pricing is KES 200 per student per year — your bill adjusts automatically as you add students. Select a tier to move to:</p>
 
                 <div style={{background: 'var(--ep-bg-secondary)', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '12px', color: 'var(--ep-text-secondary)'}}>
@@ -2077,6 +2088,7 @@ export default function Settings() {
                 ))}
 
                 <textarea
+                  aria-label="Notes or questions about the upgrade (optional)"
                   placeholder="Any notes or questions? (optional)"
                   value={upgradeNotes}
                   onChange={e => setUpgradeNotes(e.target.value)}
@@ -2114,8 +2126,15 @@ export default function Settings() {
       {/* Delete Account Modal */}
       {showDeleteModal && (
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'}}>
-          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', maxWidth: '440px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}>
-            <h3 style={{fontSize: '16px', fontWeight: 700, color: '#dc2626', marginBottom: '12px'}}>Delete account</h3>
+          <div
+            ref={deleteAccountModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-modal-title"
+            onKeyDown={e => { if (e.key === 'Escape') setShowDeleteModal(false) }}
+            style={{background: 'var(--ep-card-bg)', borderRadius: '12px', padding: '28px', maxWidth: '440px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)'}}
+          >
+            <h3 id="delete-account-modal-title" style={{fontSize: '16px', fontWeight: 700, color: '#dc2626', marginBottom: '12px'}}>Delete account</h3>
             <p style={{fontSize: '13px', color: 'var(--ep-text-secondary)', lineHeight: 1.6, marginBottom: '16px'}}>
               This will permanently delete all your school data including students, payments, and invoices. <strong>This cannot be undone.</strong>
             </p>
@@ -2125,6 +2144,7 @@ export default function Settings() {
               value={deleteConfirmText}
               onChange={e => setDeleteConfirmText(e.target.value)}
               placeholder="DELETE"
+              aria-label="Type DELETE to confirm account deletion"
               style={{width: '100%', border: '1px solid var(--ep-border)', borderRadius: '6px', padding: '10px 12px', fontSize: '13px', outline: 'none', marginBottom: '16px', boxSizing: 'border-box'}}
             />
             {deleteError && <p style={{color: '#ef4444', fontSize: '12px', marginBottom: '12px'}}>{deleteError}</p>}

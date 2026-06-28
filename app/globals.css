@@ -217,3 +217,24 @@
   background-color: var(--ep-input-bg);
   color: var(--ep-text-primary);
 }
+
+/* ─── Accessibility — focus rings ───────────────────────────────────────── */
+/* Provides a visible focus indicator for keyboard users on every interactive
+   element. Inline outline:none styles on individual inputs are removed on
+   staff pages; this rule is the single source of truth for focus style. */
+/* !important overrides inline outline:none on individual inputs without
+   requiring edits to 30+ inline style objects across staff pages. */
+:focus-visible {
+  outline: 2px solid #0a1f4e !important;
+  outline-offset: 2px !important;
+}
+[data-theme="dark"] :focus-visible {
+  outline-color: #c8a84b !important;
+}
+
+/* ─── Responsive breakpoint tokens ─────────────────────────────────────── */
+:root {
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+}

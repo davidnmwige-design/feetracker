@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import RoleGuard from '@/components/RoleGuard'
 import { normalizePhoneForWhatsApp } from '@/lib/phoneUtils'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 
 function reminderEmailHtml({
   schoolName,
@@ -98,6 +99,7 @@ export default function Reminders() {
 
   // Bulk email modal
   const [bulkModal, setBulkModal] = useState(false)
+  const bulkModalRef = useFocusTrap(bulkModal)
   const [bulkEmails, setBulkEmails] = useState<Record<number, string>>({})
   const [bulkSending, setBulkSending] = useState(false)
   const [bulkResult, setBulkResult] = useState<{ sent: number; skipped: number } | null>(null)
@@ -604,9 +606,16 @@ export default function Reminders() {
           style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px'}}
           onClick={e => { if (e.target === e.currentTarget && !bulkSending) { setBulkModal(false); setBulkResult(null) } }}
         >
-          <div style={{background: 'var(--ep-card-bg)', borderRadius: '12px', width: '540px', maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column' as const}}>
+          <div
+            ref={bulkModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bulk-modal-title"
+            onKeyDown={e => { if (e.key === 'Escape' && !bulkSending) { setBulkModal(false); setBulkResult(null) } }}
+            style={{background: 'var(--ep-card-bg)', borderRadius: '12px', width: '540px', maxWidth: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column' as const}}
+          >
             <div style={{padding: '24px 24px 16px', borderBottom: '1px solid var(--ep-border)', flexShrink: 0}}>
-              <h3 style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Send email reminders to all parents</h3>
+              <h3 id="bulk-modal-title" style={{fontSize: '16px', fontWeight: 700, color: 'var(--ep-text-primary)', marginBottom: '4px'}}>Send email reminders to all parents</h3>
               <p style={{fontSize: '12px', color: 'var(--ep-text-secondary)', margin: 0}}>{withBalance.length} parents with outstanding balances · fill in missing emails before sending</p>
             </div>
 
