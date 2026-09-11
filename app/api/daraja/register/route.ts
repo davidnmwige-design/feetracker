@@ -15,7 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: 'No paybill number configured for this school. Add it in school settings first.' }, { status: 400 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker-seven.vercel.app'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
     const confirmationUrl = `${appUrl}/api/daraja/confirmation`
     const validationUrl = `${appUrl}/api/daraja/validation`
 
