@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import PricingSection from '@/components/PricingSection'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://feetracker.co.ke'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://elimupay.co.ke'
 
 export const metadata: Metadata = {
   title: 'Elimu Pay - School Fee Management',
